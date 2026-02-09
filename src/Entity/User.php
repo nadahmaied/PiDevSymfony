@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
@@ -35,6 +37,20 @@ class User
     #[ORM\Column(length: 255)]
     private ?string $role = null;
 
+    // --- RELATION 1: Liste des candidatures bénévoles de cet utilisateur ---
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Volunteer::class)]
+    private Collection $volunteers;
+
+    // --- RELATION 2: Liste des missions créées par cet admin ---
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: MissionVolunteer::class)]
+    private Collection $missions;
+
+    public function __construct()
+    {
+        $this->volunteers = new ArrayCollection();
+        $this->missions = new ArrayCollection();
+    }
+
     public function getId(): ?int
     {
         return $this->id;
@@ -48,7 +64,6 @@ class User
     public function setEmail(string $email): static
     {
         $this->email = $email;
-
         return $this;
     }
 
@@ -60,7 +75,6 @@ class User
     public function setPassword(string $password): static
     {
         $this->password = $password;
-
         return $this;
     }
 
@@ -72,7 +86,6 @@ class User
     public function setNom(string $nom): static
     {
         $this->nom = $nom;
-
         return $this;
     }
 
@@ -84,7 +97,6 @@ class User
     public function setPrenom(string $prenom): static
     {
         $this->prenom = $prenom;
-
         return $this;
     }
 
@@ -96,7 +108,6 @@ class User
     public function setAdresse(?string $adresse): static
     {
         $this->adresse = $adresse;
-
         return $this;
     }
 
@@ -108,7 +119,6 @@ class User
     public function setTelephone(?string $telephone): static
     {
         $this->telephone = $telephone;
-
         return $this;
     }
 
@@ -120,7 +130,66 @@ class User
     public function setRole(string $role): static
     {
         $this->role = $role;
+        return $this;
+    }
 
+    // --- GESTION DES BÉNÉVOLES (Candidatures) ---
+
+    /**
+     * @return Collection<int, Volunteer>
+     */
+    public function getVolunteers(): Collection
+    {
+        return $this->volunteers;
+    }
+
+    public function addVolunteer(Volunteer $volunteer): static
+    {
+        if (!$this->volunteers->contains($volunteer)) {
+            $this->volunteers->add($volunteer);
+            $volunteer->setUser($this);
+        }
+        return $this;
+    }
+
+    public function removeVolunteer(Volunteer $volunteer): static
+    {
+        if ($this->volunteers->removeElement($volunteer)) {
+            // Si l'utilisateur était lié, on le détache
+            if ($volunteer->getUser() === $this) {
+                $volunteer->setUser(null);
+            }
+        }
+        return $this;
+    }
+
+    // --- GESTION DES MISSIONS (Créées par l'Admin) ---
+
+    /**
+     * @return Collection<int, MissionVolunteer>
+     */
+    public function getMissions(): Collection
+    {
+        return $this->missions;
+    }
+
+    public function addMission(MissionVolunteer $mission): static
+    {
+        if (!$this->missions->contains($mission)) {
+            $this->missions->add($mission);
+            $mission->setUser($this);
+        }
+        return $this;
+    }
+
+    public function removeMission(MissionVolunteer $mission): static
+    {
+        if ($this->missions->removeElement($mission)) {
+            // Si la mission était liée à cet admin, on la détache
+            if ($mission->getUser() === $this) {
+                $mission->setUser(null);
+            }
+        }
         return $this;
     }
 }
