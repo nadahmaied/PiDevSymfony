@@ -1,0 +1,137 @@
+{% extends 'baseBack.html.twig' %}
+
+{% block body %}
+<div class="flex-1 overflow-y-auto p-8">
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
+                        <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-xl"><i class="fa-solid fa-calendar-day"></i></div>
+                        <div><p class="text-gray-500 text-xs font-bold uppercase">Aujourd'hui</p><p class="text-xl font-bold text-gray-800">12 RDV</p></div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
+                        <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-lg flex items-center justify-center text-xl"><i class="fa-solid fa-clock"></i></div>
+                        <div><p class="text-gray-500 text-xs font-bold uppercase">En attente</p><p class="text-xl font-bold text-gray-800">5 Demandes</p></div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
+                        <div class="w-12 h-12 bg-green-50 text-green-600 rounded-lg flex items-center justify-center text-xl"><i class="fa-solid fa-user-check"></i></div>
+                        <div><p class="text-gray-500 text-xs font-bold uppercase">Terminés</p><p class="text-xl font-bold text-gray-800">48 this week</p></div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-50 text-gray-600 text-xs uppercase">
+                            <tr>
+                                <th class="px-6 py-4">Réf.</th>
+                                <th class="px-6 py-4">Patient</th>
+                                <th class="px-6 py-4">Médecin</th>
+                                <th class="px-6 py-4">Date & Heure</th>
+                                <th class="px-6 py-4">Statut</th>
+                                <th class="px-6 py-4 text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 text-sm">
+                            
+                            <tr class="hover:bg-blue-50/30 transition">
+                                <td class="px-6 py-4 font-mono text-gray-400">#RDV-89</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">AS</div>
+                                        <div>
+                                            <p class="font-bold text-gray-800">Ahmed Salah</p>
+                                            <p class="text-xs text-gray-500">24 ans • Homme</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-user-doctor text-gray-400"></i>
+                                        <span class="font-medium text-gray-700">Dr. Amrani</span>
+                                    </div>
+                                    <p class="text-xs text-gray-400 pl-6">Cardiologue</p>
+                                </td>
+                                <td class="px-6 py-4 text-gray-600">
+                                    <span class="block font-bold">14 Fév. 2026</span>
+                                    <span class="block text-xs"><i class="fa-regular fa-clock mr-1"></i> 09:30</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-bold border border-green-200 flex items-center w-fit gap-1">
+                                        <i class="fa-solid fa-check"></i> Confirmé
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 flex justify-center gap-3">
+                                    <button class="text-gray-400 hover:text-blue-600 p-2 transition"><i class="fa-solid fa-eye"></i></button>
+                                    <button class="text-gray-400 hover:text-orange-500 p-2 transition"><i class="fa-solid fa-pen"></i></button>
+                                </td>
+                            </tr>
+
+                            <tr class="hover:bg-blue-50/30 transition">
+                                <td class="px-6 py-4 font-mono text-gray-400">#RDV-90</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-xs">SJ</div>
+                                        <div>
+                                            <p class="font-bold text-gray-800">Sarah Jebali</p>
+                                            <p class="text-xs text-gray-500">32 ans • Femme</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-user-doctor text-gray-400"></i>
+                                        <span class="font-medium text-gray-700">Dr. Kallel</span>
+                                    </div>
+                                    <p class="text-xs text-gray-400 pl-6">Ophtalmologue</p>
+                                </td>
+                                <td class="px-6 py-4 text-gray-600">
+                                    <span class="block font-bold">15 Fév. 2026</span>
+                                    <span class="block text-xs"><i class="fa-regular fa-clock mr-1"></i> 14:00</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs font-bold border border-orange-200 flex items-center w-fit gap-1">
+                                        <i class="fa-solid fa-hourglass-start"></i> En attente
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 flex justify-center gap-3">
+                                    <button class="text-gray-400 hover:text-blue-600 p-2 transition"><i class="fa-solid fa-eye"></i></button>
+                                    <button class="text-gray-400 hover:text-orange-500 p-2 transition"><i class="fa-solid fa-pen"></i></button>
+                                </td>
+                            </tr>
+
+                             <tr class="hover:bg-blue-50/30 transition opacity-60">
+                                <td class="px-6 py-4 font-mono text-gray-400">#RDV-88</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-bold text-xs">MA</div>
+                                        <div>
+                                            <p class="font-bold text-gray-800">Mohamed Ali</p>
+                                            <p class="text-xs text-gray-500">55 ans • Homme</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-user-doctor text-gray-400"></i>
+                                        <span class="font-medium text-gray-700">Dr. Ben Youssef</span>
+                                    </div>
+                                    <p class="text-xs text-gray-400 pl-6">Dentiste</p>
+                                </td>
+                                <td class="px-6 py-4 text-gray-600">
+                                    <span class="block font-bold line-through text-gray-400">12 Fév. 2026</span>
+                                    <span class="block text-xs text-gray-400">10:00</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-bold border border-red-200 flex items-center w-fit gap-1">
+                                        <i class="fa-solid fa-ban"></i> Annulé
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 flex justify-center gap-3">
+                                    <button class="text-gray-400 hover:text-red-600 p-2 transition"><i class="fa-solid fa-trash"></i></button>
+                                </td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endblock %}

@@ -1,0 +1,202 @@
+{% extends 'baseFront.html.twig' %}
+
+{% block body %}
+ <div class="flex-1 overflow-y-auto bg-slate-50 p-4 md:p-8 no-scrollbar">
+ <div class="flex justify-end mb-4">
+    <button
+        onclick="openAddRdvModal()"
+        class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg flex items-center gap-2 transition">
+        <i class="fa-solid fa-plus"></i>
+        Ajouter RDV
+    </button>
+</div>
+{% include 'rdv/front/modal.html.twig' %}
+
+
+                <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+                    <div class="lg:col-span-8 space-y-6">
+                        
+                        <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-6">
+                            <div class="relative z-10">
+                                <div class="inline-block bg-blue-500/30 border border-blue-400/30 rounded-full px-3 py-1 text-xs font-bold mb-2">
+                                    <i class="fa-solid fa-bell animate-pulse mr-1"></i> Prochain Rendez-vous
+                                </div>
+                                <h2 class="text-2xl font-bold mb-1">Dr. Sarah Amrani</h2>
+                                <p class="text-blue-100 mb-4">Cardiologie • Clinique Pasteur</p>
+                                <div class="flex gap-3">
+                                    <button class="bg-white text-blue-700 px-4 py-2 rounded-lg text-sm font-bold shadow hover:bg-blue-50 transition">
+                                        <i class="fa-solid fa-video mr-1"></i> Lancer Visio
+                                    </button>
+                                    <button class="bg-blue-800/50 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-800 transition">
+                                        Détails
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4 text-center min-w-[100px]">
+                                <span class="block text-sm uppercase tracking-widest text-blue-200">Fév</span>
+                                <span class="block text-4xl font-bold text-white">14</span>
+                                <span class="block text-sm font-medium text-blue-100 mt-1">10:00</span>
+                            </div>
+                            <i class="fa-solid fa-user-doctor absolute -right-6 -bottom-6 text-9xl text-white opacity-10"></i>
+                        </div>
+
+                        <div class="flex items-center justify-between border-b border-slate-200 pb-1">
+                            <div class="flex gap-6">
+                                <button class="text-blue-600 font-bold border-b-2 border-blue-600 pb-3 px-1">À venir (2)</button>
+                                <button class="text-slate-500 font-medium hover:text-slate-800 pb-3 px-1 transition">Historique</button>
+                                <button class="text-slate-500 font-medium hover:text-slate-800 pb-3 px-1 transition">Annulés</button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            
+                            <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col sm:flex-row items-start sm:items-center gap-5 hover:border-orange-200 transition group">
+                                <div class="flex-shrink-0 w-16 h-16 bg-orange-50 rounded-xl flex flex-col items-center justify-center text-orange-600 border border-orange-100 group-hover:bg-orange-100 transition">
+                                    <span class="text-xs font-bold uppercase">Mars</span>
+                                    <span class="text-xl font-bold">02</span>
+                                </div>
+                                
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <h3 class="font-bold text-slate-800 text-lg">Dr. Mohamed Kallel</h3>
+                                            <p class="text-slate-500 text-sm">Ophtalmologie • Cabinet Lac 2</p>
+                                        </div>
+                                        <span class="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-1 rounded-md border border-orange-200">
+                                            <i class="fa-regular fa-clock mr-1"></i> En attente
+                                        </span>
+                                    </div>
+                                    <div class="mt-3 flex items-center gap-4 text-sm text-slate-500">
+                                        <span class="flex items-center gap-1"><i class="fa-regular fa-clock"></i> 14:30</span>
+                                        <span class="flex items-center gap-1"><i class="fa-solid fa-location-dot"></i> 12 Rue du Lac</span>
+                                    </div>
+                                </div>
+
+                                <div class="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                                    <button         onclick="openEditRdvModal({{ rdv.id }})"
+ 
+ class="flex-1 sm:flex-none border border-slate-200 text-slate-600 p-2 rounded-lg hover:bg-slate-50 transition" title="Modifier">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                    <button class="flex-1 sm:flex-none border border-slate-200 text-red-500 p-2 rounded-lg hover:bg-red-50 hover:border-red-200 transition" title="Annuler">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col sm:flex-row items-start sm:items-center gap-5 hover:border-blue-200 transition">
+                                <div class="flex-shrink-0 w-16 h-16 bg-slate-50 rounded-xl flex flex-col items-center justify-center text-slate-600 border border-slate-200">
+                                    <span class="text-xs font-bold uppercase">Avr</span>
+                                    <span class="text-xl font-bold">10</span>
+                                </div>
+                                
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <h3 class="font-bold text-slate-800 text-lg">Dr. Karim Ben Youssef</h3>
+                                            <p class="text-slate-500 text-sm">Dentiste • Menzah 6</p>
+                                        </div>
+                                        <span class="bg-blue-50 text-blue-700 text-xs font-bold px-2 py-1 rounded-md border border-blue-100">
+                                            <i class="fa-solid fa-check mr-1"></i> Confirmé
+                                        </span>
+                                    </div>
+                                    <div class="mt-3 flex items-center gap-4 text-sm text-slate-500">
+                                        <span class="flex items-center gap-1"><i class="fa-regular fa-clock"></i> 09:00</span>
+                                        <span class="flex items-center gap-1"><i class="fa-solid fa-video"></i> Consultation Vidéo</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-4 space-y-6">
+                        
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                            <h4 class="font-bold text-slate-800 mb-4">Février 2026</h4>
+                            <div class="grid grid-cols-7 gap-1 text-center text-sm mb-2 text-slate-400 font-medium">
+                                <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
+                            </div>
+                            <div class="grid grid-cols-7 gap-1 text-center text-sm font-medium text-slate-600">
+                                <span class="p-2 text-slate-300">26</span><span class="p-2 text-slate-300">27</span><span class="p-2 text-slate-300">28</span><span class="p-2 text-slate-300">29</span><span class="p-2 text-slate-300">30</span><span class="p-2">1</span><span class="p-2">2</span>
+                                <span class="p-2">3</span><span class="p-2">4</span><span class="p-2">5</span><span class="p-2">6</span><span class="p-2">7</span><span class="p-2">8</span><span class="p-2">9</span>
+                                <span class="p-2">10</span><span class="p-2">11</span><span class="p-2">12</span><span class="p-2">13</span><span class="bg-blue-600 text-white rounded-lg shadow-md p-2">14</span><span class="p-2">15</span><span class="p-2">16</span>
+                                <span class="p-2">17</span><span class="p-2">18</span><span class="p-2">19</span><span class="p-2">20</span><span class="p-2">21</span><span class="p-2">22</span><span class="p-2">23</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="font-bold text-slate-800">Mes Médecins</h4>
+                                <button class="text-blue-600 text-xs font-bold hover:underline">Voir tout</button>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="flex items-center gap-3 group cursor-pointer">
+                                    <div class="relative">
+                                        <img src="https://ui-avatars.com/api/?name=Sarah+Amrani&background=random" class="w-10 h-10 rounded-full">
+                                        <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white"></div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition">Dr. S. Amrani</p>
+                                        <p class="text-xs text-slate-500">Cardiologue</p>
+                                    </div>
+                                    <button class="w-8 h-8 rounded-full bg-slate-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition">
+                                        <i class="fa-solid fa-calendar-plus text-xs"></i>
+                                    </button>
+                                </div>
+                                <div class="flex items-center gap-3 group cursor-pointer">
+                                    <img src="https://ui-avatars.com/api/?name=Mohamed+Kallel&background=random" class="w-10 h-10 rounded-full grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition">
+                                    <div class="flex-1">
+                                        <p class="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition">Dr. M. Kallel</p>
+                                        <p class="text-xs text-slate-500">Ophtalmo</p>
+                                    </div>
+                                    <button class="w-8 h-8 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-blue-600 hover:text-white transition">
+                                        <i class="fa-solid fa-calendar-plus text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <button class="w-full mt-6 py-2 border border-dashed border-slate-300 text-slate-500 rounded-xl text-sm font-medium hover:border-blue-400 hover:text-blue-600 transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-magnifying-glass"></i> Trouver un spécialiste
+                            </button>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+  <script>
+function openAddRdvModal() {
+    fetch('/rdv/front/AjouterRdv')
+        .then(res => res.text())
+        .then(html => {
+            document.getElementById('rdvModalContent').innerHTML = html;
+            openRdvModal();
+        });
+}
+
+function openEditRdvModal(id) {
+    fetch(`/rdv/front/ModifierRdv/${id}`)
+        .then(res => res.text())
+        .then(html => {
+            document.getElementById('rdvModalContent').innerHTML = html;
+            openRdvModal();
+        });
+}
+
+function openRdvModal() {
+    document.getElementById('rdvModal').classList.remove('hidden');
+}
+
+function closeRdvModal() {
+    document.getElementById('rdvModal').classList.add('hidden');
+}
+</script>
+
+
+
+ {% endblock %}
+
+
