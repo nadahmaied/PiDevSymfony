@@ -1,0 +1,66 @@
+{% extends 'baseFront.html.twig' %}
+
+{% block body %}
+<div class="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+
+    {# ===== LEFT SIDE ===== #}
+    <div>
+        <h1 class="text-5xl font-extrabold text-slate-900 leading-tight">
+            {{ rdv.medecin }}
+        </h1>
+
+        <p class="text-xl text-blue-600 font-semibold mt-2">
+            {{ rdv.motif }}
+        </p>
+
+        <p class="text-slate-600 mt-6 max-w-xl">
+            {{ rdv.message ?? 'Consultation médicale programmée.' }}
+        </p>
+
+        {# ===== BADGES ===== #}
+        <div class="flex flex-wrap gap-4 mt-8">
+            <span class="bg-green-100 text-green-700 px-4 py-2 rounded-full font-semibold text-sm">
+                📅 {{ rdv.date|date('d/m/Y') }} • {{ rdv.hdebut|date('H:i') }}
+            </span>
+
+            <span class="bg-blue-100 text-blue-700 px-4 py-2 rounded-full font-semibold text-sm">
+                📌 {{ rdv.statut }}
+            </span>
+        </div>
+
+        {# ===== ACTION BUTTONS ===== #}
+        <div class="flex gap-4 mt-10">
+            <a href="{{ path('rdv_edit_form', {id: rdv.id}) }}"
+               class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow">
+                ✏️ Modifier
+            </a>
+
+            <a href="#"
+               class="border border-red-300 text-red-600 px-6 py-3 rounded-xl font-bold hover:bg-red-50">
+                🗑️ Annuler
+            </a>
+        </div>
+    </div>
+
+    {# ===== RIGHT SIDE (IMAGE) ===== #}
+    <div class="relative">
+        <div class="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl p-10 relative">
+
+            <div class="rounded-full overflow-hidden w-80 h-80 mx-auto border-8 border-white shadow-xl">
+                <img
+                    src="https://ui-avatars.com/api/?name={{ rdv.medecin|url_encode }}&size=400"
+                    alt="Médecin"
+                    class="w-full h-full object-cover"
+                >
+            </div>
+
+            <div class="absolute top-6 left-6 bg-white px-5 py-3 rounded-xl shadow-lg flex items-center gap-2">
+                <span class="text-green-600 font-bold">✔</span>
+                <span class="font-semibold">Rendez-vous</span>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
