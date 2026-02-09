@@ -1,0 +1,20 @@
+{% extends 'baseBack.html.twig' %}
+
+{% block title %}Nouveau Sponsor{% endblock %}
+
+{% block body %}
+    <header class="bg-white border-b py-4 px-8 shadow-sm flex items-center gap-4">
+        <a href="{{ path('app_sponsor_index') }}" class="text-gray-500 hover:text-blue-600 transition">
+            <i class="fa-solid fa-arrow-left"></i> Retour
+        </a>
+        <h1 class="text-2xl font-bold text-gray-800">Ajouter un Sponsor</h1>
+    </header>
+
+    <div class="p-8 max-w-4xl mx-auto">
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+            <div class="h-2 bg-gradient-to-r from-green-400 to-blue-500"></div> <div class="p-8">
+                {{ include('sponsor/_form.html.twig') }}
+            </div>
+        </div>
+    </div>
+{% endblock %}

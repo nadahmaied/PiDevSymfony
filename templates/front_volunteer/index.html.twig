@@ -1,0 +1,49 @@
+{% extends 'baseFront.html.twig' %}
+
+{% block title %}Mes Candidatures{% endblock %}
+
+{% block body %}
+<div class="container mx-auto px-4 py-12">
+    <h1 class="text-3xl font-bold text-gray-800 mb-8 border-b pb-4">Mes Candidatures</h1>
+
+    <div class="grid gap-6">
+        {% for volunteer in volunteers %}
+            <div class="bg-white rounded-lg shadow-md p-6 flex flex-col md:flex-row justify-between items-center border-l-4 
+                {% if volunteer.statut == 'Validée' %}border-green-500
+                {% elseif volunteer.statut == 'Refusée' %}border-red-500
+                {% else %}border-yellow-500{% endif %}">
+                
+                <div class="mb-4 md:mb-0">
+                    <h2 class="text-xl font-bold text-gray-800">{{ volunteer.mission.titre }}</h2>
+                    <p class="text-sm text-gray-500">Postulé le {{ "now"|date("d/m/Y") }} (Simulation date)</p>
+                    
+                    <span class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold
+                        {% if volunteer.statut == 'Validée' %}bg-green-100 text-green-700
+                        {% elseif volunteer.statut == 'Refusée' %}bg-red-100 text-red-700
+                        {% else %}bg-yellow-100 text-yellow-700{% endif %}">
+                        {{ volunteer.statut }}
+                    </span>
+                </div>
+
+                <div class="flex gap-3">
+                    <a href="{{ path('app_front_volunteer_edit', {'id': volunteer.id}) }}" class="text-blue-600 hover:text-blue-800 font-medium">
+                        <i class="fa-solid fa-pen"></i> Modifier
+                    </a>
+
+                    <form method="post" action="{{ path('app_front_volunteer_delete', {'id': volunteer.id}) }}" onsubmit="return confirm('Voulez-vous vraiment annuler votre candidature ?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ volunteer.id) }}">
+                        <button class="text-red-600 hover:text-red-800 font-medium">
+                            <i class="fa-solid fa-trash"></i> Annuler
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {% else %}
+            <div class="text-center py-12 bg-gray-50 rounded-lg">
+                <p class="text-gray-500 text-lg">Vous n'avez postulé à aucune mission pour le moment.</p>
+                <a href="{{ path('app_missions_index') }}" class="inline-block mt-4 text-blue-600 font-bold hover:underline">Voir les missions disponibles</a>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

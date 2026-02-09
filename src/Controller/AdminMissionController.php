@@ -12,18 +12,37 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Knp\Component\Pager\PaginatorInterface;
 
 #[Route('/admin/missions')]
 class AdminMissionController extends AbstractController
 {
     // 1. AFFICHER LA LISTE
     #[Route('/', name: 'app_admin_missions_index', methods: ['GET'])]
-    public function index(MissionVolunteerRepository $repository): Response
-    {
-        return $this->render('admin_mission/index.html.twig', [
-            'missions' => $repository->findAll(),
-        ]);
-    }
+    public function index(
+    MissionVolunteerRepository $missionRepository, 
+    PaginatorInterface $paginator, 
+    Request $request
+): Response
+{
+    // 1. Récupérer le terme de recherche depuis l'URL (ex: ?q=medecin)
+    $searchTerm = $request->query->get('q');
+
+    // 2. Créer la requête via notre méthode du Repository
+    $query = $missionRepository->findBySearchQuery($searchTerm);
+
+    // 3. Paginer les résultats (10 par page)
+    $pagination = $paginator->paginate(
+        $query,
+        $request->query->getInt('page', 1), // Numéro de page
+        4 // Limite par page
+    );
+
+    return $this->render('admin_mission/index.html.twig', [
+        'pagination' => $pagination, // On passe "pagination" au lieu de "missions"
+        'searchTerm' => $searchTerm  // Pour garder le mot dans la barre de recherche
+    ]);
+}
 
     // 2. CRÉER (NOUVEAU)
     // 2. CRÉER (NOUVEAU) - VERSION DEBUG
