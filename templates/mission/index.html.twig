@@ -12,6 +12,10 @@
     <main class="flex-1 flex flex-col h-screen overflow-hidden">
         <header class="bg-white border-b border-gray-200 py-4 px-8 flex justify-between items-center shrink-0">
             <h1 class="text-2xl font-bold text-gray-800">Missions de Bénévolat</h1>
+            <a href="{{ path('app_front_volunteer_index') }}" class="bg-white border border-blue-200 text-blue-600 px-5 py-2 rounded-lg font-medium hover:bg-blue-50 transition flex items-center gap-2 shadow-sm">
+        <i class="fa-solid fa-list-check"></i>
+        Suivre mes candidatures
+    </a>
             <div class="flex items-center gap-3">
                 <div class="text-right hidden sm:block">
                     <p class="text-sm font-bold text-gray-700">{{ app.user ? app.user.fullname : 'Invité' }}</p>

@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\MissionVolunteer;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\Query;
 
 /**
  * @extends ServiceEntityRepository<MissionVolunteer>
@@ -40,4 +41,23 @@ class MissionVolunteerRepository extends ServiceEntityRepository
 //            ->getOneOrNullResult()
 //        ;
 //    }
+public function findBySearchQuery(?string $searchTerm, ?string $statut = null): Query
+{
+    $qb = $this->createQueryBuilder('m')
+        ->orderBy('m.dateDebut', 'DESC'); // Tri par défaut : les plus récentes d'abord
+
+    // 1. Recherche par mot-clé (Titre, Ville ou Description)
+    if ($searchTerm) {
+        $qb->andWhere('m.titre LIKE :term OR m.description LIKE :term OR m.lieu LIKE :term')
+           ->setParameter('term', '%' . $searchTerm . '%');
+    }
+
+    // 2. Filtre par statut (pour le Front qui ne veut que les "Ouverte")
+    if ($statut) {
+        $qb->andWhere('m.statut = :statut')
+           ->setParameter('statut', $statut);
+    }
+
+    return $qb->getQuery();
+}
 }

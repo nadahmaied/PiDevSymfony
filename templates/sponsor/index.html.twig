@@ -1,0 +1,54 @@
+{% extends 'baseBack.html.twig' %}
+
+{% block title %}Liste des Sponsors{% endblock %}
+
+{% block body %}
+    <header class="bg-white border-b py-4 px-8 shadow-sm flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-800">Gestion des Sponsors</h1>
+        <a href="{{ path('app_sponsor_new') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow transition flex items-center gap-2">
+            <i class="fa-solid fa-plus"></i> Ajouter un Sponsor
+        </a>
+    </header>
+
+    <div class="p-8">
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-gray-50 text-gray-600 uppercase text-xs font-semibold">
+                    <tr>
+                        <th class="p-4 border-b">Logo</th>
+                        <th class="p-4 border-b">Entreprise</th>
+                        <th class="p-4 border-b">Contact</th>
+                        <th class="p-4 border-b text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for sponsor in sponsors %}
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="p-4">
+                                {% if sponsor.logo %}
+                                    <img src="{{ asset('uploads/missions/' ~ sponsor.logo) }}" alt="Logo" class="h-12 w-12 object-contain rounded bg-gray-100 p-1 border">
+                                {% else %}
+                                    <span class="text-gray-400 text-xs italic">Pas de logo</span>
+                                {% endif %}
+                            </td>
+                            <td class="p-4 font-medium text-gray-800">{{ sponsor.nomSociete }}</td>
+                            <td class="p-4 text-gray-600">{{ sponsor.contactEmail }}</td>
+                            <td class="p-4 text-center space-x-2">
+                                <a href="{{ path('app_sponsor_edit', {'id': sponsor.id}) }}" class="text-blue-500 hover:text-blue-700">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                                {{ include('sponsor/_delete_form.html.twig') }}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="p-8 text-center text-gray-500">
+                                Aucun sponsor trouvé. Ajoutez-en un !
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

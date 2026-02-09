@@ -68,9 +68,16 @@ class MissionVolunteer
     #[ORM\JoinColumn(nullable: true)]
     private ?User $user = null;
 
+    /**
+     * @var Collection<int, Sponsor>
+     */
+    #[ORM\ManyToMany(targetEntity: Sponsor::class, mappedBy: 'missions')]
+    private Collection $sponsors;
+
     public function __construct()
     {
         $this->volunteers = new ArrayCollection();
+        $this->sponsors = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -195,6 +202,33 @@ class MissionVolunteer
     public function setUser(?User $user): static
     {
         $this->user = $user;
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Sponsor>
+     */
+    public function getSponsors(): Collection
+    {
+        return $this->sponsors;
+    }
+
+    public function addSponsor(Sponsor $sponsor): static
+    {
+        if (!$this->sponsors->contains($sponsor)) {
+            $this->sponsors->add($sponsor);
+            $sponsor->addMission($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSponsor(Sponsor $sponsor): static
+    {
+        if ($this->sponsors->removeElement($sponsor)) {
+            $sponsor->removeMission($this);
+        }
+
         return $this;
     }
 }
