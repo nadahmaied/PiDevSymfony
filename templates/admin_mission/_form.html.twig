@@ -50,6 +50,7 @@
                         'class': 'pl-10 w-full rounded-lg border-gray-300 border p-2.5 text-sm shadow-sm focus:border-orange-500 focus:ring-orange-500',
                         'placeholder': 'Tunis, Ariana...'
                     }}) }}
+                    <div class="text-red-500 text-xs mt-1">{{ form_errors(form.lieu) }}</div>
                 </div>
             </div>
 
@@ -65,6 +66,7 @@
                 {{ form_widget(form.dateDebut, {'attr': {
                     'class': 'w-full rounded-lg border-gray-300 border p-2.5 text-sm shadow-sm focus:border-orange-500 focus:ring-orange-500'
                 }}) }}
+                <div class="text-red-500 text-xs mt-1">{{ form_errors(form.dateDebut) }}</div>
             </div>
 
             <div>
@@ -72,6 +74,7 @@
                 {{ form_widget(form.dateFin, {'attr': {
                     'class': 'w-full rounded-lg border-gray-300 border p-2.5 text-sm shadow-sm focus:border-orange-500 focus:ring-orange-500'
                 }}) }}
+                <div class="text-red-500 text-xs mt-1">{{ form_errors(form.dateFin) }}</div>
             </div>
         </div>
     </div>

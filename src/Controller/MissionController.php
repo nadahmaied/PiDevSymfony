@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use App\Entity\User;
+use Knp\Component\Pager\PaginatorInterface;
 
 #[Route('/missions')]
 class MissionController extends AbstractController
@@ -21,13 +22,33 @@ class MissionController extends AbstractController
      * 1. AFFICHER LA LISTE DES MISSIONS (Page avec les cartes)
      */
     #[Route('/', name: 'app_missions_index', methods: ['GET'])]
-    public function index(MissionVolunteerRepository $missionRepository): Response
+    public function index(MissionVolunteerRepository $missionRepository, PaginatorInterface $paginator, Request $request): Response
     {
-        // On récupère uniquement les missions "Ouverte" pour le public
-        $missions = $missionRepository->findBy(['statut' => 'Ouverte']);
+        // 1. On récupère le terme de recherche s'il existe (depuis la barre de recherche)
+        $searchTerm = $request->query->get('q');
 
+        // 2. On prépare la requête (QueryBuilder)
+        $qb = $missionRepository->createQueryBuilder('m')
+            ->where('m.statut = :statut')
+            ->setParameter('statut', 'Ouverte')
+            ->orderBy('m.dateDebut', 'DESC');
+
+        // 3. Si une recherche est faite, on filtre les résultats
+        if ($searchTerm) {
+            $qb->andWhere('m.titre LIKE :search OR m.description LIKE :search OR m.lieu LIKE :search')
+               ->setParameter('search', '%' . $searchTerm . '%');
+        }
+
+        // 4. On active la pagination (6 missions par page)
+        $pagination = $paginator->paginate(
+            $qb->getQuery(), /* La requête */
+            $request->query->getInt('page', 1), /* Numéro de page actuel */
+            6 /* Limite par page */
+        );
+
+        // 5. On envoie "pagination" à la vue (C'est ce que votre Twig attend !)
         return $this->render('mission/index.html.twig', [
-            'missions' => $missions,
+            'pagination' => $pagination,
         ]);
     }
 
@@ -71,6 +92,13 @@ class MissionController extends AbstractController
         return $this->render('mission/apply.html.twig', [
             'mission' => $mission,
             'form' => $form,
+        ]);
+    }
+    #[Route('/{id}', name: 'app_mission_show', methods: ['GET'])]
+    public function show(MissionVolunteer $mission): Response
+    {
+        return $this->render('mission/show.html.twig', [
+            'mission' => $mission,
         ]);
     }
 }
