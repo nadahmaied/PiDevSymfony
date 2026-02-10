@@ -6,6 +6,7 @@ use App\Repository\SponsorRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: SponsorRepository::class)]
 class Sponsor
@@ -16,9 +17,16 @@ class Sponsor
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "Le nom de la société est obligatoire.")]
+    #[Assert\Length(
+        min: 3, 
+        minMessage: "Le nom de la société doit faire au moins {{ limit }} caractères."
+    )]
     private ?string $nomSociete = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "L'email est obligatoire.")]
+    #[Assert\Email(message: "L'adresse email '{{ value }}' n'est pas valide.")]
     private ?string $contactEmail = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -28,6 +36,10 @@ class Sponsor
      * @var Collection<int, MissionVolunteer>
      */
     #[ORM\ManyToMany(targetEntity: MissionVolunteer::class, inversedBy: 'sponsors')]
+    #[Assert\Count(
+        min: 1,
+        minMessage: "Veuillez sélectionner au moins une mission à sponsoriser."
+    )]
     private Collection $missions;
 
     public function __construct()

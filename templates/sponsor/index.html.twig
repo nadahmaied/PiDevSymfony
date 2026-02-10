@@ -3,26 +3,55 @@
 {% block title %}Liste des Sponsors{% endblock %}
 
 {% block body %}
-    <header class="bg-white border-b py-4 px-8 shadow-sm flex justify-between items-center">
-        <h1 class="text-2xl font-bold text-gray-800">Gestion des Sponsors</h1>
-        <a href="{{ path('app_sponsor_new') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow transition flex items-center gap-2">
-            <i class="fa-solid fa-plus"></i> Ajouter un Sponsor
-        </a>
-    </header>
-
     <div class="p-8">
+        
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Gestion des Sponsors</h1>
+                <p class="text-sm text-gray-500 mt-1">
+                    <span class="font-bold text-blue-600">{{ pagination.getTotalItemCount }}</span> sponsors enregistrés
+                </p>
+            </div>
+            
+            <a href="{{ path('app_sponsor_new') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow transition flex items-center gap-2">
+                <i class="fa-solid fa-plus"></i> Ajouter un Sponsor
+            </a>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6">
+            <form method="get" class="flex gap-2">
+                <div class="relative flex-1">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400"></i>
+                    <input type="text" name="q" value="{{ app.request.query.get('q') }}" placeholder="Rechercher par entreprise ou email..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 outline-none transition">
+                </div>
+                <button type="submit" class="bg-gray-800 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition">
+                    Chercher
+                </button>
+                {% if app.request.query.get('q') %}
+                    <a href="{{ path('app_sponsor_index') }}" class="bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition flex items-center" title="Effacer la recherche">
+                        <i class="fa-solid fa-xmark"></i>
+                    </a>
+                {% endif %}
+            </form>
+        </div>
+
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
             <table class="w-full text-left border-collapse">
                 <thead class="bg-gray-50 text-gray-600 uppercase text-xs font-semibold">
                     <tr>
                         <th class="p-4 border-b">Logo</th>
-                        <th class="p-4 border-b">Entreprise</th>
-                        <th class="p-4 border-b">Contact</th>
+                        <th class="p-4 border-b hover:bg-gray-100 transition cursor-pointer">
+                            {{ knp_pagination_sortable(pagination, 'Entreprise', 's.nomSociete') }}
+                        </th>
+                        <th class="p-4 border-b hover:bg-gray-100 transition cursor-pointer">
+                            {{ knp_pagination_sortable(pagination, 'Contact', 's.contactEmail') }}
+                        </th>
                         <th class="p-4 border-b text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
-                    {% for sponsor in sponsors %}
+                    {# BOUCLE SUR PAGINATION #}
+                    {% for sponsor in pagination %}
                         <tr class="hover:bg-gray-50 transition">
                             <td class="p-4">
                                 {% if sponsor.logo %}
@@ -33,22 +62,33 @@
                             </td>
                             <td class="p-4 font-medium text-gray-800">{{ sponsor.nomSociete }}</td>
                             <td class="p-4 text-gray-600">{{ sponsor.contactEmail }}</td>
-                            <td class="p-4 text-center space-x-2">
-                                <a href="{{ path('app_sponsor_edit', {'id': sponsor.id}) }}" class="text-blue-500 hover:text-blue-700">
-                                    <i class="fa-solid fa-pen-to-square"></i>
-                                </a>
-                                {{ include('sponsor/_delete_form.html.twig') }}
+                            <td class="p-4">
+                                <div class="flex justify-center items-center gap-2">
+                                    <a href="{{ path('app_sponsor_edit', {'id': sponsor.id}) }}" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-2 rounded transition">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </a>
+                                    
+                                    {# Formulaire de suppression (assurez-vous qu'il a le bon style dans _delete_form) #}
+                                    <div class="inline-block text-red-500 hover:text-red-700 bg-red-50 p-2 rounded transition">
+                                        {{ include('sponsor/_delete_form.html.twig') }}
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                     {% else %}
                         <tr>
-                            <td colspan="4" class="p-8 text-center text-gray-500">
-                                Aucun sponsor trouvé. Ajoutez-en un !
+                            <td colspan="4" class="p-12 text-center text-gray-500 flex flex-col items-center">
+                                <i class="fa-solid fa-building text-4xl mb-3 opacity-20"></i>
+                                Aucun sponsor ne correspond à votre recherche.
                             </td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
+            
+            <div class="p-4 bg-gray-50 border-t border-gray-100 flex justify-center">
+                {{ knp_pagination_render(pagination) }}
+            </div>
         </div>
     </div>
 {% endblock %}

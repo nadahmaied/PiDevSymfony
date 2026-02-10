@@ -45,10 +45,24 @@ class User
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: MissionVolunteer::class)]
     private Collection $missions;
 
+    /**
+     * @var Collection<int, MissionLike>
+     */
+    #[ORM\OneToMany(targetEntity: MissionLike::class, mappedBy: 'user')]
+    private Collection $missionLikes;
+
+    /**
+     * @var Collection<int, MissionRating>
+     */
+    #[ORM\OneToMany(targetEntity: MissionRating::class, mappedBy: 'user')]
+    private Collection $missionRatings;
+
     public function __construct()
     {
         $this->volunteers = new ArrayCollection();
         $this->missions = new ArrayCollection();
+        $this->missionLikes = new ArrayCollection();
+        $this->missionRatings = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -190,6 +204,66 @@ class User
                 $mission->setUser(null);
             }
         }
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, MissionLike>
+     */
+    public function getMissionLikes(): Collection
+    {
+        return $this->missionLikes;
+    }
+
+    public function addMissionLike(MissionLike $missionLike): static
+    {
+        if (!$this->missionLikes->contains($missionLike)) {
+            $this->missionLikes->add($missionLike);
+            $missionLike->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeMissionLike(MissionLike $missionLike): static
+    {
+        if ($this->missionLikes->removeElement($missionLike)) {
+            // set the owning side to null (unless already changed)
+            if ($missionLike->getUser() === $this) {
+                $missionLike->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, MissionRating>
+     */
+    public function getMissionRatings(): Collection
+    {
+        return $this->missionRatings;
+    }
+
+    public function addMissionRating(MissionRating $missionRating): static
+    {
+        if (!$this->missionRatings->contains($missionRating)) {
+            $this->missionRatings->add($missionRating);
+            $missionRating->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeMissionRating(MissionRating $missionRating): static
+    {
+        if ($this->missionRatings->removeElement($missionRating)) {
+            // set the owning side to null (unless already changed)
+            if ($missionRating->getUser() === $this) {
+                $missionRating->setUser(null);
+            }
+        }
+
         return $this;
     }
 }

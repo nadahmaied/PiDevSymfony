@@ -14,6 +14,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Knp\Component\Pager\PaginatorInterface;
+
 
 #[Route('/espace-association/missions')]
 class AssociationMissionController extends AbstractController
@@ -35,13 +37,45 @@ class AssociationMissionController extends AbstractController
 
     // 1. TABLEAU DE BORD (Liste des missions de l'association)
     #[Route('/', name: 'app_assoc_mission_index', methods: ['GET'])]
-    public function index(MissionVolunteerRepository $missionRepository, UserRepository $userRepository): Response
-    {
+    public function index(
+        MissionVolunteerRepository $missionRepository, 
+        UserRepository $userRepository,
+        PaginatorInterface $paginator,
+        Request $request
+    ): Response {
+        // 1. Récupération de l'utilisateur de test
         $user = $this->getTestUser($userRepository);
+        
+        // 2. Récupération du mot-clé recherché
+        $searchTerm = $request->query->get('q');
+
+        // 3. Construction de la requête
+        $qb = $missionRepository->createQueryBuilder('m')
+            // Filtre OBLIGATOIRE : n'afficher QUE les missions de cet utilisateur
+            ->where('m.user = :user')
+            ->setParameter('user', $user);
+
+        // 4. Ajout de la recherche (avec des parenthèses cruciales pour la sécurité !)
+        if ($searchTerm) {
+            $qb->andWhere('(m.titre LIKE :search OR m.description LIKE :search OR m.lieu LIKE :search)')
+               ->setParameter('search', '%' . $searchTerm . '%');
+        }
+
+        // 5. Tri par défaut (les plus récentes d'abord)
+        if (!$request->query->get('sort')) {
+            $qb->orderBy('m.dateDebut', 'DESC');
+        }
+
+        // 6. Pagination
+        $pagination = $paginator->paginate(
+            $qb->getQuery(),
+            $request->query->getInt('page', 1),
+            5 // Nombre de missions par page
+        );
 
         return $this->render('association_mission/index.html.twig', [
-            // On filtre pour n'afficher QUE les missions de cet utilisateur
-            'missions' => $missionRepository->findBy(['user' => $user]),
+            // On envoie "pagination" à la vue Twig (votre Twig est déjà prêt pour ça !)
+            'pagination' => $pagination,
         ]);
     }
 

@@ -11,15 +11,41 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
+use Knp\Component\Pager\PaginatorInterface;
 
 #[Route('/sponsor')]
 final class SponsorController extends AbstractController
 {
     #[Route(name: 'app_sponsor_index', methods: ['GET'])]
-    public function index(SponsorRepository $sponsorRepository): Response
+    public function index(SponsorRepository $sponsorRepository, PaginatorInterface $paginator, Request $request): Response
     {
+        // 1. Récupérer le terme de recherche
+        $searchTerm = $request->query->get('q');
+
+        // 2. Construire la requête
+        $qb = $sponsorRepository->createQueryBuilder('s');
+
+        // 3. Appliquer la recherche (sur nom ou email)
+        if ($searchTerm) {
+            $qb->andWhere('s.nomSociete LIKE :search OR s.contactEmail LIKE :search')
+               ->setParameter('search', '%' . $searchTerm . '%');
+        }
+
+        // 4. Tri par défaut (Ordre alphabétique sur le nom de l'entreprise)
+        if (!$request->query->get('sort')) {
+            $qb->orderBy('s.nomSociete', 'ASC');
+        }
+
+        // 5. Pagination (ex: 5 sponsors par page)
+        $pagination = $paginator->paginate(
+            $qb->getQuery(),
+            $request->query->getInt('page', 1),
+            5 
+        );
+
+        // On envoie "pagination" à la vue
         return $this->render('sponsor/index.html.twig', [
-            'sponsors' => $sponsorRepository->findAll(),
+            'pagination' => $pagination,
         ]);
     }
 
