@@ -1,0 +1,287 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dons & Annonces - HealthTrack{% endblock %}
+
+{% block page_title %}Espace Solidarité{% endblock %}
+
+{% block body %}
+
+<!-- Hero Banner -->
+<div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-3xl p-8 text-white shadow-xl shadow-orange-900/10 relative overflow-hidden flex flex-col md:flex-row items-center justify-between">
+    <div class="relative z-10 max-w-2xl">
+        <h2 class="text-3xl font-bold mb-2">Gérez vos dons et annonces</h2>
+        <p class="text-orange-100 mb-6 text-sm font-light">Chaque geste compte. Consultez les besoins urgents ou proposez du matériel médical et des médicaments à ceux qui en ont besoin.</p>
+        <div class="flex gap-4">
+            <a href="{{ path('app_annonce_new') }}" class="bg-white text-orange-600 px-5 py-2.5 rounded-xl font-bold shadow hover:bg-slate-50 transition flex items-center gap-2">
+                <i class="fa-solid fa-bullhorn"></i> Créer une annonce
+            </a>
+            <a href="{{ path('app_donation_new') }}" class="bg-orange-800/40 backdrop-blur text-white border border-orange-400/50 px-5 py-2.5 rounded-xl font-bold shadow hover:bg-orange-800/60 transition flex items-center gap-2">
+                <i class="fa-solid fa-box-open"></i> Proposer un don
+            </a>
+        </div>
+    </div>
+    <i class="fa-solid fa-handshake-angle absolute -bottom-8 -right-8 text-9xl text-white opacity-20 transform -rotate-12 z-0"></i>
+</div>
+
+<!-- Stats Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+        <div>
+            <p class="text-slate-500 text-sm font-medium">Dons Totaux</p>
+            <h3 class="text-2xl font-bold text-slate-800">{{ donations|length }}</h3>
+        </div>
+        <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-box-open"></i>
+        </div>
+    </div>
+    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+        <div>
+            <p class="text-slate-500 text-sm font-medium">Dons en Attente</p>
+            <h3 class="text-2xl font-bold text-slate-800">
+                {% set pending = 0 %}
+                {% for donation in donations %}
+                    {% if donation.statut == 'en attente' %}
+                        {% set pending = pending + 1 %}
+                    {% endif %}
+                {% endfor %}
+                {{ pending }}
+            </h3>
+        </div>
+        <div class="w-12 h-12 rounded-full bg-yellow-50 text-yellow-600 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-hourglass-half"></i>
+        </div>
+    </div>
+    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+        <div>
+            <p class="text-slate-500 text-sm font-medium">Dons Acceptés</p>
+            <h3 class="text-2xl font-bold text-slate-800">
+                {% set accepted = 0 %}
+                {% for donation in donations %}
+                    {% if donation.statut == 'accepté' %}
+                        {% set accepted = accepted + 1 %}
+                    {% endif %}
+                {% endfor %}
+                {{ accepted }}
+            </h3>
+        </div>
+        <div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-circle-check"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Annonces + Donations -->
+<div class="space-y-8">
+    <!-- Liste des annonces au-dessus -->
+    <div class="space-y-4">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div class="flex items-center gap-2">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-bullhorn text-orange-500"></i>
+                    Annonces de besoins
+                </h3>
+                <span class="text-xs text-slate-400">({{ annonces|length }} annonces)</span>
+            </div>
+            <div class="flex flex-col md:flex-row gap-2 md:items-center">
+                <div class="flex items-center gap-2 flex-1">
+                    <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
+                    <input
+                        id="front-dons-annonces-search"
+                        type="text"
+                        placeholder="Rechercher une annonce par titre..."
+                        class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs md:text-sm text-slate-800 shadow-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none"
+                    >
+                </div>
+                <div class="flex items-center gap-2">
+                    <label for="front-dons-annonces-sort-urgence" class="text-[11px] md:text-xs font-medium text-slate-500">Trier par urgence</label>
+                    <select
+                        id="front-dons-annonces-sort-urgence"
+                        class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] md:text-xs text-slate-800 shadow-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none"
+                    >
+                        <option value="none">Aucun tri</option>
+                        <option value="urgence_desc">Urgence élevée → faible</option>
+                        <option value="urgence_asc">Urgence faible → élevée</option>
+                    </select>
+                </div>
+                <a href="{{ path('app_annonce_new') }}" class="text-xs md:text-sm text-orange-600 hover:underline flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Nouvelle annonce
+                </a>
+            </div>
+        </div>
+
+        {% if annonces is empty %}
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 text-center">
+                <i class="fa-solid fa-bullhorn text-4xl text-slate-300 mb-3"></i>
+                <p class="text-slate-500 text-sm">Aucune annonce n'a encore été créée.</p>
+            </div>
+        {% else %}
+            <div id="front-dons-annonces-list" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {% for annonce in annonces %}
+                    <a
+                        href="{{ path('app_annonce_show', {'id': annonce.id}) }}"
+                        class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 hover-scale flex flex-col gap-2 front-annonce-card"
+                        data-title="{{ annonce.titreAnnonce|lower }}"
+                        data-urgence="{{ annonce.urgence }}"
+                    >
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <p class="text-[11px] text-slate-400 mb-1">
+                                    Publié le {{ annonce.datePublication ? annonce.datePublication|date('d M Y') : '—' }}
+                                </p>
+                                <h4 class="font-semibold text-slate-800 text-sm line-clamp-2">{{ annonce.titreAnnonce }}</h4>
+                            </div>
+                            {% set badgeColor = 
+                                annonce.urgence == 'élevée' ? 'bg-red-100 text-red-700' :
+                                (annonce.urgence == 'moyenne' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700')
+                            %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold {{ badgeColor }}">
+                                <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+                                {{ annonce.urgence|capitalize }}
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-600 line-clamp-2">
+                            {{ annonce.description }}
+                        </p>
+                        <div class="flex items-center justify-between pt-1">
+                            <span class="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full
+                                {% if annonce.etatAnnonce == 'active' %}
+                                    bg-emerald-50 text-emerald-700
+                                {% else %}
+                                    bg-slate-100 text-slate-600
+                                {% endif %}
+                            ">
+                                <i class="fa-solid {{ annonce.etatAnnonce == 'active' ? 'fa-circle-check' : 'fa-circle-xmark' }}"></i>
+                                {{ annonce.etatAnnonce == 'active' ? 'Active' : 'Clôturée' }}
+                            </span>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Liste des donations -->
+    <div class="space-y-4">
+        <div class="flex items-center justify-between">
+            <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-hand-holding-medical text-emerald-500"></i> Liste des Donations
+            </h3>
+            <a href="{{ path('app_donation_new') }}" class="text-sm text-emerald-600 hover:underline flex items-center gap-2">
+                <i class="fa-solid fa-plus"></i> Nouvelle donation
+            </a>
+        </div>
+
+        {% if donations is empty %}
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 text-center">
+                <i class="fa-solid fa-box-open text-5xl text-slate-300 mb-4"></i>
+                <p class="text-slate-500">Aucune donation pour le moment</p>
+                <a href="{{ path('app_donation_new') }}" class="inline-block mt-4 bg-orange-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-orange-700 transition">
+                    Créer la première donation
+                </a>
+            </div>
+        {% else %}
+            <div class="space-y-4">
+                {% for donation in donations %}
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4 hover-scale">
+                        <div class="w-14 h-14 rounded-xl 
+                            {% if donation.statut == 'en attente' %}bg-yellow-50 text-yellow-600
+                            {% elseif donation.statut == 'accepté' %}bg-emerald-50 text-emerald-600
+                            {% else %}bg-slate-100 text-slate-400
+                            {% endif %}
+                            flex items-center justify-center text-2xl shrink-0">
+                            <i class="fa-solid fa-box-open"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-bold text-slate-800 text-sm">{{ donation.typeDon }}</h4>
+                                <span class="text-sm font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">Qté: {{ donation.quantite }}</span>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-1">Donation du {{ donation.dateDonation|date('d M Y') }}</p>
+                            {% if donation.annonce %}
+                                <p class="text-xs text-blue-600 mt-1">
+                                    <i class="fa-solid fa-link"></i> Lié à: {{ donation.annonce.titreAnnonce }}
+                                </p>
+                            {% endif %}
+                            <div class="mt-2">
+                                {% if donation.statut == 'en attente' %}
+                                    <span class="inline-flex items-center gap-1.5 text-xs font-medium text-yellow-700 bg-yellow-100 px-2.5 py-1 rounded-full">
+                                        <i class="fa-solid fa-spinner"></i> En attente de validation
+                                    </span>
+                                {% elseif donation.statut == 'accepté' %}
+                                    <span class="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-full">
+                                        <i class="fa-solid fa-check"></i> Accepté
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 bg-slate-200 px-2.5 py-1 rounded-full">
+                                        <i class="fa-solid fa-xmark"></i> {{ donation.statut|capitalize }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <a href="{{ path('app_donation_show', {'id': donation.id}) }}" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Voir">
+                                <i class="fa-solid fa-eye"></i>
+                            </a>
+                            <a href="{{ path('app_donation_edit', {'id': donation.id}) }}" class="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition" title="Modifier">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function () {
+            const searchInput = document.getElementById('front-dons-annonces-search');
+            const sortSelect = document.getElementById('front-dons-annonces-sort-urgence');
+            const container = document.getElementById('front-dons-annonces-list');
+            if (!searchInput || !sortSelect || !container) {
+                return;
+            }
+
+            function urgencyWeight(u) {
+                switch (u) {
+                    case 'élevée': return 3;
+                    case 'moyenne': return 2;
+                    case 'faible': return 1;
+                    default: return 0;
+                }
+            }
+
+            function applyFilters() {
+                const term = searchInput.value.trim().toLowerCase();
+                const sortValue = sortSelect.value;
+                const cards = Array.from(container.querySelectorAll('.front-annonce-card'));
+
+                cards.forEach(card => {
+                    const title = (card.dataset.title || '').toLowerCase();
+                    const matches = !term || title.includes(term);
+                    card.style.display = matches ? '' : 'none';
+                });
+
+                let visibleCards = cards.filter(card => card.style.display !== 'none');
+
+                if (sortValue === 'urgence_desc' || sortValue === 'urgence_asc') {
+                    visibleCards.sort((a, b) => {
+                        const wa = urgencyWeight(a.dataset.urgence);
+                        const wb = urgencyWeight(b.dataset.urgence);
+                        return sortValue === 'urgence_desc' ? wb - wa : wa - wb;
+                    });
+
+                    visibleCards.forEach(card => container.appendChild(card));
+                }
+            }
+
+            searchInput.addEventListener('input', applyFilters);
+            sortSelect.addEventListener('change', applyFilters);
+        })();
+    </script>
+{% endblock %}
+

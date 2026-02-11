@@ -1,0 +1,138 @@
+{% extends 'admin_base.html.twig' %}
+
+{% block title %}Admin - Donations{% endblock %}
+
+{% block page_header %}Donations{% endblock %}
+{% block page_subtitle %}Gestion des donations reçues sur la plateforme{% endblock %}
+
+{% block header_actions %}
+    <a href="{{ path('admin_donation_new') }}" class="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700">
+        <i class="fa-solid fa-plus"></i>
+        Nouvelle donation
+    </a>
+{% endblock %}
+
+{% block body %}
+    <div class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+                <div>
+                    <p class="text-slate-500 text-sm font-medium">Dons totaux</p>
+                    <h3 class="text-2xl font-bold text-slate-800">{{ donations|length }}</h3>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-box-open"></i>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+                <div>
+                    <p class="text-slate-500 text-sm font-medium">En attente</p>
+                    <h3 class="text-2xl font-bold text-slate-800">
+                        {% set pending = 0 %}
+                        {% for donation in donations %}
+                            {% if donation.statut == 'en attente' %}
+                                {% set pending = pending + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                        {{ pending }}
+                    </h3>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-yellow-50 text-yellow-600 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-hourglass-half"></i>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+                <div>
+                    <p class="text-slate-500 text-sm font-medium">Acceptés</p>
+                    <h3 class="text-2xl font-bold text-slate-800">
+                        {% set accepted = 0 %}
+                        {% for donation in donations %}
+                            {% if donation.statut == 'accepté' %}
+                                {% set accepted = accepted + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                        {{ accepted }}
+                    </h3>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+            </div>
+        </div>
+
+        {% if donations is empty %}
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 text-center">
+                <i class="fa-solid fa-hand-holding-heart text-5xl text-slate-300 mb-4"></i>
+                <p class="text-slate-500">Aucune donation enregistrée pour le moment.</p>
+                <a href="{{ path('admin_donation_new') }}" class="inline-block mt-4 bg-orange-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-orange-700 transition">
+                    Créer la première donation
+                </a>
+            </div>
+        {% else %}
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-4">
+                <h2 class="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+                    Liste des donations ({{ donations|length }})
+                </h2>
+                <div class="space-y-3">
+                    {% for donation in donations %}
+                        <div class="flex items-center gap-4 rounded-2xl border border-slate-100 bg-slate-50/60 p-4 hover:border-orange-300 hover:shadow-md transition">
+                            <div class="w-12 h-12 rounded-xl 
+                                {% if donation.statut == 'en attente' %}bg-yellow-50 text-yellow-600
+                                {% elseif donation.statut == 'accepté' %}bg-emerald-50 text-emerald-600
+                                {% else %}bg-slate-100 text-slate-400
+                                {% endif %}
+                                flex items-center justify-center text-xl shrink-0">
+                                <i class="fa-solid fa-box-open"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start gap-4">
+                                    <div>
+                                        <p class="text-[11px] text-slate-400 mb-0.5">
+                                            Donation du {{ donation.dateDonation ? donation.dateDonation|date('d M Y') : '—' }}
+                                        </p>
+                                        <h4 class="font-semibold text-slate-800 text-sm">{{ donation.typeDon }}</h4>
+                                        {% if donation.annonce %}
+                                            <p class="text-[11px] text-blue-600 mt-1">
+                                                <i class="fa-solid fa-link"></i>
+                                                Annonce : {{ donation.annonce.titreAnnonce }}
+                                            </p>
+                                        {% endif %}
+                                    </div>
+                                    <span class="text-xs font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">
+                                        Qté: {{ donation.quantite }}
+                                    </span>
+                                </div>
+                                <div class="mt-2 flex items-center justify-between">
+                                    <div>
+                                        {% if donation.statut == 'en attente' %}
+                                            <span class="inline-flex items-center gap-1.5 text-xs font-medium text-yellow-700 bg-yellow-100 px-2.5 py-1 rounded-full">
+                                                <i class="fa-solid fa-spinner"></i> En attente
+                                            </span>
+                                        {% elseif donation.statut == 'accepté' %}
+                                            <span class="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-full">
+                                                <i class="fa-solid fa-check"></i> Accepté
+                                            </span>
+                                        {% else %}
+                                            <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-700 bg-slate-200 px-2.5 py-1 rounded-full">
+                                                <i class="fa-solid fa-xmark"></i> Refusé
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <a href="{{ path('admin_donation_show', {'id': donation.id}) }}" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Voir">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </a>
+                                        <a href="{{ path('admin_donation_edit', {'id': donation.id}) }}" class="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition" title="Modifier">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
