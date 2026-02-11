@@ -1,0 +1,10 @@
+<form method="post"
+      action="{{ path('admin_donation_delete', {'id': donation.id}) }}"
+      onsubmit="return confirm('Confirmer la suppression de cette donation ?');">
+    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ donation.id) }}">
+    <button class="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-red-700">
+        <i class="fa-solid fa-trash"></i>
+        Supprimer la donation
+    </button>
+</form>
+

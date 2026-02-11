@@ -1,0 +1,29 @@
+{% extends 'admin_base.html.twig' %}
+
+{% block title %}Admin - Modifier une annonce{% endblock %}
+
+{% block page_header %}Modifier une annonce{% endblock %}
+{% block page_subtitle %}Mettez à jour le contenu ou le statut de l'annonce{% endblock %}
+
+{% block header_actions %}
+    <a href="{{ path('admin_annonce_index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
+        <i class="fa-solid fa-arrow-left"></i>
+        Retour à la liste
+    </a>
+{% endblock %}
+
+{% block body %}
+    <div class="space-y-6">
+        {{ include('annonce/_form.html.twig', { button_label: 'Mettre à jour' }) }}
+
+        <div class="bg-white rounded-2xl shadow-sm border border-red-100 p-4">
+            <h2 class="text-sm font-semibold text-red-700 flex items-center gap-2 mb-2">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                Suppression
+            </h2>
+            <p class="text-xs text-slate-500 mb-3">Cette action est définitive. L'annonce sera supprimée de la plateforme.</p>
+            {{ include('admin/annonce/_delete_form.html.twig') }}
+        </div>
+    </div>
+{% endblock %}
+

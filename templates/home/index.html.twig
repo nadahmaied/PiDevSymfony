@@ -1,0 +1,96 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tableau de bord - HealthTrack{% endblock %}
+
+{% block page_title %}Tableau de bord{% endblock %}
+
+{% block body %}
+    <div class="flex flex-col gap-8">
+        <!-- Hero -->
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-8 text-white shadow-xl shadow-blue-900/10 relative overflow-hidden flex flex-col md:flex-row items-center justify-between">
+            <div class="relative z-10 max-w-2xl">
+                <h1 class="text-3xl font-bold mb-2">Bienvenue sur votre espace solidarité</h1>
+                <p class="text-blue-100 mb-6 text-sm font-light">
+                    Retrouvez ici les dernières annonces de besoins afin de mieux orienter vos donations.
+                </p>
+                <div class="flex flex-wrap gap-3">
+                    <a href="{{ path('app_annonce_new') }}" class="bg-white text-blue-700 px-5 py-2.5 rounded-xl font-bold shadow hover:bg-slate-50 transition flex items-center gap-2 text-sm">
+                        <i class="fa-solid fa-bullhorn"></i> Créer une annonce
+                    </a>
+                    <a href="{{ path('app_donation_new') }}" class="bg-blue-900/40 backdrop-blur text-white border border-blue-200/40 px-5 py-2.5 rounded-xl font-bold shadow hover:bg-blue-900/60 transition flex items-center gap-2 text-sm">
+                        <i class="fa-solid fa-hand-holding-heart"></i> Proposer un don
+                    </a>
+                </div>
+            </div>
+            <i class="fa-solid fa-heart-pulse absolute -bottom-10 -right-8 text-9xl text-white opacity-10 transform rotate-6 z-0"></i>
+        </div>
+
+        <!-- Dernières annonces -->
+        <div class="flex items-center justify-between gap-4">
+            <div>
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-bullhorn text-orange-500"></i>
+                    Dernières annonces publiées
+                </h2>
+                <p class="text-xs text-slate-500 mt-1">
+                    Un aperçu des derniers besoins. Cliquez sur une carte pour voir le détail.
+                </p>
+            </div>
+            <a href="{{ path('app_annonce_index') }}" class="inline-flex items-center gap-2 text-sm font-medium text-orange-600 hover:text-orange-700">
+                Voir toutes les annonces
+                <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+
+        {% if annonces is empty %}
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 text-center">
+                <i class="fa-solid fa-bullhorn text-5xl text-slate-300 mb-4"></i>
+                <p class="text-slate-500">Aucune annonce pour le moment.</p>
+                <a href="{{ path('app_annonce_new') }}" class="inline-block mt-4 bg-orange-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-orange-700 transition text-sm">
+                    Créer la première annonce
+                </a>
+            </div>
+        {% else %}
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                {% for annonce in annonces %}
+                    <a href="{{ path('app_annonce_show', {'id': annonce.id}) }}" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 hover-scale flex flex-col gap-3">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <p class="text-xs text-slate-400 mb-1">
+                                    Publié le {{ annonce.datePublication ? annonce.datePublication|date('d M Y') : '—' }}
+                                </p>
+                                <h3 class="font-bold text-slate-800 line-clamp-2">{{ annonce.titreAnnonce }}</h3>
+                            </div>
+                            {% set badgeColor = 
+                                annonce.urgence == 'élevée' ? 'bg-red-100 text-red-700' :
+                                (annonce.urgence == 'moyenne' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700')
+                            %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold {{ badgeColor }}">
+                                <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+                                {{ annonce.urgence|capitalize }}
+                            </span>
+                        </div>
+
+                        <p class="text-sm text-slate-600 line-clamp-3">
+                            {{ annonce.description }}
+                        </p>
+
+                        <div class="flex items-center justify-between pt-2">
+                            <span class="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full
+                                {% if annonce.etatAnnonce == 'active' %}
+                                    bg-emerald-50 text-emerald-700
+                                {% else %}
+                                    bg-slate-100 text-slate-600
+                                {% endif %}
+                            ">
+                                <i class="fa-solid {{ annonce.etatAnnonce == 'active' ? 'fa-circle-check' : 'fa-circle-xmark' }}"></i>
+                                {{ annonce.etatAnnonce == 'active' ? 'Active' : 'Clôturée' }}
+                            </span>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
