@@ -46,19 +46,10 @@ class AdminAuthController extends AbstractController
     }
 
     #[Route('/admin/login', name: 'admin_login')]
-    public function login(AuthenticationUtils $authenticationUtils): Response
+    public function login(): Response
     {
-        if ($this->getUser()) {
-            return $this->redirectToRoute('admin_user_index');
-        }
-
-        $error = $authenticationUtils->getLastAuthenticationError();
-        $lastUsername = $authenticationUtils->getLastUsername();
-
-        return $this->render('security/admin_login.html.twig', [
-            'last_username' => $lastUsername,
-            'error' => $error,
-        ]);
+        // Use the unified login page for both clients and admins
+        return $this->redirectToRoute('front_login');
     }
 
     #[Route('/admin/logout', name: 'admin_logout')]
