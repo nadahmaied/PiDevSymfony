@@ -1,0 +1,67 @@
+{% extends 'baseBack.html.twig' %}
+
+{% block title %}
+    <div>
+        <h1 class="text-xl font-bold text-gray-800">Création d'un compte administrateur</h1>
+        <p class="text-xs text-gray-500 mt-1">Accès au backoffice.</p>
+    </div>
+{% endblock %}
+
+{% block body %}
+    <div class="p-8 w-full flex items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-lg p-8 w-full max-w-lg">
+            {{ form_start(registrationForm) }}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+                    {{ form_label(registrationForm.email, null, {'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-1'}}) }}
+                    {{ form_widget(registrationForm.email, {'attr': {'class': 'w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2'}}) }}
+                    {{ form_errors(registrationForm.email) }}
+                </div>
+
+                <div>
+                    {{ form_label(registrationForm.nom, null, {'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-1'}}) }}
+                    {{ form_widget(registrationForm.nom, {'attr': {'class': 'w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2'}}) }}
+                    {{ form_errors(registrationForm.nom) }}
+                </div>
+
+                <div>
+                    {{ form_label(registrationForm.prenom, null, {'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-1'}}) }}
+                    {{ form_widget(registrationForm.prenom, {'attr': {'class': 'w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2'}}) }}
+                    {{ form_errors(registrationForm.prenom) }}
+                </div>
+
+                <div class="md:col-span-2">
+                    {{ form_label(registrationForm.adresse, null, {'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-1'}}) }}
+                    {{ form_widget(registrationForm.adresse, {'attr': {'class': 'w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2'}}) }}
+                    {{ form_errors(registrationForm.adresse) }}
+                </div>
+
+                <div class="md:col-span-2">
+                    {{ form_label(registrationForm.telephone, null, {'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-1'}}) }}
+                    {{ form_widget(registrationForm.telephone, {'attr': {'class': 'w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2'}}) }}
+                    {{ form_errors(registrationForm.telephone) }}
+                </div>
+
+                <div class="md:col-span-2">
+                    {{ form_label(registrationForm.plainPassword, null, {'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-1'}}) }}
+                    {{ form_widget(registrationForm.plainPassword, {'attr': {'class': 'w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2'}}) }}
+                    {{ form_errors(registrationForm.plainPassword) }}
+                </div>
+            </div>
+
+            <button type="submit"
+                    class="mt-6 w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 focus:outline-none">
+                Créer le compte administrateur
+            </button>
+
+            {{ form_end(registrationForm) }}
+
+            <p class="mt-4 text-center text-xs text-gray-500">
+                Vous avez déjà un compte administrateur ?
+                <a href="{{ path('app_admin_login') }}" class="text-blue-600 hover:underline">Se connecter</a>
+            </p>
+        </div>
+    </div>
+{% endblock %}
+
