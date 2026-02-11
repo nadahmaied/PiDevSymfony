@@ -1,0 +1,54 @@
+{% extends 'baseFront.html.twig' %}
+
+{% block title %}
+    <h1 class="text-2xl font-bold text-gray-800">Mon compte</h1>
+{% endblock %}
+
+{% block body %}
+    <div class="p-8">
+        <div class="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm p-6 space-y-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-800">Informations personnelles</h2>
+                    <p class="text-sm text-gray-500">Consultez et mettez à jour vos informations.</p>
+                </div>
+                <a href="{{ path('account_edit') }}"
+                   class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700">
+                    Modifier mes informations
+                </a>
+            </div>
+
+            <dl class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <dt class="font-medium text-gray-500">Email</dt>
+                    <dd class="mt-1 text-gray-900">{{ user.email }}</dd>
+                </div>
+                <div>
+                    <dt class="font-medium text-gray-500">Nom</dt>
+                    <dd class="mt-1 text-gray-900">{{ user.nom }}</dd>
+                </div>
+                <div>
+                    <dt class="font-medium text-gray-500">Prénom</dt>
+                    <dd class="mt-1 text-gray-900">{{ user.prenom }}</dd>
+                </div>
+                <div>
+                    <dt class="font-medium text-gray-500">Adresse</dt>
+                    <dd class="mt-1 text-gray-900">{{ user.adresse ?: '-' }}</dd>
+                </div>
+                <div>
+                    <dt class="font-medium text-gray-500">Téléphone</dt>
+                    <dd class="mt-1 text-gray-900">{{ user.telephone ?: '-' }}</dd>
+                </div>
+            </dl>
+
+            <form method="post" action="{{ path('account_delete') }}" onsubmit="return confirm('Supprimer définitivement votre compte ?');">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete_account') }}">
+                <button type="submit"
+                        class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border border-red-500 text-red-600 hover:bg-red-50">
+                    Supprimer mon compte
+                </button>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+

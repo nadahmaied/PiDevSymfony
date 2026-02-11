@@ -22,8 +22,11 @@
                     <i class="fa-solid fa-gauge w-5"></i> Dashboard
                 </a>
                 
-                <a href="#" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl transition">
+                <a href="{{ path('admin_user_index') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl transition">
                     <i class="fa-solid fa-users w-5"></i> Utilisateurs
+                </a>
+                <a href="{{ path('account_show') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl transition">
+                    <i class="fa-solid fa-user-gear w-5"></i> Mon compte
                 </a>
 
                 <a href="{{ path('app_admin_missions_index') }}" class="flex items-center gap-3 px-4 py-3 bg-orange-600 text-white rounded-xl font-medium transition shadow-lg shadow-orange-900/50">
@@ -31,7 +34,10 @@
                 </a>
 
                 <a href="#" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl transition">
-                    <i class="fa-solid fa-calendar-day w-5"></i> Événements
+                    <i class="fa-solid fa-calendar-day w-5"></i> Forum
+                </a>
+                <a href="{{ path('front_logout') }}" class="flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-slate-800 hover:text-red-300 rounded-xl transition">
+                    <i class="fa-solid fa-right-from-bracket w-5"></i> Déconnexion
                 </a>
             </nav>
         </aside>
