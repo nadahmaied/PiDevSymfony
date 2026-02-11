@@ -1,0 +1,81 @@
+{% extends 'baseBack.html.twig' %}
+
+{% block title %}Détail Sujet{% endblock %}
+
+{% block body %}
+    <div class="p-8 max-w-5xl mx-auto">
+        
+        <a href="{{ path('app_admin_forum_index') }}" class="text-gray-500 hover:text-gray-800 mb-4 inline-block">
+            <i class="fa-solid fa-arrow-left mr-2"></i> Retour à la liste
+        </a>
+
+        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6 mb-8">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">{{ question.titre }}</h1>
+                    <p class="text-sm text-gray-500 mt-1">
+                        Par <span class="font-bold text-blue-600">{{ question.auteur ? question.auteur.email : 'Anonyme' }}</span> 
+                        le {{ question.dateCreation|date('d/m/Y à H:i') }}
+                    </p>
+                </div>
+                <span class="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold">Question</span>
+            </div>
+            <div class="bg-gray-50 p-4 rounded-lg text-gray-700 border border-gray-100 whitespace-pre-line">
+                {{ question.contenu }}
+            </div>
+        </div>
+
+        <h3 class="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-comments text-orange-500"></i> Réponses ({{ question.reponses|length }})
+        </h3>
+
+        <div class="space-y-4 mb-12">
+            {% for reponse in question.reponses %}
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex gap-4">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold">
+                            {{ reponse.auteur ? reponse.auteur.email|first|upper : '?' }}
+                        </div>
+                    </div>
+
+                    <div class="flex-1">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-sm text-gray-800">{{ reponse.auteur ? reponse.auteur.email : 'Inconnu' }}</span>
+                            <span class="text-xs text-gray-400">{{ reponse.dateCreation|date('d/m/Y H:i') }}</span>
+                        </div>
+                        <p class="text-gray-600 text-sm whitespace-pre-line">{{ reponse.contenu }}</p>
+                    </div>
+
+                    <div class="flex flex-col gap-2">
+                        <a href="{{ path('app_admin_forum_edit_reponse', {'id': reponse.id}) }}" class="text-gray-400 hover:text-yellow-500 transition p-1" title="Modifier">
+                            <i class="fa-solid fa-pen"></i>
+                        </a>
+
+                        <form method="post" action="{{ path('app_admin_forum_delete_reponse', {'id': reponse.id}) }}" onsubmit="return confirm('Supprimer ce commentaire ?');">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ reponse.id) }}">
+                            <button class="text-gray-400 hover:text-red-500 transition p-1" title="Supprimer">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% else %}
+                <p class="text-gray-400 italic">Aucune réponse pour le moment.</p>
+            {% endfor %}
+        </div>
+
+        <div class="bg-gray-100 rounded-xl p-6 border border-gray-200">
+            <h4 class="font-bold text-gray-700 mb-4">Répondre en tant qu'administrateur</h4>
+            {{ form_start(form) }}
+                <div class="mb-4">
+                    {{ form_widget(form.contenu) }}
+                    {{ form_errors(form.contenu) }}
+                </div>
+                <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 transition w-full sm:w-auto">
+                    <i class="fa-solid fa-paper-plane mr-2"></i> Envoyer la réponse
+                </button>
+            {{ form_end(form) }}
+        </div>
+
+    </div>
+{% endblock %}

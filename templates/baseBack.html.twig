@@ -34,7 +34,7 @@
                 <a href="#" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl transition">
                     <i class="fa-solid fa-hand-holding-heart w-5"></i> Bénévolat
                 </a>
-                <a href="#" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl transition">
+                <a href="{{ path('app_admin_forum_index') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl transition">
                     <i class="fa-solid fa-comments w-5"></i> Forum
                 </a>
             </nav>
@@ -49,9 +49,6 @@
                     <p class="text-xs text-gray-500 mt-1">Gérez les disponibilités et les rendez-vous patients</p>
                 </div>
                  {% endblock %} 
-                <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow transition">
-                    <i class="fa-solid fa-plus"></i> Nouveau RDV
-                </button>
             </header>
 {% block body %}
 
