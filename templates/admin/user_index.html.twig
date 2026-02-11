@@ -1,0 +1,101 @@
+{% extends 'baseBack.html.twig' %}
+
+{% block title %}
+    <div>
+        <h1 class="text-xl font-bold text-gray-800">Liste des utilisateurs</h1>
+        <p class="text-xs text-gray-500 mt-1">Visualisez les comptes enregistrés sur la plateforme.</p>
+    </div>
+{% endblock %}
+
+{% block body %}
+    <div class="p-6 space-y-4">
+        <form method="get" class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+                <label for="search" class="text-sm text-gray-600">Rechercher :</label>
+                <input
+                    type="text"
+                    id="search"
+                    name="q"
+                    value="{{ q }}"
+                    placeholder="Email, nom ou prénom"
+                    class="rounded-xl border border-gray-300 text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+            </div>
+            <button
+                type="submit"
+                class="inline-flex items-center justify-center px-4 py-2 rounded-xl text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+            >
+                <i class="fa-solid fa-magnifying-glass mr-2 text-xs"></i>
+                Filtrer
+            </button>
+        </form>
+
+        <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200 text-sm">
+                <thead class="bg-gray-50">
+                    <tr>
+                        {% set toggled = direction == 'ASC' ? 'DESC' : 'ASC' %}
+                        <th class="px-4 py-2 text-left font-semibold text-gray-600">
+                            <a href="{{ path('admin_user_index', { q: q, sort: 'id', direction: sort == 'id' ? toggled : 'ASC' }) }}" class="inline-flex items-center gap-1">
+                                ID
+                                {% if sort == 'id' %}
+                                    <i class="fa-solid fa-arrow-{{ direction == 'ASC' ? 'up' : 'down' }} text-[10px]"></i>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-600">
+                            <a href="{{ path('admin_user_index', { q: q, sort: 'email', direction: sort == 'email' ? toggled : 'ASC' }) }}" class="inline-flex items-center gap-1">
+                                Email
+                                {% if sort == 'email' %}
+                                    <i class="fa-solid fa-arrow-{{ direction == 'ASC' ? 'up' : 'down' }} text-[10px]"></i>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-600">
+                            <a href="{{ path('admin_user_index', { q: q, sort: 'nom', direction: sort == 'nom' ? toggled : 'ASC' }) }}" class="inline-flex items-center gap-1">
+                                Nom
+                                {% if sort == 'nom' %}
+                                    <i class="fa-solid fa-arrow-{{ direction == 'ASC' ? 'up' : 'down' }} text-[10px]"></i>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-600">
+                            <a href="{{ path('admin_user_index', { q: q, sort: 'prenom', direction: sort == 'prenom' ? toggled : 'ASC' }) }}" class="inline-flex items-center gap-1">
+                                Prénom
+                                {% if sort == 'prenom' %}
+                                    <i class="fa-solid fa-arrow-{{ direction == 'ASC' ? 'up' : 'down' }} text-[10px]"></i>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-600">
+                            <a href="{{ path('admin_user_index', { q: q, sort: 'role', direction: sort == 'role' ? toggled : 'ASC' }) }}" class="inline-flex items-center gap-1">
+                                Rôle
+                                {% if sort == 'role' %}
+                                    <i class="fa-solid fa-arrow-{{ direction == 'ASC' ? 'up' : 'down' }} text-[10px]"></i>
+                                {% endif %}
+                            </a>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for user in users %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-2 text-gray-700">{{ user.id }}</td>
+                            <td class="px-4 py-2 text-gray-700">{{ user.email }}</td>
+                            <td class="px-4 py-2 text-gray-700">{{ user.nom }}</td>
+                            <td class="px-4 py-2 text-gray-700">{{ user.prenom }}</td>
+                            <td class="px-4 py-2 text-gray-700">{{ user.role }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="px-4 py-4 text-center text-gray-500">
+                                Aucun utilisateur trouvé.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+

@@ -1,19 +1,16 @@
-{% extends 'admin_base.html.twig' %}
+{% extends 'baseBack.html.twig' %}
 
-{% block title %}Admin - Annonces{% endblock %}
-
-{% block page_header %}Annonces{% endblock %}
-{% block page_subtitle %}Gestion des annonces de besoins{% endblock %}
-
-{% block header_actions %}
-    <a href="{{ path('admin_annonce_new') }}" class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">
-        <i class="fa-solid fa-plus"></i>
-        Nouvelle annonce
-    </a>
-{% endblock %}
+{% block title %}Gestion Annonces{% endblock %}
 
 {% block body %}
-    <div class="space-y-6">
+    <header class="bg-white border-b py-4 px-8 flex justify-between items-center shadow-sm z-0">
+        <h1 class="text-xl font-bold text-gray-800">Gestion des Annonces</h1>
+        <a href="{{ path('admin_annonce_new') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow transition">
+            <i class="fa-solid fa-plus"></i> Nouvelle annonce
+        </a>
+    </header>
+
+    <div class="flex-1 overflow-y-auto p-8 space-y-6">
         {% if annonces is empty %}
             <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 text-center">
                 <i class="fa-solid fa-bullhorn text-5xl text-slate-300 mb-4"></i>

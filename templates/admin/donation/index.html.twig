@@ -1,19 +1,16 @@
-{% extends 'admin_base.html.twig' %}
+{% extends 'baseBack.html.twig' %}
 
-{% block title %}Admin - Donations{% endblock %}
-
-{% block page_header %}Donations{% endblock %}
-{% block page_subtitle %}Gestion des donations reçues sur la plateforme{% endblock %}
-
-{% block header_actions %}
-    <a href="{{ path('admin_donation_new') }}" class="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700">
-        <i class="fa-solid fa-plus"></i>
-        Nouvelle donation
-    </a>
-{% endblock %}
+{% block title %}Gestion Donations{% endblock %}
 
 {% block body %}
-    <div class="space-y-6">
+    <header class="bg-white border-b py-4 px-8 flex justify-between items-center shadow-sm z-0">
+        <h1 class="text-xl font-bold text-gray-800">Gestion des Donations</h1>
+        <a href="{{ path('admin_donation_new') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow transition">
+            <i class="fa-solid fa-plus"></i> Nouvelle donation
+        </a>
+    </header>
+
+    <div class="flex-1 overflow-y-auto p-8 space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
                 <div>
