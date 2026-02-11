@@ -12,6 +12,10 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Knp\Component\Pager\PaginatorInterface;
+use Dompdf\Dompdf;
+use Dompdf\Options;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Email;
 
 #[Route('/sponsor')]
 final class SponsorController extends AbstractController
@@ -50,7 +54,7 @@ final class SponsorController extends AbstractController
     }
 
     #[Route('/new', name: 'app_sponsor_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager, SluggerInterface $slugger): Response
+    public function new(Request $request, EntityManagerInterface $entityManager, SluggerInterface $slugger, MailerInterface $mailer): Response
     {
         $sponsor = new Sponsor();
         $form = $this->createForm(SponsorType::class, $sponsor);
@@ -79,8 +83,46 @@ final class SponsorController extends AbstractController
             }
             // ---------------------------
 
+            // Enregistrement en base de données
             $entityManager->persist($sponsor);
             $entityManager->flush();
+
+            // --- DEBUT GENERATION PDF & EMAIL ---
+            
+            // 1. Configurer Dompdf
+            $pdfOptions = new Options();
+            $pdfOptions->set('defaultFont', 'Arial');
+            $dompdf = new Dompdf($pdfOptions);
+            
+            // 2. Transformer le Twig en HTML
+            $html = $this->renderView('sponsor/invoice.html.twig', [
+                'sponsor' => $sponsor,
+                'date' => new \DateTime()
+            ]);
+            
+            // 3. Créer le PDF
+            $dompdf->loadHtml($html);
+            $dompdf->setPaper('A4', 'portrait');
+            $dompdf->render();
+            
+            // 4. Récupérer le contenu du PDF en mémoire
+            $pdfContent = $dompdf->output();
+
+            // 5. Créer l'E-mail
+            $email = (new Email())
+                ->from('benhamoudafiras19@gmail.com')
+                ->to($sponsor->getContactEmail())
+                ->subject('Merci pour votre soutien ! Voici votre reçu.')
+                ->html('<p>Bonjour,</p><p>Nous vous remercions chaleureusement pour votre engagement envers HealthTrack.</p><p>Veuillez trouver ci-joint votre reçu de sponsoring officiel au format PDF.</p><p>Cordialement,<br>L\'équipe VitalTech</p>')
+                ->attach($pdfContent, 'Recu_HealthTrack_'.$sponsor->getId().'.pdf', 'application/pdf');
+
+            // 6. Envoyer l'E-mail
+            $mailer->send($email);
+
+            // Message de succès pour l'administrateur
+            $this->addFlash('success', 'Sponsor ajouté, logo uploadé et reçu envoyé par e-mail avec succès !');
+
+            // --- FIN GENERATION PDF & EMAIL ---
 
             return $this->redirectToRoute('app_sponsor_index', [], Response::HTTP_SEE_OTHER);
         }
@@ -90,6 +132,7 @@ final class SponsorController extends AbstractController
             'form' => $form,
         ]);
     }
+
 
     #[Route('/{id}', name: 'app_sponsor_show', methods: ['GET'])]
     public function show(Sponsor $sponsor): Response
