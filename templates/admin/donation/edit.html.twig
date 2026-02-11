@@ -1,0 +1,26 @@
+{% extends 'baseBack.html.twig' %}
+
+{% block title %}Modifier une donation{% endblock %}
+
+{% block body %}
+    <header class="bg-white border-b py-4 px-8 flex justify-between items-center shadow-sm z-0">
+        <h1 class="text-xl font-bold text-gray-800">Modifier une donation</h1>
+        <a href="{{ path('admin_donation_index') }}" class="border border-gray-200 bg-white px-4 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+            <i class="fa-solid fa-arrow-left"></i> Retour à la liste
+        </a>
+    </header>
+
+    <div class="flex-1 overflow-y-auto p-8 space-y-6">
+        {{ include('donation/_form.html.twig', { button_label: 'Mettre à jour' }) }}
+
+        <div class="bg-white rounded-2xl shadow-sm border border-red-100 p-4">
+            <h2 class="text-sm font-semibold text-red-700 flex items-center gap-2 mb-2">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                Suppression
+            </h2>
+            <p class="text-xs text-slate-500 mb-3">Cette action est définitive. La donation sera supprimée de la plateforme.</p>
+            {{ include('admin/donation/_delete_form.html.twig') }}
+        </div>
+    </div>
+{% endblock %}
+

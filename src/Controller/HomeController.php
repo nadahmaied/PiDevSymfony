@@ -8,18 +8,10 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class HomeController extends AbstractController
 {
-    #[Route('/baseFront', name: 'baseFont')]
-    public function baseFont(): Response
+    #[Route('/', name: 'app_home', methods: ['GET'])]
+    public function index(): Response
     {
-        return $this->render('/baseFront.html.twig', [
-            'controller_name' => 'HomeController',
-        ]);
-    }
-      #[Route('/baseBack', name: 'baseBack')]
-    public function baseBack(): Response
-    {
-        return $this->render('/baseBack.html.twig', [
-            'controller_name' => 'HomeController',
-        ]);
+        // Page d'accueil principale présentant les 3 métiers
+        return $this->render('home/index.html.twig');
     }
 }

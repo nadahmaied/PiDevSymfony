@@ -1,0 +1,40 @@
+{% extends 'baseBack.html.twig' %}
+
+{% block title %}Modifier Sponsor{% endblock %}
+
+{% block body %}
+    <header class="bg-white border-b py-4 px-8 shadow-sm flex items-center gap-4">
+        <a href="{{ path('app_sponsor_index') }}" class="text-gray-500 hover:text-blue-600 transition flex items-center gap-2">
+            <i class="fa-solid fa-arrow-left"></i> Retour
+        </a>
+        <h1 class="text-2xl font-bold text-gray-800">Modifier le Sponsor</h1>
+    </header>
+
+    <div class="p-8 max-w-4xl mx-auto">
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+            
+            <div class="h-2 bg-gradient-to-r from-orange-400 to-red-500"></div>
+
+            <div class="p-8">
+                {{ include('sponsor/_form.html.twig', {'button_label': 'Mettre à jour'}) }}
+
+                <div class="relative flex py-8 items-center">
+                    <div class="flex-grow border-t border-gray-200"></div>
+                    <span class="flex-shrink-0 mx-4 text-gray-400 text-xs uppercase tracking-wider">Zone de Danger</span>
+                    <div class="flex-grow border-t border-gray-200"></div>
+                </div>
+
+                <div class="bg-red-50 border border-red-100 rounded-lg p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div>
+                        <h4 class="text-red-800 font-bold text-sm">Supprimer ce sponsor</h4>
+                        <p class="text-red-600 text-xs mt-1">Attention, cette action est irréversible.</p>
+                    </div>
+                    
+                    <div class="delete-btn-wrapper">
+                        {{ include('sponsor/_delete_form.html.twig') }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

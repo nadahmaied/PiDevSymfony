@@ -1,0 +1,157 @@
+{% extends 'baseBack.html.twig' %}
+
+{% block title %}Gestion Annonces{% endblock %}
+
+{% block body %}
+    <header class="bg-white border-b py-4 px-8 flex justify-between items-center shadow-sm z-0">
+        <h1 class="text-xl font-bold text-gray-800">Gestion des Annonces</h1>
+        <a href="{{ path('admin_annonce_new') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow transition">
+            <i class="fa-solid fa-plus"></i> Nouvelle annonce
+        </a>
+    </header>
+
+    <div class="flex-1 overflow-y-auto p-8 space-y-6">
+        {% if annonces is empty %}
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 text-center">
+                <i class="fa-solid fa-bullhorn text-5xl text-slate-300 mb-4"></i>
+                <p class="text-slate-500">Aucune annonce pour le moment.</p>
+                <a href="{{ path('admin_annonce_new') }}" class="inline-block mt-4 bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition">
+                    Créer la première annonce
+                </a>
+            </div>
+        {% else %}
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+                    <div class="flex-1 flex items-center gap-2">
+                        <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
+                        <input
+                            id="admin-annonce-search"
+                            type="text"
+                            placeholder="Rechercher une annonce par titre..."
+                            class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+                        >
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label for="admin-annonce-sort-urgence" class="text-xs font-medium text-slate-500">Trier par urgence</label>
+                        <select
+                            id="admin-annonce-sort-urgence"
+                            class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+                        >
+                            <option value="none">Aucun tri</option>
+                            <option value="urgence_desc">Urgence élevée → faible</option>
+                            <option value="urgence_asc">Urgence faible → élevée</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between mb-2">
+                    <h2 class="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+                        Liste des annonces ({{ annonces|length }})
+                    </h2>
+                </div>
+                <div id="admin-annonce-list" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                    {% for annonce in annonces %}
+                        <div
+                            class="bg-slate-50/70 p-5 rounded-2xl border border-slate-100 hover:border-blue-300 hover:shadow-md transition flex flex-col gap-3 admin-annonce-card"
+                            data-title="{{ annonce.titreAnnonce|lower }}"
+                            data-urgence="{{ annonce.urgence }}"
+                        >
+                            <div class="flex items-start justify-between gap-3">
+                                <div>
+                                    <p class="text-xs text-slate-400 mb-1">
+                                        Publié le {{ annonce.datePublication ? annonce.datePublication|date('d M Y') : '—' }}
+                                    </p>
+                                    <h2 class="font-semibold text-slate-900 line-clamp-2 text-sm">{{ annonce.titreAnnonce }}</h2>
+                                </div>
+                                {% set badgeColor =
+                                    annonce.urgence == 'élevée' ? 'bg-red-100 text-red-700' :
+                                    (annonce.urgence == 'moyenne' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700')
+                                %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold {{ badgeColor }}">
+                                    <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+                                    {{ annonce.urgence|capitalize }}
+                                </span>
+                            </div>
+
+                            <p class="text-xs text-slate-600 line-clamp-3">
+                                {{ annonce.description }}
+                            </p>
+
+                            <div class="flex items-center justify-between pt-2">
+                                <span class="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full
+                                    {% if annonce.etatAnnonce == 'active' %}
+                                        bg-emerald-50 text-emerald-700
+                                    {% else %}
+                                        bg-slate-100 text-slate-600
+                                    {% endif %}
+                                ">
+                                    <i class="fa-solid {{ annonce.etatAnnonce == 'active' ? 'fa-circle-check' : 'fa-circle-xmark' }}"></i>
+                                    {{ annonce.etatAnnonce == 'active' ? 'Active' : 'Clôturée' }}
+                                </span>
+
+                                <div class="flex gap-2">
+                                    <a href="{{ path('admin_annonce_show', {'id': annonce.id}) }}" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Voir">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </a>
+                                    <a href="{{ path('admin_annonce_edit', {'id': annonce.id}) }}" class="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition" title="Modifier">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function () {
+            const searchInput = document.getElementById('admin-annonce-search');
+            const sortSelect = document.getElementById('admin-annonce-sort-urgence');
+            const container = document.getElementById('admin-annonce-list');
+            if (!searchInput || !sortSelect || !container) {
+                return;
+            }
+
+            function urgencyWeight(u) {
+                switch (u) {
+                    case 'élevée': return 3;
+                    case 'moyenne': return 2;
+                    case 'faible': return 1;
+                    default: return 0;
+                }
+            }
+
+            function applyFilters() {
+                const term = searchInput.value.trim().toLowerCase();
+                const sortValue = sortSelect.value;
+                const cards = Array.from(container.querySelectorAll('.admin-annonce-card'));
+
+                cards.forEach(card => {
+                    const title = (card.dataset.title || '').toLowerCase();
+                    const matches = !term || title.includes(term);
+                    card.style.display = matches ? '' : 'none';
+                });
+
+                let visibleCards = cards.filter(card => card.style.display !== 'none');
+
+                if (sortValue === 'urgence_desc' || sortValue === 'urgence_asc') {
+                    visibleCards.sort((a, b) => {
+                        const wa = urgencyWeight(a.dataset.urgence);
+                        const wb = urgencyWeight(b.dataset.urgence);
+                        return sortValue === 'urgence_desc' ? wb - wa : wa - wb;
+                    });
+
+                    visibleCards.forEach(card => container.appendChild(card));
+                }
+            }
+
+            searchInput.addEventListener('input', applyFilters);
+            sortSelect.addEventListener('change', applyFilters);
+        })();
+    </script>
+{% endblock %}
+
