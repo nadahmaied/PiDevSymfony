@@ -1,0 +1,338 @@
+{% extends 'baseBack.html.twig' %}
+
+{% block body %}
+<div class="flex-1 overflow-y-auto p-8">
+<div class="flex justify-end mb-6">
+    <a href="{{ path('showAlldispoBack') }}"
+       class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-3 rounded-xl shadow transition">
+        <i class="fa-solid fa-calendar-plus"></i>
+        Gérer ma disponibilité
+    </a>
+</div>
+
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
+                        <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-xl"><i class="fa-solid fa-calendar-day"></i></div>
+                        <div><p class="text-gray-500 text-xs font-bold uppercase">Aujourd'hui</p><p class="text-xl font-bold text-gray-800">12 RDV</p></div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
+                        <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-lg flex items-center justify-center text-xl"><i class="fa-solid fa-clock"></i></div>
+                        <div><p class="text-gray-500 text-xs font-bold uppercase">En attente</p><p class="text-xl font-bold text-gray-800">5 Demandes</p></div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
+                        <div class="w-12 h-12 bg-green-50 text-green-600 rounded-lg flex items-center justify-center text-xl"><i class="fa-solid fa-user-check"></i></div>
+                        <div><p class="text-gray-500 text-xs font-bold uppercase">Terminés</p><p class="text-xl font-bold text-gray-800">48 this week</p></div>
+                    </div>
+                    
+ 
+                </div>
+                
+     
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-50 text-gray-600 text-xs uppercase">
+                            <tr>
+                                <th class="px-6 py-4">Réf.</th>
+                                <th class="px-6 py-4">Patient</th>
+                                <th class="px-6 py-4">Médecin</th>
+                                <th class="px-6 py-4">Date & Heure</th>
+                                <th class="px-6 py-4">Statut</th>
+                                <th class="px-6 py-4 text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 text-sm">
+                            
+                        {% for rdv in rdvs %}
+
+<tr class="hover:bg-blue-50/30 transition {% if rdv.statut == 'Annulé' %}opacity-60{% endif %}">
+
+    <td class="px-6 py-4 font-mono text-gray-400">
+        #RDV-{{ rdv.id }}
+    </td>
+
+    <td class="px-6 py-4">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">
+                {{ rdv.medecin|slice(0,2)|upper }}
+            </div>
+            <div>
+                <p class="font-bold text-gray-800">{{ rdv.medecin }}</p>
+                <p class="text-xs text-gray-500">{{ rdv.motif }}</p>
+            </div>
+        </div>
+    </td>
+
+    <td class="px-6 py-4">
+        <div class="flex items-center gap-2">
+            <i class="fa-solid fa-user-doctor text-gray-400"></i>
+            <span class="font-medium text-gray-700">
+                {{ rdv.medecin }}
+            </span>
+        </div>
+    </td>
+
+    <td class="px-6 py-4 text-gray-600">
+        <span class="block font-bold">
+            {{ rdv.date|date('d M Y') }}
+        </span>
+        <span class="block text-xs">
+            <i class="fa-regular fa-clock mr-1"></i>
+            {{ rdv.hdebut|date('H:i') }}
+        </span>
+    </td>
+
+    <td class="px-6 py-4">
+
+        {% if rdv.statut == 'Confirmé' %}
+            <span class="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-bold border border-green-200 flex items-center w-fit gap-1">
+                <i class="fa-solid fa-check"></i> Confirmé
+            </span>
+
+        {% elseif rdv.statut == 'En attente' %}
+            <span class="bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs font-bold border border-orange-200 flex items-center w-fit gap-1">
+                <i class="fa-solid fa-hourglass-start"></i> En attente
+            </span>
+
+        {% else %}
+            <span class="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-bold border border-red-200 flex items-center w-fit gap-1">
+                <i class="fa-solid fa-ban"></i> Annulé
+            </span>
+        {% endif %}
+
+    </td>
+
+    <td class="px-6 py-4 flex justify-center gap-3">
+
+              {% if rdv.statut != 'Confirmé' and rdv.statut != 'Annulé' %}
+<button type="button"
+        onclick="openConfirmModal({{ rdv.id }})"
+        class="text-gray-400 hover:text-green-600 p-2 transition">
+    <i class="fa-solid fa-check"></i>
+</button>
+{% endif %}
+
+<button type="button"
+        onclick="openModal(
+            {{ rdv.id }},
+            '{{ rdv.date|date('Y-m-d') }}',
+            '{{ rdv.hdebut|date('H:i') }}'
+        )"
+        class="text-gray-400 hover:text-orange-500 p-2 transition">
+    <i class="fa-solid fa-pen"></i>
+</button>
+
+
+
+        <form method="POST"
+              action="{{ path('deleteRdv', {id: rdv.id}) }}"
+              onsubmit="return confirm('Supprimer ce rendez-vous ?');">
+
+            <input type="hidden"
+                   name="_token"
+                   value="{{ csrf_token('delete' ~ rdv.id) }}">
+
+           <button type="button"
+        onclick="openCancelModal({{ rdv.id }})"
+        class="text-gray-400 hover:text-red-600 p-2 transition">
+    <i class="fa-solid fa-trash"></i>
+</button>
+
+        </form>
+      
+    </td>
+
+</tr>
+     
+
+{% else %}
+
+<tr>
+    <td colspan="6" class="text-center py-6 text-gray-400">
+        Aucun rendez-vous trouvé
+    </td>
+</tr>
+ 
+
+{% endfor %}
+
+                
+                        </tbody>
+                    </table>
+                </div>
+  
+
+<div id="editModal"
+     class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+    <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl p-8 relative">
+
+        <button onclick="closeModal()"
+                class="absolute top-4 right-4 text-gray-400 hover:text-red-500">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+
+        <h3 class="text-xl font-bold mb-6 text-slate-800">
+            Modifier Date & Heure
+        </h3>
+
+        <form id="editForm" method="POST">
+
+            <div class="grid grid-cols-2 gap-4">
+
+                <div>
+                    <label class="block font-bold mb-2">Date</label>
+                    <input type="date"
+                           name="date"
+                           id="modalDate"
+                           class="w-full border rounded-xl p-3">
+                </div>
+
+                <div>
+                    <label class="block font-bold mb-2">Heure</label>
+                    <input type="time"
+                           name="hdebut"
+                           id="modalTime"
+                           class="w-full border rounded-xl p-3">
+                </div>
+
+            </div>
+
+            <div class="flex gap-3 mt-6">
+
+                <button type="button"
+                        onclick="closeModal()"
+                        class="flex-1 px-6 py-3 bg-slate-100 rounded-xl">
+                    Annuler
+                </button>
+
+                <button type="submit"
+                        class="flex-1 px-6 py-3 bg-orange-600 text-white rounded-xl">
+                    Enregistrer
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+</div>
+<div id="cancelModal"
+     class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-8 relative text-center">
+
+        <h3 class="text-xl font-bold text-slate-800 mb-4">
+            Annuler le rendez-vous ?
+        </h3>
+
+        <p class="text-gray-500 mb-6">
+            Êtes-vous sûr de vouloir annuler ce rendez-vous ?
+        </p>
+
+        <form id="cancelForm" method="POST">
+
+            <div class="flex gap-3">
+
+                <button type="button"
+                        onclick="closeCancelModal()"
+                        class="flex-1 px-6 py-3 bg-slate-100 rounded-xl">
+                    Non
+                </button>
+
+                <button type="submit"
+                        class="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl">
+                    Oui
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+</div>
+<div id="confirmModal"
+     class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-8 relative text-center">
+
+        <h3 class="text-xl font-bold text-slate-800 mb-4">
+            Confirmer le rendez-vous ?
+        </h3>
+
+        <p class="text-gray-500 mb-6">
+            Voulez-vous vraiment confirmer ce rendez-vous ?
+        </p>
+
+        <form id="confirmForm" method="POST">
+
+            <div class="flex gap-3">
+
+                <button type="button"
+                        onclick="closeConfirmModal()"
+                        class="flex-1 px-6 py-3 bg-slate-100 rounded-xl">
+                    Non
+                </button>
+
+                <button type="submit"
+                        class="flex-1 px-6 py-3 bg-green-600 text-white rounded-xl">
+                    Oui
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+
+
+            {% endblock %}
+{% block javascripts %}
+<script>
+
+function openModal(id, date, time) {
+
+    const url = "{{ path('editRdvBack', {'id': 'ID'}) }}".replace('ID', id);
+    document.getElementById('editForm').action = url;
+
+    // Injecter les valeurs
+    document.getElementById('modalDate').value = date;
+    document.getElementById('modalTime').value = time;
+
+    document.getElementById('editModal').classList.remove('hidden');
+}
+
+
+function closeModal() {
+    document.getElementById('editModal').classList.add('hidden');
+}
+
+function openCancelModal(id) {
+
+    const url = "{{ path('cancelRdv', {'id': 'ID'}) }}".replace('ID', id);
+    document.getElementById('cancelForm').action = url;
+
+    document.getElementById('cancelModal').classList.remove('hidden');
+}
+
+function closeCancelModal() {
+    document.getElementById('cancelModal').classList.add('hidden');
+}
+function openConfirmModal(id) {
+
+    const url = "{{ path('confirmRdv', {'id': 'ID'}) }}".replace('ID', id);
+    document.getElementById('confirmForm').action = url;
+
+    document.getElementById('confirmModal').classList.remove('hidden');
+}
+
+function closeConfirmModal() {
+    document.getElementById('confirmModal').classList.add('hidden');
+}
+
+
+</script>
+{% endblock %}
