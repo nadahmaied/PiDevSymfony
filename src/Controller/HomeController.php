@@ -4,22 +4,14 @@ namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Annotation\Route;
 
-final class HomeController extends AbstractController
+class HomeController extends AbstractController
 {
-    #[Route('/baseFront', name: 'baseFont')]
-    public function baseFont(): Response
+    #[Route('/', name: 'app_home')]
+    public function index(): Response
     {
-        return $this->render('/baseFront.html.twig', [
-            'controller_name' => 'HomeController',
-        ]);
-    }
-      #[Route('/baseBack', name: 'baseBack')]
-    public function baseBack(): Response
-    {
-        return $this->render('/baseBack.html.twig', [
-            'controller_name' => 'HomeController',
-        ]);
+        // On demande à Symfony d'afficher notre nouvelle page d'accueil !
+        return $this->render('home/index.html.twig');
     }
 }
