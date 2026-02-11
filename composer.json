@@ -88,7 +88,7 @@
     "conflict": {
         "symfony/symfony": "*"
     },
-    "extra": {
+        "extra": {
         "symfony": {
             "allow-contrib": false,
             "require": "6.4.*"

@@ -1,13 +1,5 @@
-
-*^=$pgyta78
-
-
-
-/
-uoètsdfg9*/<?php
-
+<?php
 namespace App\Controller;
-
 use App\Entity\Question;
 use App\Entity\Reponse;
 use App\Form\QuestionType;

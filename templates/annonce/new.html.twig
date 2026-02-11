@@ -1,0 +1,27 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouvelle annonce - HealthTrack{% endblock %}
+
+{% block page_title %}Créer une annonce{% endblock %}
+
+{% block body %}
+    <div class="flex flex-col gap-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-bullhorn text-orange-500"></i>
+                    Nouvelle annonce
+                </h1>
+                <p class="text-sm text-slate-500 mt-1">
+                    Décrivez clairement le besoin pour permettre aux donateurs de mieux y répondre.
+                </p>
+            </div>
+            <a href="{{ path('app_annonce_index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
+                <i class="fa-solid fa-list"></i>
+                Voir toutes les annonces
+            </a>
+        </div>
+
+        {{ include('annonce/_form.html.twig', { button_label: 'Publier l\'annonce' }) }}
+    </div>
+{% endblock %}

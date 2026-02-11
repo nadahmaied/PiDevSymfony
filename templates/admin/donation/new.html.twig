@@ -1,0 +1,17 @@
+{% extends 'baseBack.html.twig' %}
+
+{% block title %}Nouvelle donation{% endblock %}
+
+{% block body %}
+    <header class="bg-white border-b py-4 px-8 flex justify-between items-center shadow-sm z-0">
+        <h1 class="text-xl font-bold text-gray-800">Créer une donation</h1>
+        <a href="{{ path('admin_donation_index') }}" class="border border-gray-200 bg-white px-4 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+            <i class="fa-solid fa-list"></i> Voir toutes les donations
+        </a>
+    </header>
+
+    <div class="flex-1 overflow-y-auto p-8">
+        {{ include('donation/_form.html.twig', { button_label: 'Valider le don' }) }}
+    </div>
+{% endblock %}
+
