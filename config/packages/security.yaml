@@ -20,17 +20,21 @@ security:
             lazy: true
             provider: app_user_provider
             form_login:
-                login_path: app_login
-                check_path: app_login
+                login_path: front_login
+                check_path: front_login
                 default_target_path: baseFont
             logout:
-                path: app_logout
-                target: app_login
+                path: front_logout
+                target: front_login
 
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
+        # allow public access to admin auth pages
+        - { path: ^/admin/(login|signup), roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        # protect the rest of /admin
         - { path: ^/admin, roles: ROLE_ADMIN }
+        # user account area
         - { path: ^/account, roles: ROLE_USER }
 
 when@test:
