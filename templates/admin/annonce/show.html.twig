@@ -1,28 +1,24 @@
-{% extends 'admin_base.html.twig' %}
+{% extends 'baseBack.html.twig' %}
 
-{% block title %}Admin - Détail annonce #{{ annonce.id }}{% endblock %}
-
-{% block page_header %}Détail de l'annonce{% endblock %}
-{% block page_subtitle %}Visualisation et gestion de l'annonce sélectionnée{% endblock %}
-
-{% block header_actions %}
-    <div class="flex gap-2">
-        <a href="{{ path('admin_annonce_index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
-            <i class="fa-solid fa-arrow-left"></i>
-            Retour à la liste
-        </a>
-        <a href="{{ path('admin_donation_new_for_annonce', {'annonce': annonce.id}) }}" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700">
-            <i class="fa-solid fa-hand-holding-heart"></i>
-            Accepter
-        </a>
-        <a href="{{ path('admin_annonce_edit', {'id': annonce.id}) }}" class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">
-            <i class="fa-solid fa-pen"></i>
-            Modifier
-        </a>
-    </div>
-{% endblock %}
+{% block title %}Détail annonce #{{ annonce.id }}{% endblock %}
 
 {% block body %}
+    <header class="bg-white border-b py-4 px-8 flex justify-between items-center shadow-sm z-0">
+        <h1 class="text-xl font-bold text-gray-800">Détail de l'annonce</h1>
+        <div class="flex gap-2">
+            <a href="{{ path('admin_annonce_index') }}" class="border border-gray-200 bg-white px-4 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Retour à la liste
+            </a>
+            <a href="{{ path('admin_donation_new_for_annonce', {'annonce': annonce.id}) }}" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                <i class="fa-solid fa-hand-holding-heart"></i> Associer un don
+            </a>
+            <a href="{{ path('admin_annonce_edit', {'id': annonce.id}) }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                <i class="fa-solid fa-pen"></i> Modifier
+            </a>
+        </div>
+    </header>
+
+    <div class="flex-1 overflow-y-auto p-8">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-4">
             <div class="flex items-start justify-between gap-4">
@@ -101,6 +97,7 @@
                 {{ include('admin/annonce/_delete_form.html.twig') }}
             </div>
         </div>
+    </div>
     </div>
 {% endblock %}
 

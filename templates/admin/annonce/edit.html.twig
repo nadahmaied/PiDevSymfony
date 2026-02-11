@@ -1,19 +1,16 @@
-{% extends 'admin_base.html.twig' %}
+{% extends 'baseBack.html.twig' %}
 
-{% block title %}Admin - Modifier une annonce{% endblock %}
-
-{% block page_header %}Modifier une annonce{% endblock %}
-{% block page_subtitle %}Mettez à jour le contenu ou le statut de l'annonce{% endblock %}
-
-{% block header_actions %}
-    <a href="{{ path('admin_annonce_index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
-        <i class="fa-solid fa-arrow-left"></i>
-        Retour à la liste
-    </a>
-{% endblock %}
+{% block title %}Modifier une annonce{% endblock %}
 
 {% block body %}
-    <div class="space-y-6">
+    <header class="bg-white border-b py-4 px-8 flex justify-between items-center shadow-sm z-0">
+        <h1 class="text-xl font-bold text-gray-800">Modifier une annonce</h1>
+        <a href="{{ path('admin_annonce_index') }}" class="border border-gray-200 bg-white px-4 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+            <i class="fa-solid fa-arrow-left"></i> Retour à la liste
+        </a>
+    </header>
+
+    <div class="flex-1 overflow-y-auto p-8 space-y-6">
         {{ include('annonce/_form.html.twig', { button_label: 'Mettre à jour' }) }}
 
         <div class="bg-white rounded-2xl shadow-sm border border-red-100 p-4">
