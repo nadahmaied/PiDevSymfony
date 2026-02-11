@@ -50,64 +50,52 @@
                         </div>
 
                         <div class="space-y-4">
-                            
+                            {% for rdv in rdvs %}
                             <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col sm:flex-row items-start sm:items-center gap-5 hover:border-orange-200 transition group">
                                 <div class="flex-shrink-0 w-16 h-16 bg-orange-50 rounded-xl flex flex-col items-center justify-center text-orange-600 border border-orange-100 group-hover:bg-orange-100 transition">
-                                    <span class="text-xs font-bold uppercase">Mars</span>
-                                    <span class="text-xl font-bold">02</span>
+                                    <span class="text-xs font-bold uppercase">{{ rdv.date|date('M') }}</span>
+                                    <span class="text-xl font-bold">{{ rdv.date|date('d') }}</span>
                                 </div>
                                 
                                 <div class="flex-1">
                                     <div class="flex justify-between items-start">
                                         <div>
-                                            <h3 class="font-bold text-slate-800 text-lg">Dr. Mohamed Kallel</h3>
-                                            <p class="text-slate-500 text-sm">Ophtalmologie • Cabinet Lac 2</p>
+                                            <h3 class="font-bold text-slate-800 text-lg">{{ rdv.medecin }}</h3>
+                                            <p class="text-slate-500 text-sm">{{ rdv.motif }}</p>
                                         </div>
                                         <span class="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-1 rounded-md border border-orange-200">
-                                            <i class="fa-regular fa-clock mr-1"></i> En attente
+                                            <i class="fa-regular fa-clock mr-1"></i> {{ rdv.statut }}
                                         </span>
                                     </div>
                                     <div class="mt-3 flex items-center gap-4 text-sm text-slate-500">
-                                        <span class="flex items-center gap-1"><i class="fa-regular fa-clock"></i> 14:30</span>
-                                        <span class="flex items-center gap-1"><i class="fa-solid fa-location-dot"></i> 12 Rue du Lac</span>
+                                        <span class="flex items-center gap-1"><i class="fa-regular fa-clock"></i> {{ rdv.hdebut|date('H:i') }} - {{ rdv.hfin|date('H:i') }}</span>
+                                        {% if rdv.message %}<span class="flex items-center gap-1"><i class="fa-solid fa-comment"></i> {{ rdv.message }}</span>{% endif %}
                                     </div>
                                 </div>
 
                                 <div class="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-                                    <button         onclick="openEditRdvModal({{ rdv.id }})"
- 
- class="flex-1 sm:flex-none border border-slate-200 text-slate-600 p-2 rounded-lg hover:bg-slate-50 transition" title="Modifier">
+                                    <button 
+                                        onclick="openEditRdvModal({{ rdv.id }})" 
+                                        class="flex-1 sm:flex-none border border-slate-200 text-slate-600 p-2 rounded-lg hover:bg-slate-50 transition text-center" 
+                                        title="Modifier">
                                         <i class="fa-solid fa-pen"></i>
                                     </button>
-                                    <button class="flex-1 sm:flex-none border border-slate-200 text-red-500 p-2 rounded-lg hover:bg-red-50 hover:border-red-200 transition" title="Annuler">
-                                        <i class="fa-solid fa-trash"></i>
-                                    </button>
+                                    <a href="{{ path('showOne', { id: rdv.id }) }}" class="flex-1 sm:flex-none border border-slate-200 text-blue-500 p-2 rounded-lg hover:bg-blue-50 transition text-center" title="Détails">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </a>
+                                    <button
+    onclick="openDeleteModal({{ rdv.id }}, '{{ csrf_token('delete' ~ rdv.id) }}')"
+    class="flex-1 sm:flex-none border border-red-200 text-red-600 p-2 rounded-lg hover:bg-red-50 transition text-center"
+    title="Supprimer">
+    <i class="fa-solid fa-trash"></i>
+</button>
+
+
                                 </div>
                             </div>
-
-                            <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col sm:flex-row items-start sm:items-center gap-5 hover:border-blue-200 transition">
-                                <div class="flex-shrink-0 w-16 h-16 bg-slate-50 rounded-xl flex flex-col items-center justify-center text-slate-600 border border-slate-200">
-                                    <span class="text-xs font-bold uppercase">Avr</span>
-                                    <span class="text-xl font-bold">10</span>
-                                </div>
-                                
-                                <div class="flex-1">
-                                    <div class="flex justify-between items-start">
-                                        <div>
-                                            <h3 class="font-bold text-slate-800 text-lg">Dr. Karim Ben Youssef</h3>
-                                            <p class="text-slate-500 text-sm">Dentiste • Menzah 6</p>
-                                        </div>
-                                        <span class="bg-blue-50 text-blue-700 text-xs font-bold px-2 py-1 rounded-md border border-blue-100">
-                                            <i class="fa-solid fa-check mr-1"></i> Confirmé
-                                        </span>
-                                    </div>
-                                    <div class="mt-3 flex items-center gap-4 text-sm text-slate-500">
-                                        <span class="flex items-center gap-1"><i class="fa-regular fa-clock"></i> 09:00</span>
-                                        <span class="flex items-center gap-1"><i class="fa-solid fa-video"></i> Consultation Vidéo</span>
-                                    </div>
-                                </div>
-                            </div>
-
+                            {% else %}
+                            <p class="text-slate-500 text-center py-8">Aucun rendez-vous pour le moment.</p>
+                            {% endfor %}
                         </div>
                     </div>
 
@@ -167,22 +155,81 @@
 
                 </div>
             </div>
+<!-- Modal Suppression -->
+<div id="deleteModal"
+     class="fixed inset-0 z-50 hidden flex items-center justify-center">
+
+    <!-- Overlay -->
+    <div onclick="closeDeleteModal()"
+         class="absolute inset-0 bg-black/60 backdrop-blur-sm">
+    </div>
+
+    <!-- Card -->
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-8 transform transition-all scale-95 opacity-0"
+         id="deleteCard">
+
+        <div class="text-center">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-trash text-red-600 text-2xl"></i>
+            </div>
+
+            <h3 class="text-xl font-bold text-slate-800 mb-2">
+                Supprimer ce rendez-vous ?
+            </h3>
+
+            <p class="text-slate-500 mb-6">
+                Cette action est irréversible.
+            </p>
+
+            <form id="deleteForm" method="POST">
+                <input type="hidden" name="_token" id="deleteToken">
+
+                <div class="flex gap-3">
+                    <button type="button"
+                            onclick="closeDeleteModal()"
+                            class="flex-1 px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">
+                        Annuler
+                    </button>
+
+                    <button type="submit"
+                            class="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition shadow-lg">
+                        Supprimer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
   <script>
 function openAddRdvModal() {
-    fetch('/rdv/front/AjouterRdv')
+    fetch('{{ path('AjouterRdv') }}', {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
         .then(res => res.text())
         .then(html => {
             document.getElementById('rdvModalContent').innerHTML = html;
             openRdvModal();
+        })
+        .catch(err => { 
+            console.error(err); 
+            openRdvModal(); 
+            document.getElementById('rdvModalContent').innerHTML = '<p class="text-red-500">Erreur chargement du formulaire.</p>'; 
         });
 }
 
 function openEditRdvModal(id) {
-    fetch(`/rdv/front/ModifierRdv/${id}`)
+    fetch(`{{ path('editForm', {id: '__ID__'}) }}`.replace('__ID__', id), {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
         .then(res => res.text())
         .then(html => {
             document.getElementById('rdvModalContent').innerHTML = html;
             openRdvModal();
+        })
+        .catch(err => { 
+            console.error(err); 
+            alert('Erreur lors du chargement du formulaire de modification.'); 
         });
 }
 
@@ -193,10 +240,34 @@ function openRdvModal() {
 function closeRdvModal() {
     document.getElementById('rdvModal').classList.add('hidden');
 }
+function openDeleteModal(id, token) {
+    const modal = document.getElementById('deleteModal');
+    const card = document.getElementById('deleteCard');
+    const form = document.getElementById('deleteForm');
+    const tokenInput = document.getElementById('deleteToken');
+
+    form.action = `/delete/${id}`;
+    tokenInput.value = token;
+
+    modal.classList.remove('hidden');
+
+    setTimeout(() => {
+        card.classList.remove('scale-95', 'opacity-0');
+        card.classList.add('scale-100', 'opacity-100');
+    }, 10);
+}
+
+function closeDeleteModal() {
+    const modal = document.getElementById('deleteModal');
+    const card = document.getElementById('deleteCard');
+
+    card.classList.remove('scale-100', 'opacity-100');
+    card.classList.add('scale-95', 'opacity-0');
+
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 200);
+}
 </script>
 
-
-
  {% endblock %}
-
-
