@@ -2,78 +2,289 @@
 
 {% block body %}
 <div class="flex-1 overflow-y-auto p-8">
-<div class="flex justify-start mb-6">
-    <a href="{{ path('showAllRdvBack') }}"
-       class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-3 rounded-xl shadow transition">
-        <i class="fa-solid fa-list"></i>
-        Consulter les rendez-vous
-    </a>
+    <div class="flex justify-start mb-6">
+        <a href="{{ path('showAllRdvBack') }}"
+           class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-3 rounded-xl shadow transition">
+            <i class="fa-solid fa-list"></i>
+            Consulter les rendez-vous
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
+            <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-xl">
+                <i class="fa-solid fa-calendar-day"></i>
+            </div>
+            <div>
+                <p class="text-gray-500 text-xs font-bold uppercase">Aujourd'hui</p>
+                <p class="text-xl font-bold text-gray-800">12 RDV</p>
+            </div>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
+            <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-lg flex items-center justify-center text-xl">
+                <i class="fa-solid fa-clock"></i>
+            </div>
+            <div>
+                <p class="text-gray-500 text-xs font-bold uppercase">En attente</p>
+                <p class="text-xl font-bold text-gray-800">5 Demandes</p>
+            </div>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
+            <div class="w-12 h-12 bg-green-50 text-green-600 rounded-lg flex items-center justify-center text-xl">
+                <i class="fa-solid fa-user-check"></i>
+            </div>
+            <div>
+                <p class="text-gray-500 text-xs font-bold uppercase">Terminés</p>
+                <p class="text-xl font-bold text-gray-800">48 this week</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div id="calendar"></div>
+    </div>
 </div>
 
+<!-- Modal RDV et Disponibilités -->
+<div id="rdvModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl p-6 relative max-h-[90vh] overflow-y-auto">
+        <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-2xl">
+            ✖
+        </button>
+
+        <h3 id="modalTitle" class="text-xl font-bold mb-4 text-slate-800"></h3>
+        
+        <p id="jourSemaine" class="text-sm text-gray-600 mb-6"></p>
+
+        <!-- Section Rendez-vous -->
+        <div class="mb-6">
+            <h4 class="text-lg font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-calendar-check text-blue-600"></i>
+                Rendez-vous programmés
+            </h4>
+            <div id="rdvList" class="space-y-2"></div>
+        </div>
+
+        <!-- Section Disponibilités -->
+        <div class="border-t pt-6">
+            <h4 class="text-lg font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-clock text-green-600"></i>
+                Disponibilités
+            </h4>
+            
+            <div id="dispoList" class="space-y-2 mb-4"></div>
+
+            <!-- Bouton Gérer les disponibilités -->
+            <button onclick="toggleDispoForm()" 
+                    class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-plus"></i>
+                Gérer les disponibilités
+            </button>
+
+            <!-- Formulaire d'ajout de disponibilité (caché par défaut) -->
+            <div id="dispoForm" class="hidden mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <h5 class="font-semibold text-slate-700 mb-3">Ajouter une disponibilité</h5>
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
-                        <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-xl"><i class="fa-solid fa-calendar-day"></i></div>
-                        <div><p class="text-gray-500 text-xs font-bold uppercase">Aujourd'hui</p><p class="text-xl font-bold text-gray-800">12 RDV</p></div>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Heure début</label>
+                        <input type="time" id="heureDebut" 
+                               class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
                     </div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
-                        <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-lg flex items-center justify-center text-xl"><i class="fa-solid fa-clock"></i></div>
-                        <div><p class="text-gray-500 text-xs font-bold uppercase">En attente</p><p class="text-xl font-bold text-gray-800">5 Demandes</p></div>
-                    </div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
-                        <div class="w-12 h-12 bg-green-50 text-green-600 rounded-lg flex items-center justify-center text-xl"><i class="fa-solid fa-user-check"></i></div>
-                        <div><p class="text-gray-500 text-xs font-bold uppercase">Terminés</p><p class="text-xl font-bold text-gray-800">48 this week</p></div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Heure fin</label>
+                        <input type="time" id="heureFin" 
+                               class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
                     </div>
                 </div>
 
-               <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div class="flex gap-2">
+                    <button onclick="addDisponibilite()" 
+                            class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                        <i class="fa-solid fa-check"></i> Ajouter
+                    </button>
+                    <button onclick="toggleDispoForm()" 
+                            class="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition">
+                        <i class="fa-solid fa-times"></i> Annuler
+                    </button>
+                </div>
+            </div>
+        </div>
 
-    <div id="calendar">
+        <!-- Lien vers la page de gestion complète -->
+        <div class="mt-6 pt-4 border-t">
+            <a href="{{ path('showAlldispoBack') }}" 
+               class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-semibold">
+                <i class="fa-solid fa-cog"></i>
+                Gérer toutes les disponibilités
+            </a>
+        </div>
     </div>
-
 </div>
 
-            </div>
-            <script>
+<script>
 document.addEventListener('DOMContentLoaded', function () {
-
     var calendarEl = document.getElementById('calendar');
-
-    var rdvDates = {{ rdvDates|json_encode|raw }};
+    var rdvData = {{ rdvData|json_encode|raw }};
+    var selectedDate = null;
 
     var calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         height: 650,
-
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
             right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
 
-        buttonText: {
-            today: "Aujourd'hui",
-            month: "Mois",
-            week: "Semaine",
-            day: "Jour"
+        dateClick: function(info) {
+            selectedDate = info.dateStr;
+            openModalForDate(selectedDate);
         },
 
         datesSet: function () {
-
             document.querySelectorAll('.fc-daygrid-day').forEach(day => {
                 const date = day.getAttribute('data-date');
-
-                if (rdvDates.includes(date)) {
-                    day.style.backgroundColor = "#dcfce7"; // vert clair
+                if (rdvData[date]) {
+                    day.style.backgroundColor = "#dcfce7";
                 }
             });
-
         }
     });
 
     calendar.render();
 });
 
+function openModalForDate(dateStr) {
+    const date = new Date(dateStr + 'T00:00:00');
+    const jours = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+    const jourNom = jours[date.getDay()];
+    
+    document.getElementById('modalTitle').innerText = "Rendez-vous du " + dateStr;
+    document.getElementById('jourSemaine').innerText = jourNom;
+
+    // Afficher les RDV (données statiques pour exemple)
+    let rdvHtml = "";
+    const rdvs = [
+        { heure: "09:00", patient: "Mohamed Ben Ali" },
+        { heure: "10:30", patient: "Fatma Trabelsi" },
+        { heure: "14:00", patient: "Ahmed Jebali" },
+        { heure: "15:30", patient: "Salma Gharbi" }
+    ].sort((a, b) => a.heure.localeCompare(b.heure));
+
+    if (rdvs.length > 0) {
+        rdvs.forEach(function(rdv) {
+            rdvHtml += `
+                <div class="p-3 border rounded-lg bg-blue-50 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="text-blue-600 font-bold text-lg">🕒 ${rdv.heure}</div>
+                        <div class="text-gray-700 font-medium">${rdv.patient}</div>
+                    </div>
+                </div>
+            `;
+        });
+    } else {
+        rdvHtml = '<p class="text-gray-500 italic text-center py-4">Aucun rendez-vous pour cette date</p>';
+    }
+    document.getElementById('rdvList').innerHTML = rdvHtml;
+
+    // Afficher les disponibilités (données statiques pour exemple)
+    displayDisponibilites(jourNom);
+
+    document.getElementById('rdvModal').classList.remove('hidden');
+}
+
+function displayDisponibilites(jourNom) {
+    let dispoHtml = "";
+    
+    // Disponibilités par défaut selon le jour
+    let disponibilites = [];
+    
+    if (jourNom === 'Samedi') {
+        disponibilites = [
+            { id: 1, heureDebut: "09:00", heureFin: "13:00" }
+        ];
+    } else if (jourNom === 'Dimanche') {
+        disponibilites = [];
+    } else {
+        // Lundi à Vendredi
+        disponibilites = [
+            { id: 1, heureDebut: "09:00", heureFin: "12:00" },
+            { id: 2, heureDebut: "14:00", heureFin: "17:00" }
+        ];
+    }
+
+    if (disponibilites.length > 0) {
+        disponibilites.forEach(function(dispo) {
+            dispoHtml += `
+                <div class="p-3 border rounded-lg bg-green-50 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="text-green-600 font-bold">
+                            <i class="fa-solid fa-clock"></i> ${dispo.heureDebut} - ${dispo.heureFin}
+                        </div>
+                    </div>
+                    <button onclick="deleteDispo(${dispo.id})" 
+                            class="text-red-500 hover:text-red-700 font-semibold">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            `;
+        });
+    } else {
+        dispoHtml = '<p class="text-gray-500 italic text-center py-4">Aucune disponibilité (jour de repos)</p>';
+    }
+
+    document.getElementById('dispoList').innerHTML = dispoHtml;
+}
+
+function toggleDispoForm() {
+    const form = document.getElementById('dispoForm');
+    form.classList.toggle('hidden');
+    
+    if (!form.classList.contains('hidden')) {
+        document.getElementById('heureDebut').value = '';
+        document.getElementById('heureFin').value = '';
+    }
+}
+
+function addDisponibilite() {
+    const heureDebut = document.getElementById('heureDebut').value;
+    const heureFin = document.getElementById('heureFin').value;
+    
+    if (!heureDebut || !heureFin) {
+        alert('Veuillez remplir les deux heures');
+        return;
+    }
+    
+    if (heureDebut >= heureFin) {
+        alert('L\'heure de fin doit être après l\'heure de début');
+        return;
+    }
+    
+    // Ici vous ajouterez l'appel AJAX pour sauvegarder
+    console.log('Ajout disponibilité:', { heureDebut, heureFin, date: selectedDate });
+    
+    alert('Disponibilité ajoutée avec succès!');
+    toggleDispoForm();
+    
+    // Recharger les disponibilités (à implémenter avec AJAX)
+}
+
+function deleteDispo(id) {
+    if (confirm('Voulez-vous vraiment supprimer cette disponibilité?')) {
+        // Ici vous ajouterez l'appel AJAX pour supprimer
+        console.log('Suppression disponibilité:', id);
+        alert('Disponibilité supprimée!');
+        
+        // Recharger les disponibilités (à implémenter avec AJAX)
+    }
+}
+
+function closeModal() {
+    document.getElementById('rdvModal').classList.remove('hidden');
+    document.getElementById('rdvModal').classList.add('hidden');
+    document.getElementById('dispoForm').classList.add('hidden');
+}
 </script>
 
-            {% endblock %}
+{% endblock %}

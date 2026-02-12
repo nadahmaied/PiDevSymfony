@@ -117,26 +117,29 @@ public function editForm(Request $request, Rdv $rdv, ManagerRegistry $mr): Respo
 }
 
 
-    #[Route('/showAlldispoBack', name: 'showAlldispoBack')]
+   #[Route('/showAlldispoBack', name: 'showAlldispoBack')]
 public function showAlldispoBack(RdvRepository $repo): Response
 {
-    $rdvs = $repo->findAll();
+    $rdvs = $repo->findBy([], [
+        'date' => 'ASC',
+        'hdebut' => 'ASC'
+    ]);
 
-    $dates = [];
+    $rdvData = [];
 
     foreach ($rdvs as $rdv) {
-        if ($rdv->getDate()) {
-            $dates[] = $rdv->getDate()->format('Y-m-d');
-        }
+
+        $date = $rdv->getDate()->format('Y-m-d');
+        $heure = $rdv->getHdebut()->format('H:i');
+
+        $rdvData[$date][] = $heure;
     }
 
-    // enlever les doublons
-    $dates = array_unique($dates);
-
     return $this->render('rdv/back/show.html.twig', [
-        'rdvDates' => $dates
+        'rdvData' => $rdvData
     ]);
 }
+
 
 
 #[Route('/showAllRdvBack', name: 'showAllRdvBack')]
