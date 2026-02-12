@@ -1,0 +1,30 @@
+{% extends 'admin_base.html.twig' %}
+
+{% block title %}Modifier Ordonnance{% endblock %}
+
+{% block body %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-10">
+        <div>
+            <h1 class="text-4xl font-black text-slate-800 tracking-tight">Modifier Ordonnance</h1>
+            <p class="text-slate-500 font-medium">Édition de l'ordonnance <span class="text-indigo-600 font-bold">#{{ ordonnance.id }}</span>.</p>
+        </div>
+        <div class="flex items-center gap-4">
+            <a href="{{ path('app_ordonnance_index') }}" class="flex items-center gap-2 text-slate-400 hover:text-indigo-600 transition-all font-bold group">
+                <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
+                Retour
+            </a>
+            {{ include('ordonnance/_delete_form.html.twig') }}
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="bg-white rounded-[3rem] shadow-2xl shadow-indigo-100 p-10 border border-slate-100 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-48 h-48 bg-purple-50 rounded-full blur-3xl -mr-24 -mt-24"></div>
+        <div class="relative z-10">
+            {{ include('ordonnance/_form.html.twig', {'button_label': 'Mettre à jour'}) }}
+        </div>
+    </div>
+</div>
+{% endblock %}

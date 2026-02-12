@@ -33,20 +33,32 @@
         <nav class="flex-1 p-4 space-y-2">
             <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 pl-2">Menu Principal</p>
             
+<<<<<<< HEAD
             <a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 text-blue-600 bg-blue-50 rounded-xl font-medium">
+=======
+            <a href="{{ path('patient_dashboard') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 {{ app.request.get('_route') == 'patient_dashboard' ? 'text-blue-600 bg-blue-50' : 'text-gray-600' }} rounded-xl font-medium">
+>>>>>>> e3874a9 (user + events + annonce + forum + suiviSante)
                 <i class="fa-solid fa-chart-line w-5"></i> Tableau de Bord
             </a>
             <a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 text-gray-600 rounded-xl font-medium">
                 <i class="fa-solid fa-user-doctor w-5"></i> Rendez-vous
             </a>
+<<<<<<< HEAD
             <a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 text-gray-600 rounded-xl font-medium">
                 <i class="fa-solid fa-pills w-5"></i> Médicaments
             </a>
             <a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 text-gray-600 rounded-xl font-medium">
+=======
+            <a href="{{ path('patient_medicaments') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 {{ app.request.get('_route') == 'patient_medicaments' ? 'text-blue-600 bg-blue-50' : 'text-gray-600' }} rounded-xl font-medium">
+                <i class="fa-solid fa-pills w-5"></i> Médicaments
+            </a>
+            <a href="{{ path('patient_dossier') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 {{ app.request.get('_route') == 'patient_dossier' ? 'text-blue-600 bg-blue-50' : 'text-gray-600' }} rounded-xl font-medium">
+>>>>>>> e3874a9 (user + events + annonce + forum + suiviSante)
                 <i class="fa-solid fa-notes-medical w-5"></i> Mes Données
             </a>
 
             <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mt-6 mb-2 pl-2">Communauté</p>
+<<<<<<< HEAD
             <a href="{{ path('app_missions_index')}}" class="sidebar-link flex items-center gap-3 px-4 py-3 text-gray-600 rounded-xl font-medium">
                 <i class="fa-solid fa-hand-holding-heart w-5"></i> Bénévolat
             </a>
@@ -61,6 +73,22 @@
             </a>
             <a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 text-gray-600 rounded-xl font-medium">
                 <i class="fa-solid fa-calendar-day w-5"></i> Événements
+=======
+            <a href="{{ path('app_missions_index')}}" class="sidebar-link flex items-center gap-3 px-4 py-3 {{ app.request.get('_route') == 'app_missions_index' ? 'text-blue-600 bg-blue-50' : 'text-gray-600' }} rounded-xl font-medium">
+                <i class="fa-solid fa-hand-holding-heart w-5 text-orange-400"></i> Bénévolat
+            </a>
+            <a href="{{ path('app_forum_index') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 {{ app.request.get('_route') == 'app_forum_index' ? 'text-blue-600 bg-blue-50' : 'text-gray-600' }} rounded-xl font-medium">
+                <i class="fa-solid fa-comments w-5 text-blue-400"></i> Forum
+            </a>
+            <a href="{{ path('app_donation_index') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 {{ app.request.get('_route') == 'app_donation_index' ? 'text-blue-600 bg-blue-50' : 'text-gray-600' }} rounded-xl font-medium">
+                <i class="fa-solid fa-bullhorn w-5 text-purple-400"></i> Annonces & Donations
+            </a>
+            <a href="{{ path('app_assoc_mission_index') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 {{ app.request.get('_route') == 'app_assoc_mission_index' ? 'text-blue-600 bg-blue-50' : 'text-gray-600' }} rounded-xl font-medium">
+                <i class="fa-solid fa-briefcase w-5 text-emerald-400"></i> Gérer mes Missions
+            </a>
+            <a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 text-gray-600 rounded-xl font-medium">
+                <i class="fa-solid fa-calendar-check w-5 text-red-400"></i> Événements
+>>>>>>> e3874a9 (user + events + annonce + forum + suiviSante)
             </a>
 
             {% if is_granted('ROLE_ADMIN') %}
@@ -123,8 +151,25 @@
             </div>
         </header>
         
+<<<<<<< HEAD
 {% block body %}
 {% endblock %} 
+=======
+        <div class="px-8 pt-6">
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="mb-4 p-4 rounded-2xl shadow-sm border animate-bounce flex items-center gap-3
+                        {% if label == 'success' %}bg-green-50 text-green-700 border-green-200{% elseif label == 'danger' or label == 'error' %}bg-red-50 text-red-700 border-red-200{% else %}bg-blue-50 text-blue-700 border-blue-200{% endif %}">
+                        <i class="fa-solid {% if label == 'success' %}fa-circle-check{% else %}fa-circle-exclamation{% endif %} text-lg"></i>
+                        <span class="font-bold text-sm">{{ message }}</span>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+        
+        {% block body %}
+        {% endblock %} 
+>>>>>>> e3874a9 (user + events + annonce + forum + suiviSante)
 
     </main>
 {% block javascripts %}

@@ -1,0 +1,30 @@
+{% extends 'admin_base.html.twig' %}
+
+{% block title %}Modifier Médicament{% endblock %}
+
+{% block body %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-10">
+        <div>
+            <h1 class="text-4xl font-black text-slate-800 tracking-tight">Modifier Médicament</h1>
+            <p class="text-slate-500 font-medium">Mise à jour des informations pour <span class="text-blue-600 font-bold">{{ medicament.nomMedicament }}</span>.</p>
+        </div>
+        <div class="flex items-center gap-4">
+            <a href="{{ path('app_medicament_index') }}" class="flex items-center gap-2 text-slate-400 hover:text-blue-600 transition-all font-bold group">
+                <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
+                Retour
+            </a>
+            {{ include('medicament/_delete_form.html.twig') }}
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/60 p-10 border border-slate-100 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-full blur-3xl -mr-16 -mt-16"></div>
+        <div class="relative z-10">
+            {{ include('medicament/_form.html.twig', {'button_label': 'Mettre à jour'}) }}
+        </div>
+    </div>
+</div>
+{% endblock %}

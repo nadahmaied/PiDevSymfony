@@ -2,6 +2,13 @@
 
 namespace App\Entity;
 
+<<<<<<< HEAD
+=======
+use App\Entity\Fiche;
+use App\Entity\Ordonnance;
+use App\Entity\Question;
+use App\Entity\Reponse;
+>>>>>>> e3874a9 (user + events + annonce + forum + suiviSante)
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -75,10 +82,24 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Reponse::class, mappedBy: 'auteur')]
     private Collection $reponses;
 
+<<<<<<< HEAD
+=======
+    #[ORM\OneToMany(targetEntity: Fiche::class, mappedBy: 'idU')]
+    private Collection $fiches;
+
+    #[ORM\OneToMany(targetEntity: Ordonnance::class, mappedBy: 'idU')]
+    private Collection $ordonnances;
+
+>>>>>>> e3874a9 (user + events + annonce + forum + suiviSante)
     public function __construct()
     {
         $this->questions = new ArrayCollection();
         $this->reponses = new ArrayCollection();
+<<<<<<< HEAD
+=======
+        $this->fiches = new ArrayCollection();
+        $this->ordonnances = new ArrayCollection();
+>>>>>>> e3874a9 (user + events + annonce + forum + suiviSante)
     }
 
     public function getId(): ?int
@@ -241,6 +262,69 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $this;
     }
+<<<<<<< HEAD
+=======
+
+    /**
+     * @return Collection<int, Fiche>
+     */
+    public function getFiches(): Collection
+    {
+        return $this->fiches;
+    }
+
+    public function addFiche(Fiche $fiche): static
+    {
+        if (!$this->fiches->contains($fiche)) {
+            $this->fiches->add($fiche);
+            $fiche->setIdU($this);
+        }
+
+        return $this;
+    }
+
+    public function removeFiche(Fiche $fiche): static
+    {
+        if ($this->fiches->removeElement($fiche)) {
+            // set the owning side to null (unless already changed)
+            if ($fiche->getIdU() === $this) {
+                $fiche->setIdU(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Ordonnance>
+     */
+    public function getOrdonnances(): Collection
+    {
+        return $this->ordonnances;
+    }
+
+    public function addOrdonnance(Ordonnance $ordonnance): static
+    {
+        if (!$this->ordonnances->contains($ordonnance)) {
+            $this->ordonnances->add($ordonnance);
+            $ordonnance->setIdU($this);
+        }
+
+        return $this;
+    }
+
+    public function removeOrdonnance(Ordonnance $ordonnance): static
+    {
+        if ($this->ordonnances->removeElement($ordonnance)) {
+            // set the owning side to null (unless already changed)
+            if ($ordonnance->getIdU() === $this) {
+                $ordonnance->setIdU(null);
+            }
+        }
+
+        return $this;
+    }
+>>>>>>> e3874a9 (user + events + annonce + forum + suiviSante)
     public function getUserIdentifier(): string
     {
         return (string) $this->email;

@@ -19,6 +19,7 @@
                 </div>
             </div>
             <nav class="flex-1 p-4 space-y-2 text-sm">
+<<<<<<< HEAD
                 <p class="text-xs font-bold text-slate-500 uppercase mb-2 pl-3">Général</p>
                 <a href="{{ path('admin_annonce_index') }}" class="flex items-center gap-3 px-4 py-3 {% if app.request.get('_route') starts with 'admin_annonce' %}bg-blue-600 text-white shadow-lg shadow-blue-900/50{% else %}text-slate-400 hover:bg-slate-800 hover:text-white{% endif %} rounded-xl font-medium transition">
                     <i class="fa-solid fa-bullhorn w-5"></i> Annonces
@@ -28,6 +29,48 @@
                 <a href="{{ path('admin_donation_index') }}" class="flex items-center gap-3 px-4 py-3 {% if app.request.get('_route') starts with 'admin_donation' %}bg-orange-600 text-white shadow-lg shadow-orange-900/50{% else %}text-slate-400 hover:bg-slate-800 hover:text-white{% endif %} rounded-xl transition">
                     <i class="fa-solid fa-hand-holding-heart w-5"></i> Donations
                 </a>
+=======
+            <nav class="flex-1 p-4 space-y-2 text-sm overflow-y-auto no-scrollbar">
+                <!-- Section Médicale (New) -->
+                <p class="text-xs font-bold text-slate-500 uppercase mb-2 pl-3">Médical</p>
+                <a href="{{ path('app_medicament_index') }}" class="flex items-center gap-3 px-4 py-3 {% if app.request.get('_route') starts with 'app_medicament' %}bg-blue-600 text-white shadow-lg shadow-blue-900/50{% else %}text-slate-400 hover:bg-slate-800 hover:text-white{% endif %} rounded-xl font-medium transition">
+                    <i class="fa-solid fa-pills w-5"></i> Médicaments
+                </a>
+                <a href="{{ path('app_fiche_index') }}" class="flex items-center gap-3 px-4 py-3 {% if app.request.get('_route') starts with 'app_fiche' %}bg-blue-600 text-white shadow-lg shadow-blue-900/50{% else %}text-slate-400 hover:bg-slate-800 hover:text-white{% endif %} rounded-xl font-medium transition">
+                    <i class="fa-solid fa-file-medical w-5"></i> Fiches Médicales
+                </a>
+                <a href="{{ path('app_ordonnance_index') }}" class="flex items-center gap-3 px-4 py-3 {% if app.request.get('_route') starts with 'app_ordonnance' %}bg-blue-600 text-white shadow-lg shadow-blue-900/50{% else %}text-slate-400 hover:bg-slate-800 hover:text-white{% endif %} rounded-xl font-medium transition">
+                    <i class="fa-solid fa-prescription w-5"></i> Ordonnances
+                </a>
+
+                <!-- Community / Social -->
+                <p class="text-xs font-bold text-slate-500 uppercase mt-6 mb-2 pl-3">Communauté</p>
+                <a href="{{ path('app_admin_forum_index') }}" class="flex items-center gap-3 px-4 py-3 {% if app.request.get('_route') starts with 'app_admin_forum' %}bg-purple-600 text-white shadow-lg shadow-purple-900/50{% else %}text-slate-400 hover:bg-slate-800 hover:text-white{% endif %} rounded-xl transition">
+                    <i class="fa-solid fa-comments w-5"></i> Forum
+                </a>
+                <a href="{{ path('app_admin_missions_index') }}" class="flex items-center gap-3 px-4 py-3 {% if app.request.get('_route') starts with 'app_admin_missions' %}bg-green-600 text-white shadow-lg shadow-green-900/50{% else %}text-slate-400 hover:bg-slate-800 hover:text-white{% endif %} rounded-xl transition">
+                    <i class="fa-solid fa-tasks w-5"></i> Missions
+                </a>
+
+                <!-- Solidarity -->
+                <p class="text-xs font-bold text-slate-500 uppercase mt-6 mb-2 pl-3">Solidarité</p>
+                <a href="{{ path('admin_annonce_index') }}" class="flex items-center gap-3 px-4 py-3 {% if app.request.get('_route') starts with 'admin_annonce' %}bg-amber-600 text-white shadow-lg shadow-amber-900/50{% else %}text-slate-400 hover:bg-slate-800 hover:text-white{% endif %} rounded-xl transition">
+                    <i class="fa-solid fa-bullhorn w-5"></i> Annonces
+                </a>
+                <a href="{{ path('admin_donation_index') }}" class="flex items-center gap-3 px-4 py-3 {% if app.request.get('_route') starts with 'admin_donation' %}bg-orange-600 text-white shadow-lg shadow-orange-900/50{% else %}text-slate-400 hover:bg-slate-800 hover:text-white{% endif %} rounded-xl transition">
+                    <i class="fa-solid fa-hand-holding-heart w-5"></i> Donations
+                </a>
+
+                <!-- System -->
+                <p class="text-xs font-bold text-slate-500 uppercase mt-6 mb-2 pl-3">Système</p>
+                <a href="{{ path('admin_user_index') }}" class="flex items-center gap-3 px-4 py-3 {% if app.request.get('_route') starts with 'admin_user' %}bg-slate-600 text-white shadow-lg shadow-slate-900/50{% else %}text-slate-400 hover:bg-slate-800 hover:text-white{% endif %} rounded-xl transition">
+                    <i class="fa-solid fa-user-gear w-5"></i> Utilisateurs
+                </a>
+                <a href="{{ path('app_seed') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-green-400 rounded-xl transition">
+                    <i class="fa-solid fa-database w-5"></i> Seed Test Data
+                </a>
+            </nav>
+>>>>>>> e3874a9 (user + events + annonce + forum + suiviSante)
             </nav>
             <div class="p-4 border-t border-slate-800">
                 <a href="{{ path('app_home') }}" class="flex items-center gap-2 text-slate-400 hover:text-white transition text-sm">
@@ -53,6 +96,18 @@
 
             <!-- Page Content -->
             <div class="flex-1 overflow-y-auto p-8">
+<<<<<<< HEAD
+=======
+                {% for label, messages in app.flashes %}
+                    {% for message in messages %}
+                        <div class="mb-4 p-4 rounded-xl shadow-sm border
+                            {% if label == 'success' %}bg-green-50 text-green-700 border-green-200{% elseif label == 'danger' or label == 'error' %}bg-red-50 text-red-700 border-red-200{% else %}bg-blue-50 text-blue-700 border-blue-200{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+
+>>>>>>> e3874a9 (user + events + annonce + forum + suiviSante)
                 {% block body %}{% endblock %}
             </div>
         </main>

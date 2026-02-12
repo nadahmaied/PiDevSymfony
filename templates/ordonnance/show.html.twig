@@ -1,0 +1,122 @@
+{% extends 'admin_base.html.twig' %}
+
+{% block title %}Ordonnance #{{ ordonnance.id }}{% endblock %}
+
+{% block body %}
+<div class="max-w-5xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-10">
+        <div>
+            <h1 class="text-4xl font-black text-slate-800 tracking-tight">Ordonnance détaillée</h1>
+            <p class="text-slate-500 font-medium">Visualisation complète de la prescription.</p>
+        </div>
+        <div class="flex items-center gap-4">
+            <a href="{{ path('app_ordonnance_index') }}" class="bg-slate-100 text-slate-600 px-6 py-3 rounded-2xl font-bold hover:bg-slate-200 transition-all flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i>
+                Liste
+            </a>
+            <a href="{{ path('app_ordonnance_edit', {'id': ordonnance.id}) }}" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all flex items-center gap-2">
+                <i class="fa-solid fa-edit"></i>
+                Modifier
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Content -->
+        <div class="lg:col-span-2 space-y-8">
+            <div class="bg-white rounded-[3rem] shadow-xl shadow-slate-200/50 p-10 border border-slate-100">
+                <h2 class="text-2xl font-black text-slate-800 mb-8 flex items-center gap-3">
+                    <i class="fa-solid fa-notes-medical text-indigo-500"></i>
+                    Traitement Prescrit
+                </h2>
+                
+                <div class="space-y-6">
+                    <div>
+                        <p class="text-slate-400 text-xs font-black uppercase tracking-widest mb-2">Posologie</p>
+                        <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 font-bold text-slate-700 leading-relaxed">
+                            {{ ordonnance.posologie }}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="bg-indigo-50/50 p-6 rounded-2xl border border-indigo-100">
+                            <p class="text-indigo-400 text-[10px] font-black uppercase tracking-widest mb-1">Durée du traitement</p>
+                            <p class="text-2xl font-black text-indigo-600">{{ ordonnance.dureeTraitement }} Jours</p>
+                        </div>
+                        <div class="bg-purple-50/50 p-6 rounded-2xl border border-purple-100">
+                            <p class="text-purple-400 text-[10px] font-black uppercase tracking-widest mb-1">Fréquence</p>
+                            <p class="text-lg font-black text-purple-600">{{ ordonnance.frequence }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medicaments List -->
+            <div class="bg-white rounded-[3rem] shadow-xl shadow-slate-200/50 p-10 border border-slate-100">
+                <h2 class="text-2xl font-black text-slate-800 mb-8 flex items-center justify-between">
+                    <span class="flex items-center gap-3">
+                        <i class="fa-solid fa-pills text-blue-500"></i>
+                        Médicaments Inclus
+                    </span>
+                    <span class="bg-blue-100 text-blue-600 text-sm px-4 py-1 rounded-full">{{ ordonnance.medicaments|length }} Items</span>
+                </h2>
+
+                <div class="space-y-4">
+                    {% for medicament in ordonnance.medicaments %}
+                        <div class="flex items-center justify-between p-5 bg-slate-50 rounded-2xl border border-slate-100 hover:border-blue-200 transition-colors group">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-capsules"></i>
+                                </div>
+                                <div>
+                                    <p class="font-black text-slate-700">{{ medicament.nomMedicament }}</p>
+                                    <p class="text-xs text-slate-400 font-bold tracking-tight">{{ medicament.dosage }} • {{ medicament.forme }}</p>
+                                </div>
+                            </div>
+                            <a href="{{ path('app_medicament_show', {'id': medicament.id}) }}" class="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-300 hover:text-blue-500 hover:shadow-md transition-all">
+                                <i class="fa-solid fa-external-link text-xs"></i>
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-10">
+                            <i class="fa-solid fa-circle-info text-3xl text-slate-200 mb-4"></i>
+                            <p class="text-slate-400 font-bold">Aucun médicament spécifié</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-8">
+            <!-- Doctor Card -->
+            <div class="bg-indigo-600 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-indigo-100 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+                <h3 class="text-indigo-100 text-[10px] font-black uppercase tracking-widest mb-6 relative z-10">Médecin Prescripteur</h3>
+                <div class="flex items-center gap-4 relative z-10 mb-6">
+                    <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
+                        <i class="fa-solid fa-user-doctor text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="font-black text-lg">{{ ordonnance.idU.email|split('@')|first|capitalize }}</p>
+                        <p class="text-indigo-200 text-xs font-medium">{{ ordonnance.idU.email }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fiche Association -->
+            <div class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 p-8 border border-slate-100 text-center">
+                <p class="text-slate-400 text-xs font-black uppercase tracking-widest mb-4">Fiche Médicale Associée</p>
+                <div class="bg-emerald-50 text-emerald-600 p-4 rounded-2xl font-black mb-6 border border-emerald-100">
+                    ID Fiche: #{{ ordonnance.idFiche.id }}
+                </div>
+                <a href="{{ path('app_fiche_show', {'id': ordonnance.idFiche.id}) }}" class="inline-flex items-center gap-2 text-sm font-black text-slate-600 hover:text-emerald-500 transition-colors">
+                    Consulter la fiche
+                    <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
