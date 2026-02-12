@@ -1,0 +1,104 @@
+{% extends 'baseFront.html.twig' %}
+
+{% block title %}{{ question.titre }}{% endblock %}
+
+{% block body %}
+<div class="flex h-screen bg-slate-50 overflow-hidden">
+    <aside class="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col z-20">
+        {% include 'partials/_sidebar_front.html.twig' ignore missing %}
+    </aside>
+
+    <main class="flex-1 flex flex-col h-screen overflow-y-auto p-4 md:p-8 no-scrollbar relative">
+        <div class="max-w-5xl mx-auto w-full space-y-6">
+            
+            <a href="{{ path('app_forum_index') }}" class="text-slate-500 hover:text-teal-600 inline-flex items-center gap-2 transition font-medium">
+                <i class="fa-solid fa-arrow-left"></i> Retour aux discussions
+            </a>
+
+            <div class="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 relative group">
+                <div class="absolute top-6 right-6 flex gap-2 opacity-0 group-hover:opacity-100 transition">
+                    <a href="{{ path('app_forum_edit', {'id': question.id}) }}" class="p-2 text-slate-400 hover:text-teal-600 transition" title="Modifier">
+                        <i class="fa-solid fa-pen"></i>
+                    </a>
+                    <form method="post" action="{{ path('app_forum_delete', {'id': question.id}) }}" onsubmit="return confirm('Êtes-vous sûr ?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ question.id) }}">
+                        <button class="p-2 text-slate-400 hover:text-red-500 transition" title="Supprimer">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <div class="flex items-start gap-4 mb-6">
+                    <img src="https://ui-avatars.com/api/?name={{ question.auteur ? question.auteur.email : '?' }}&background=0D8ABC&color=fff" class="w-14 h-14 rounded-2xl shadow-sm">
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold text-slate-800 leading-tight">{{ question.titre }}</h1>
+                        <div class="flex items-center gap-2 mt-2 text-sm text-slate-500">
+                            <span class="font-bold text-teal-600">{{ question.auteur ? question.auteur.email : 'Anonyme' }}</span>
+                            <span>•</span>
+                            <span>{{ question.dateCreation|date('d M Y à H:i') }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="prose max-w-none text-slate-600 leading-relaxed pl-0 md:pl-18">
+                    {{ question.contenu|nl2br }}
+                </div>
+            </div>
+
+            <div class="border-t border-slate-200 pt-8">
+                <h3 class="font-bold text-slate-800 text-xl mb-6 flex items-center gap-2">
+                    <span class="bg-teal-100 text-teal-700 px-3 py-1 rounded-lg text-sm">{{ question.reponses|length }}</span> Réponses
+                </h3>
+
+                <div class="space-y-6">
+                    {% for reponse in question.reponses %}
+                        <div class="flex gap-4 group">
+                            <div class="flex flex-col items-center">
+                                <img src="https://ui-avatars.com/api/?name={{ reponse.auteur ? reponse.auteur.email : '?' }}&background=random" class="w-10 h-10 rounded-full border-2 border-white shadow-sm">
+                                <div class="w-0.5 h-full bg-slate-100 mt-2 group-last:hidden"></div>
+                            </div>
+                            
+                            <div class="flex-1 bg-white p-6 rounded-2xl rounded-tl-none shadow-sm border border-slate-100 relative hover:border-teal-100 transition">
+                                <form method="post" action="{{ path('app_forum_delete_reponse', {'id': reponse.id}) }}" class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition" onsubmit="return confirm('Supprimer ce commentaire ?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ reponse.id) }}">
+                                    <button class="text-slate-300 hover:text-red-500 transition"><i class="fa-solid fa-times"></i></button>
+                                </form>
+
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-bold text-slate-700 text-sm">{{ reponse.auteur ? reponse.auteur.email : 'Anonyme' }}</span>
+                                    <span class="text-xs text-slate-400">{{ reponse.dateCreation|date('d/m/Y H:i') }}</span>
+                                </div>
+                                <p class="text-slate-600 text-sm">{{ reponse.contenu|nl2br }}</p>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-8 bg-white rounded-2xl border border-dashed border-slate-200">
+                            <p class="text-slate-400 italic">Aucune réponse pour le moment. Soyez le premier !</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="sticky bottom-0 bg-slate-50/95 backdrop-blur pt-4 pb-8 border-t border-slate-200 mt-8">
+                <div class="bg-white p-2 rounded-2xl shadow-lg border border-teal-100 flex items-start gap-2">
+                    <img src="https://ui-avatars.com/api/?name={{ app.user ? app.user.email : 'Me' }}&background=0f172a&color=fff" class="w-10 h-10 rounded-full m-2 hidden md:block">
+                    
+                    <div class="flex-1">
+                        {{ form_start(form) }}
+                            {{ form_widget(form.contenu, {'attr': {'class': 'w-full px-4 py-3 bg-transparent outline-none text-slate-700 placeholder-slate-400 resize-none h-20', 'placeholder': 'Partagez votre avis ou votre expérience...'}}) }}
+                            
+                            <div class="flex justify-between items-center px-4 pb-2">
+                                <div class="text-xs text-slate-400"><i class="fa-solid fa-markdown"></i> Markdown supporté</div>
+                                <button type="submit" class="bg-teal-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-teal-700 transition flex items-center gap-2 text-sm">
+                                    <i class="fa-solid fa-reply"></i> Répondre
+                                </button>
+                            </div>
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+{% endblock %}

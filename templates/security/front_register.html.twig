@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription - VitalTech</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-sky-50 flex items-center justify-center px-4">
+<div class="w-full max-w-2xl">
+    <div class="mb-8 text-center">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-500 text-white shadow-lg shadow-emerald-300/60">
+            <i class="fa-solid fa-user-plus text-2xl"></i>
+        </div>
+        <h1 class="mt-4 text-2xl font-bold text-slate-900">Créer un compte patient</h1>
+        <p class="mt-1 text-sm text-slate-500">Rejoignez VitalTech et suivez vos données de santé en toute sécurité.</p>
+    </div>
+
+    <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl shadow-emerald-100/60 p-6 border border-slate-100">
+        {{ form_start(registrationForm) }}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="md:col-span-2 space-y-1.5">
+                {{ form_label(registrationForm.email, null, {'label_attr': {'class': 'block text-sm font-medium text-slate-700'}}) }}
+                {{ form_widget(registrationForm.email, {
+                    'attr': {
+                        'class': 'w-full rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/60 text-sm px-3 py-2.5 bg-white',
+                        'placeholder': 'vous@example.com'
+                    }
+                }) }}
+                <div class="text-xs text-rose-500">
+                    {{ form_errors(registrationForm.email) }}
+                </div>
+            </div>
+
+            <div class="space-y-1.5">
+                {{ form_label(registrationForm.nom, null, {'label_attr': {'class': 'block text-sm font-medium text-slate-700'}}) }}
+                {{ form_widget(registrationForm.nom, {
+                    'attr': {
+                        'class': 'w-full rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/60 text-sm px-3 py-2.5 bg-white',
+                        'placeholder': 'Votre nom'
+                    }
+                }) }}
+                <div class="text-xs text-rose-500">
+                    {{ form_errors(registrationForm.nom) }}
+                </div>
+            </div>
+
+            <div class="space-y-1.5">
+                {{ form_label(registrationForm.prenom, null, {'label_attr': {'class': 'block text-sm font-medium text-slate-700'}}) }}
+                {{ form_widget(registrationForm.prenom, {
+                    'attr': {
+                        'class': 'w-full rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/60 text-sm px-3 py-2.5 bg-white',
+                        'placeholder': 'Votre prénom'
+                    }
+                }) }}
+                <div class="text-xs text-rose-500">
+                    {{ form_errors(registrationForm.prenom) }}
+                </div>
+            </div>
+
+            <div class="md:col-span-2 space-y-1.5">
+                {{ form_label(registrationForm.adresse, null, {'label_attr': {'class': 'block text-sm font-medium text-slate-700'}}) }}
+                {{ form_widget(registrationForm.adresse, {
+                    'attr': {
+                        'class': 'w-full rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/60 text-sm px-3 py-2.5 bg-white',
+                        'placeholder': 'Adresse (optionnel)'
+                    }
+                }) }}
+                <div class="text-xs text-rose-500">
+                    {{ form_errors(registrationForm.adresse) }}
+                </div>
+            </div>
+
+            <div class="md:col-span-2 space-y-1.5">
+                {{ form_label(registrationForm.telephone, null, {'label_attr': {'class': 'block text-sm font-medium text-slate-700'}}) }}
+                {{ form_widget(registrationForm.telephone, {
+                    'attr': {
+                        'class': 'w-full rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/60 text-sm px-3 py-2.5 bg-white',
+                        'placeholder': 'Téléphone (optionnel)'
+                    }
+                }) }}
+                <div class="text-xs text-rose-500">
+                    {{ form_errors(registrationForm.telephone) }}
+                </div>
+            </div>
+
+            <div class="md:col-span-2 space-y-1.5">
+                {{ form_label(registrationForm.plainPassword, null, {'label_attr': {'class': 'block text-sm font-medium text-slate-700'}}) }}
+                {{ form_widget(registrationForm.plainPassword, {
+                    'attr': {
+                        'class': 'w-full rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/60 text-sm px-3 py-2.5 bg-white',
+                        'placeholder': 'Choisissez un mot de passe'
+                    }
+                }) }}
+                <p class="text-[11px] text-slate-400">Minimum 6 caractères.</p>
+                <div class="text-xs text-rose-500">
+                    {{ form_errors(registrationForm.plainPassword) }}
+                </div>
+            </div>
+        </div>
+
+        <button
+            type="submit"
+            class="mt-6 w-full inline-flex justify-center items-center px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-emerald-500 hover:bg-emerald-600 shadow-sm shadow-emerald-300/60 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors"
+        >
+            <i class="fa-solid fa-user-check mr-2 text-xs"></i>
+            Créer mon compte
+        </button>
+
+        {{ form_end(registrationForm) }}
+
+        <p class="mt-4 text-center text-xs text-slate-500">
+            Vous avez déjà un compte ?
+            <a href="{{ path('front_login') }}" class="font-medium text-emerald-600 hover:text-emerald-700 hover:underline">
+                Se connecter
+            </a>
+        </p>
+    </div>
+
+    <p class="mt-6 text-center text-[11px] text-slate-400">
+        Accès administrateur ?
+        <a href="{{ path('admin_login') }}" class="font-medium text-slate-600 hover:text-slate-800 underline">
+            Se connecter au backoffice
+        </a>
+    </p>
+</div>
+</body>
+</html>
+
