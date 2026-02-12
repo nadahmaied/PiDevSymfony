@@ -1,0 +1,104 @@
+{% extends 'baseFront.html.twig' %}
+
+{% block title %}
+<h1 class="text-2xl font-black text-gray-800 tracking-tight">Mon Dossier Médical 📁</h1>
+{% endblock %}
+
+{% block body %}
+<div class="px-8 py-8 space-y-12">
+    <!-- Header with Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="bg-emerald-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-emerald-100 relative overflow-hidden group">
+            <i class="fa-solid fa-file-medical absolute -right-4 -bottom-4 text-7xl text-white/10 group-hover:scale-125 transition-transform"></i>
+            <p class="text-emerald-100 text-[10px] font-black uppercase tracking-widest mb-1 italic">Total Fiches</p>
+            <h3 class="text-4xl font-black">{{ fiches|length }}</h3>
+            <p class="text-xs text-emerald-100/60 mt-4 font-bold">Votre historique clinique complet.</p>
+        </div>
+        <div class="bg-indigo-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-indigo-100 relative overflow-hidden group">
+            <i class="fa-solid fa-receipt absolute -right-4 -bottom-4 text-7xl text-white/10 group-hover:scale-125 transition-transform"></i>
+            <p class="text-indigo-100 text-[10px] font-black uppercase tracking-widest mb-1 italic">Ordonnances</p>
+            <h3 class="text-4xl font-black">{{ ordonnances|length }}</h3>
+            <p class="text-xs text-indigo-100/60 mt-4 font-bold">Traitements prescrits par vos médecins.</p>
+        </div>
+        <div class="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-xl flex items-center justify-center">
+            <div class="text-center">
+                <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 mx-auto mb-3">
+                    <i class="fa-solid fa-shield-virus text-xl"></i>
+                </div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Confidentialité</p>
+                <p class="text-xs font-bold text-slate-600 mt-1">Vos données sont sécurisées.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <!-- Fiches Section -->
+        <div class="space-y-8">
+            <h2 class="text-2xl font-black text-gray-800 flex items-center gap-3">
+                <i class="fa-solid fa-stethoscope text-emerald-500"></i>
+                Mes Analyses Cliniques
+            </h2>
+            
+            <div class="space-y-4">
+                {% for fiche in fiches %}
+                    <a href="{{ path('patient_fiche_show', {id: fiche.id}) }}" class="flex items-center justify-between p-6 bg-white rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all group hover:-translate-x-2">
+                        <div class="flex items-center gap-5">
+                            <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
+                                <i class="fa-solid fa-notes-medical text-2xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-black text-gray-800 text-lg italic group-hover:text-emerald-700transition-colors">"{{ fiche.libelleMaladie }}"</h4>
+                                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">{{ fiche.date ? fiche.date|date('d M Y') : 'N/A' }}</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-end gap-2 text-right">
+                            <span class="px-3 py-1 bg-slate-50 rounded-lg text-[10px] font-black uppercase text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+                                {{ fiche.gravite }}
+                            </span>
+                            <i class="fa-solid fa-chevron-right text-gray-200 group-hover:text-emerald-500 group-hover:translate-x-2 transition-all"></i>
+                        </div>
+                    </a>
+                {% else %}
+                    <div class="p-10 text-center bg-gray-50 rounded-[2rem] border-2 border-dashed border-gray-200">
+                        <p class="font-bold text-gray-400">Aucune analyse disponible.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Ordonnances Section -->
+        <div class="space-y-8">
+            <h2 class="text-2xl font-black text-gray-800 flex items-center gap-3">
+                <i class="fa-solid fa-file-prescription text-indigo-500"></i>
+                Mes Ordonnances
+            </h2>
+
+            <div class="space-y-4">
+                {% for ord in ordonnances %}
+                    <a href="{{ path('patient_ordonnance_show', {id: ord.id}) }}" class="flex items-center justify-between p-6 bg-white rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all group hover:translate-x-2">
+                        <div class="flex items-center gap-5">
+                            <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
+                                <i class="fa-solid fa-briefcase-medical text-2xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-black text-gray-800 text-lg italic group-hover:text-indigo-700 transition-colors"> Prescription #{{ ord.id }}</h4>
+                                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">{{ ord.dureeTraitement }} Jours de Traitement</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-end gap-2 text-right">
+                            <span class="px-3 py-1 bg-slate-50 rounded-lg text-[10px] font-black uppercase text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                                {{ ord.medicaments|length }} Médicaments
+                            </span>
+                            <i class="fa-solid fa-chevron-right text-gray-200 group-hover:text-indigo-500 group-hover:translate-x-2 transition-all"></i>
+                        </div>
+                    </a>
+                {% else %}
+                    <div class="p-10 text-center bg-gray-50 rounded-[2rem] border-2 border-dashed border-gray-200">
+                        <p class="font-bold text-gray-400">Aucune ordonnance disponible.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

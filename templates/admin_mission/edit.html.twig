@@ -1,0 +1,40 @@
+{% extends 'baseBack.html.twig' %}
+
+{% block title %}Modifier la Mission{% endblock %}
+
+{% block body %}
+    <header class="bg-white border-b py-4 px-8 shadow-sm flex justify-between items-center">
+        <div>
+            <div class="flex items-center gap-2 text-sm text-gray-500 mb-1">
+                <a href="{{ path('app_admin_missions_index') }}" class="hover:text-orange-600">Missions</a>
+                <i class="fa-solid fa-chevron-right text-xs"></i>
+                <span>Edition</span>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-800">Modifier la mission #{{ mission.id }}</h1>
+        </div>
+        
+        {{ include('admin_mission/_delete_form.html.twig') }}
+    </header>
+
+    <div class="flex-1 overflow-y-auto p-8 bg-gray-50">
+        <div class="max-w-3xl mx-auto">
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                 <div class="h-2 bg-gradient-to-r from-blue-400 to-blue-600"></div>
+
+                <div class="p-8">
+                    <div class="mb-6 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-700">Détails de la mission</h2>
+                            <p class="text-sm text-gray-500">Modifiez les informations nécessaires ci-dessous.</p>
+                        </div>
+                        <span class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-bold border border-blue-100">
+                            Mode Édition
+                        </span>
+                    </div>
+
+                    {{ include('admin_mission/_form.html.twig', {'button_label': 'Mettre à jour'}) }}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

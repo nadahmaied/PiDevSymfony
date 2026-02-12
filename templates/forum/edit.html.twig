@@ -1,0 +1,42 @@
+{% extends 'baseFront.html.twig' %}
+
+{% block title %}Modifier Sujet{% endblock %}
+
+{% block body %}
+<div class="flex h-screen bg-slate-50 overflow-hidden">
+    <aside class="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col z-20">
+        {% include 'partials/_sidebar_front.html.twig' ignore missing %}
+    </aside>
+
+    <main class="flex-1 flex flex-col h-screen overflow-y-auto p-8 relative">
+        <div class="max-w-3xl mx-auto w-full">
+            <a href="{{ path('app_forum_show', {'id': question.id}) }}" class="text-slate-500 hover:text-teal-600 mb-6 inline-flex items-center gap-2 transition">
+                <i class="fa-solid fa-arrow-left"></i> Annuler
+            </a>
+
+            <div class="bg-white rounded-3xl shadow-xl p-8 border border-slate-100">
+                <h1 class="text-2xl font-bold text-slate-800 mb-6">Modifier votre question</h1>
+
+                {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+                    <div class="space-y-6">
+                        <div>
+                            {{ form_label(form.titre, null, {'label_attr': {'class': 'font-bold text-slate-700'}}) }}
+                            {{ form_widget(form.titre) }}
+                        </div>
+                        <div>
+                            {{ form_label(form.contenu, null, {'label_attr': {'class': 'font-bold text-slate-700'}}) }}
+                            {{ form_widget(form.contenu) }}
+                        </div>
+
+                        <div class="flex gap-4">
+                            <button type="submit" class="flex-1 bg-teal-600 text-white font-bold py-3 rounded-xl hover:bg-teal-700 transition">
+                                Enregistrer
+                            </button>
+                        </div>
+                    </div>
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

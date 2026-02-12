@@ -1,0 +1,92 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Détail de la donation - HealthTrack{% endblock %}
+
+{% block page_title %}Détail de la donation{% endblock %}
+
+{% block body %}
+    <div class="flex flex-col gap-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-hand-holding-heart text-emerald-500"></i>
+                    {{ donation.typeDon }}
+                </h1>
+                <p class="text-xs text-slate-400 mt-1">
+                    Donation du {{ donation.dateDonation ? donation.dateDonation|date('d M Y') : '—' }}
+                </p>
+            </div>
+            <div class="flex gap-2">
+                <a href="{{ path('app_donation_index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    Retour aux donations
+                </a>
+                <a href="{{ path('app_donation_edit', {'id': donation.id}) }}" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700">
+                    <i class="fa-solid fa-pen"></i>
+                    Modifier
+                </a>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="md:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-4">
+                <h2 class="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+                    Détails de la donation
+                </h2>
+                <dl class="space-y-3 text-sm">
+                    <div class="flex items-center justify-between">
+                        <dt class="text-slate-500">Identifiant</dt>
+                        <dd class="font-mono text-slate-800">#{{ donation.id }}</dd>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <dt class="text-slate-500">Type de don</dt>
+                        <dd class="text-slate-800">{{ donation.typeDon }}</dd>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <dt class="text-slate-500">Quantité</dt>
+                        <dd class="text-slate-800">{{ donation.quantite }}</dd>
+                    </div>
+                    {% if donation.annonce %}
+                        <div class="flex items-center justify-between">
+                            <dt class="text-slate-500">Annonce associée</dt>
+                            <dd>
+                                <a href="{{ path('app_annonce_show', {'id': donation.annonce.id}) }}" class="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline">
+                                    <i class="fa-solid fa-link"></i>
+                                    {{ donation.annonce.titreAnnonce }}
+                                </a>
+                            </dd>
+                        </div>
+                    {% endif %}
+                </dl>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-4">
+                <h2 class="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+                    Statut
+                </h2>
+                <div class="space-y-3 text-sm">
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-500">Statut actuel</span>
+                        {% if donation.statut == 'en attente' %}
+                            <span class="inline-flex items-center gap-1.5 text-xs font-medium text-yellow-700 bg-yellow-100 px-2.5 py-1 rounded-full">
+                                <i class="fa-solid fa-spinner"></i> En attente
+                            </span>
+                        {% elseif donation.statut == 'accepté' %}
+                            <span class="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-full">
+                                <i class="fa-solid fa-check"></i> Accepté
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-700 bg-slate-200 px-2.5 py-1 rounded-full">
+                                <i class="fa-solid fa-xmark"></i> Refusé
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100">
+                    {{ include('donation/_delete_form.html.twig') }}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

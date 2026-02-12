@@ -1,0 +1,29 @@
+{% extends 'baseBack.html.twig' %}
+
+{% block title %}Modifier Réponse{% endblock %}
+
+{% block body %}
+<div class="p-8 max-w-3xl mx-auto">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">Modifier la réponse</h1>
+
+    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+        {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+            
+            <div class="mb-6">
+                {{ form_label(form.contenu, null, {'label_attr': {'class': 'block text-gray-700 font-bold mb-2'}}) }}
+                {{ form_widget(form.contenu) }}
+                {{ form_errors(form.contenu) }}
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <a href="{{ path('app_admin_forum_show', {'id': reponse.question.id}) }}" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">Annuler</a>
+                
+                <button type="submit" class="bg-yellow-500 text-white px-6 py-2 rounded-lg font-bold hover:bg-yellow-600 transition">
+                    <i class="fa-solid fa-check mr-2"></i> Enregistrer les modifications
+                </button>
+            </div>
+
+        {{ form_end(form) }}
+    </div>
+</div>
+{% endblock %}
