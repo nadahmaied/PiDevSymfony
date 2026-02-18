@@ -58,6 +58,30 @@ class MissionVolunteer
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $photo = null;
 
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $requiredSkills = null;
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $thematicTags = null;
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $criticalPeriods = null;
+
+    #[ORM\Column(length: 100, nullable: true)]
+    private ?string $targetAudience = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $difficultyLevel = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $urgencyLevel = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?float $latitude = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?float $longitude = null;
+
     // --- RELATION 1 : Liste des candidatures (Bénévoles) ---
     // Corrigé en OneToMany pour correspondre à votre entité Volunteer
     #[ORM\OneToMany(mappedBy: 'mission', targetEntity: Volunteer::class, orphanRemoval: true)]
@@ -174,6 +198,117 @@ class MissionVolunteer
     {
         $this->photo = $photo;
         return $this;
+    }
+
+    public function getRequiredSkills(): ?string
+    {
+        return $this->requiredSkills;
+    }
+
+    public function setRequiredSkills(?string $requiredSkills): static
+    {
+        $this->requiredSkills = $requiredSkills;
+
+        return $this;
+    }
+
+    public function getThematicTags(): ?string
+    {
+        return $this->thematicTags;
+    }
+
+    public function setThematicTags(?string $thematicTags): static
+    {
+        $this->thematicTags = $thematicTags;
+
+        return $this;
+    }
+
+    public function getCriticalPeriods(): ?string
+    {
+        return $this->criticalPeriods;
+    }
+
+    public function setCriticalPeriods(?string $criticalPeriods): static
+    {
+        $this->criticalPeriods = $criticalPeriods;
+
+        return $this;
+    }
+
+    public function getTargetAudience(): ?string
+    {
+        return $this->targetAudience;
+    }
+
+    public function setTargetAudience(?string $targetAudience): static
+    {
+        $this->targetAudience = $targetAudience;
+
+        return $this;
+    }
+
+    public function getDifficultyLevel(): ?int
+    {
+        return $this->difficultyLevel;
+    }
+
+    public function setDifficultyLevel(?int $difficultyLevel): static
+    {
+        $this->difficultyLevel = $difficultyLevel;
+
+        return $this;
+    }
+
+    public function getUrgencyLevel(): ?int
+    {
+        return $this->urgencyLevel;
+    }
+
+    public function setUrgencyLevel(?int $urgencyLevel): static
+    {
+        $this->urgencyLevel = $urgencyLevel;
+
+        return $this;
+    }
+
+    public function getLatitude(): ?float
+    {
+        return $this->latitude;
+    }
+
+    public function setLatitude(?float $latitude): static
+    {
+        $this->latitude = $latitude;
+
+        return $this;
+    }
+
+    public function getLongitude(): ?float
+    {
+        return $this->longitude;
+    }
+
+    public function setLongitude(?float $longitude): static
+    {
+        $this->longitude = $longitude;
+
+        return $this;
+    }
+
+    public function requiredSkillsAsArray(): array
+    {
+        return self::csvToArray($this->requiredSkills);
+    }
+
+    public function thematicTagsAsArray(): array
+    {
+        return self::csvToArray($this->thematicTags);
+    }
+
+    public function criticalPeriodsAsArray(): array
+    {
+        return self::csvToArray($this->criticalPeriods);
     }
 
     // --- GESTION DES BÉNÉVOLES (Candidatures) ---
@@ -304,5 +439,17 @@ class MissionVolunteer
         }
 
         return $this;
+    }
+
+    private static function csvToArray(?string $value): array
+    {
+        if (!$value) {
+            return [];
+        }
+
+        $parts = array_map('trim', explode(',', mb_strtolower($value)));
+        $parts = array_filter($parts, static fn (string $part): bool => $part !== '');
+
+        return array_values(array_unique($parts));
     }
 }

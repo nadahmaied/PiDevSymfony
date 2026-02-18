@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\MissionVolunteer;
 use App\Form\MissionType;
 use App\Repository\MissionVolunteerRepository;
+use App\Service\MissionRecommendationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -151,5 +152,44 @@ class AdminMissionController extends AbstractController
         }
 
         return $this->redirectToRoute('app_admin_missions_index');
+    }
+
+    #[Route('/ai-dashboard', name: 'app_admin_missions_ai_dashboard', methods: ['GET'])]
+    public function aiDashboard(
+        MissionVolunteerRepository $missionRepository,
+        MissionRecommendationService $recommendationService
+    ): Response {
+        $missions = $missionRepository->findBy([], ['dateDebut' => 'DESC']);
+        $insights = $recommendationService->adminInsights($missions);
+
+        $atRiskMissions = [];
+        foreach ($missions as $mission) {
+            if ($mission->getStatut() !== 'Ouverte') {
+                continue;
+            }
+
+            $difficulty = $mission->getDifficultyLevel() ?? 3;
+            $urgency = $mission->getUrgencyLevel() ?? 3;
+            $applications = count($mission->getVolunteers());
+            $riskScore = ($difficulty * 0.4) + ($urgency * 0.4) + (max(0, 5 - min(5, $applications)) * 0.2);
+
+            if ($riskScore >= 3.2) {
+                $atRiskMissions[] = [
+                    'mission' => $mission,
+                    'riskScore' => round($riskScore, 1),
+                    'applications' => $applications,
+                ];
+            }
+        }
+
+        usort(
+            $atRiskMissions,
+            static fn (array $a, array $b): int => $b['riskScore'] <=> $a['riskScore']
+        );
+
+        return $this->render('admin_mission/ai_dashboard.html.twig', [
+            'insights' => $insights,
+            'atRiskMissions' => array_slice($atRiskMissions, 0, 8),
+        ]);
     }
 }

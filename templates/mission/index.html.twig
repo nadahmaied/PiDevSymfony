@@ -24,6 +24,26 @@
             <i class="fa-solid fa-handshake-angle absolute -bottom-10 -right-10 text-9xl text-white opacity-20 transform -rotate-12"></i>
         </div>
 
+        {% if recommendedMissions is defined and recommendedMissions is not empty %}
+            <div class="bg-white rounded-2xl border border-blue-100 shadow-sm p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-gray-800">Recommandations pour vous</h3>
+                    <span class="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full">IA Matching</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {% for item in recommendedMissions %}
+                        <a href="{{ path('app_mission_show', {'id': item.mission.id}) }}" class="border border-gray-100 rounded-xl p-4 hover:shadow-md transition block">
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="font-semibold text-gray-800 truncate pr-2">{{ item.mission.titre }}</p>
+                                <span class="text-sm font-bold text-green-600">{{ item.matchPercent }}%</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mb-2">{{ item.mission.lieu }}</p>
+                            <p class="text-xs text-gray-600">{{ item.reasons|first }}</p>
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
         <div class="flex justify-between items-center px-2">
             <p class="text-gray-500 text-sm">
                 <span class="font-bold text-gray-800 text-lg">{{ pagination.getTotalItemCount }}</span> missions disponibles
@@ -154,3 +174,4 @@
     });
 </script>
 {% endblock %}
+

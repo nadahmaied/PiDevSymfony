@@ -7,6 +7,9 @@
         <h1 class="text-xl font-bold text-gray-800">Gestion des Missions Bénévoles</h1>
         
         <div class="flex gap-3">
+            <a href="{{ path('app_admin_missions_ai_dashboard') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow transition transform hover:scale-105">
+                <i class="fa-solid fa-chart-line"></i> Dashboard IA
+            </a>
             <a href="{{ path('app_sponsor_index') }}" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow transition transform hover:scale-105">
                 <i class="fa-solid fa-handshake"></i> Gérer les Sponsors
             </a>
@@ -143,3 +146,4 @@
         </div>
     </div>
 {% endblock %}
+
