@@ -48,7 +48,23 @@
                     <p class="text-blue-700 text-sm">Donnez votre avis ou ajoutez-la à vos favoris.</p>
                 </div>
                 
-                <div class="flex gap-4">
+                <div class="flex gap-4 items-center">
+                    {% set totalRating = 0 %}
+                    {% for r in mission.missionRatings %}
+                        {% set totalRating = totalRating + r.note %}
+                    {% endfor %}
+                    {% set avg = mission.missionRatings|length > 0 ? (totalRating / mission.missionRatings|length) : 0 %}
+
+                    <div class="flex text-yellow-400 js-rating-stars"
+                         data-rate-base="{{ path('app_mission_rate_action', {'id': mission.id, 'note': 0}) }}">
+                        {% for i in 1..5 %}
+                            <button type="button" class="js-rate-star px-0.5" data-note="{{ i }}" aria-label="Noter {{ i }}/5">
+                                <i class="{{ i <= avg ? 'fa-solid' : 'fa-regular' }} fa-star"></i>
+                            </button>
+                        {% endfor %}
+                    </div>
+                    <span class="text-xs text-blue-800 js-rating-count">({{ mission.missionRatings|length }} avis)</span>
+
                     <button data-url="{{ path('app_mission_like_action', {'id': mission.id}) }}" class="js-like-button bg-white text-gray-400 w-12 h-12 rounded-full flex items-center justify-center shadow hover:text-red-500 transition">
                         <i class="fa-heart text-xl {% if app.user and mission.missionLikes|filter(l => l.user == app.user)|length > 0 %} fa-solid text-red-500 {% else %} fa-regular {% endif %}"></i>
                     </button>
@@ -100,6 +116,46 @@
                         alert("Connectez-vous pour aimer !");
                     }
                 });
+        });
+    });
+
+    document.querySelectorAll('.js-rating-stars').forEach(block => {
+        const baseUrl = block.dataset.rateBase;
+        const countEl = document.querySelector('.js-rating-count');
+
+        const paintStars = (value) => {
+            block.querySelectorAll('.js-rate-star').forEach(btn => {
+                const note = parseInt(btn.dataset.note, 10);
+                const icon = btn.querySelector('i');
+                if (note <= value) {
+                    icon.classList.remove('fa-regular');
+                    icon.classList.add('fa-solid');
+                } else {
+                    icon.classList.remove('fa-solid');
+                    icon.classList.add('fa-regular');
+                }
+            });
+        };
+
+        block.querySelectorAll('.js-rate-star').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const note = parseInt(this.dataset.note, 10);
+                const url = baseUrl.replace('/0', '/' + note);
+
+                fetch(url, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.code === 200) {
+                            paintStars(Math.round(data.average));
+                            if (countEl) {
+                                countEl.textContent = `(${data.count} avis)`;
+                            }
+                        } else if (data.code === 403) {
+                            alert('Connectez-vous pour noter !');
+                        }
+                    })
+                    .catch(err => console.error('Erreur rating:', err));
+            });
         });
     });
 </script>
