@@ -6,6 +6,9 @@
 parameters:
     mission_images_directory: '%kernel.project_dir%/public/uploads/missions'
     ml_model_path: '%kernel.project_dir%/var/ml/recommendation_model.json'
+    forum_ai_api_key: '%env(FORUM_AI_API_KEY)%'
+    forum_ai_api_url: '%env(FORUM_AI_API_URL)%'
+    forum_ai_model: '%env(FORUM_AI_MODEL)%'
 services:
     # default configuration for services in *this* file
     _defaults:
@@ -33,6 +36,12 @@ services:
         arguments:
             $projectDir: '%kernel.project_dir%'
             $modelPath: '%ml_model_path%'
+
+    App\Service\ForumAiAssistant:
+        arguments:
+            $apiKey: '%forum_ai_api_key%'
+            $apiUrl: '%forum_ai_api_url%'
+            $model: '%forum_ai_model%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

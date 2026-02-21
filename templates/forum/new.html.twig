@@ -3,45 +3,124 @@
 {% block title %}Nouveau Sujet{% endblock %}
 
 {% block body %}
-<div class="flex h-screen bg-slate-50 overflow-hidden">
-    <aside class="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col z-20">
-        {% include 'partials/_sidebar_front.html.twig' ignore missing %}
-    </aside>
+<div class="bg-slate-50 p-6 md:p-8">
+    <div class="max-w-3xl mx-auto w-full">
+        <a href="{{ path('app_forum_index') }}" class="text-slate-500 hover:text-teal-600 mb-6 inline-flex items-center gap-2 transition">
+            <i class="fa-solid fa-arrow-left"></i> Retour au forum
+        </a>
 
-    <main class="flex-1 flex flex-col h-screen overflow-y-auto p-8 relative">
-        <div class="max-w-3xl mx-auto w-full">
-            
-            <a href="{{ path('app_forum_index') }}" class="text-slate-500 hover:text-teal-600 mb-6 inline-flex items-center gap-2 transition">
-                <i class="fa-solid fa-arrow-left"></i> Retour au forum
-            </a>
+        <div class="bg-white rounded-3xl shadow-xl p-8 border border-slate-100 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-teal-50 rounded-bl-full -mr-10 -mt-10 z-0"></div>
 
-            <div class="bg-white rounded-3xl shadow-xl p-8 border border-slate-100 relative overflow-hidden">
-                <div class="absolute top-0 right-0 w-32 h-32 bg-teal-50 rounded-bl-full -mr-10 -mt-10 z-0"></div>
-                
-                <h1 class="text-3xl font-bold text-slate-800 mb-2 relative z-10">Poser une question</h1>
-                <p class="text-slate-500 mb-8 relative z-10">La communauté et nos médecins sont là pour vous aider.</p>
+            <h1 class="text-3xl font-bold text-slate-800 mb-2 relative z-10">Poser une question</h1>
+            <p class="text-slate-500 mb-8 relative z-10">La communaute et nos medecins sont la pour vous aider.</p>
 
-                {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
-                    <div class="space-y-6 relative z-10">
-                        <div>
-                            {{ form_label(form.titre, 'Titre de votre sujet', {'label_attr': {'class': 'block text-sm font-bold text-slate-700 mb-2'}}) }}
-                            {{ form_widget(form.titre, {'attr': {'class': 'w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition outline-none', 'placeholder': 'Ex: Douleurs musculaires après le sport'}}) }}
-                            {{ form_errors(form.titre) }}
-                        </div>
-
-                        <div>
-                            {{ form_label(form.contenu, 'Détails de votre question', {'label_attr': {'class': 'block text-sm font-bold text-slate-700 mb-2'}}) }}
-                            {{ form_widget(form.contenu, {'attr': {'class': 'w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition outline-none h-48 resize-none', 'placeholder': 'Soyez précis pour obtenir une meilleure réponse...'}}) }}
-                            {{ form_errors(form.contenu) }}
-                        </div>
-
-                        <button type="submit" class="w-full bg-teal-600 text-white font-bold py-4 rounded-xl hover:bg-teal-700 transition shadow-lg shadow-teal-600/20 flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-paper-plane"></i> Publier ma question
-                        </button>
+            {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+                <div class="space-y-6 relative z-10">
+                    <div>
+                        {{ form_label(form.titre, 'Titre de votre sujet', {'label_attr': {'class': 'block text-sm font-bold text-slate-700 mb-2'}}) }}
+                        {{ form_widget(form.titre, {'attr': {'class': 'w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition outline-none', 'placeholder': 'Ex: Douleurs musculaires apres le sport'}}) }}
+                        {{ form_errors(form.titre) }}
                     </div>
-                {{ form_end(form) }}
-            </div>
+
+                    <div>
+                        {{ form_label(form.contenu, 'Details de votre question', {'label_attr': {'class': 'block text-sm font-bold text-slate-700 mb-2'}}) }}
+                        {{ form_widget(form.contenu, {'attr': {'class': 'w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition outline-none h-48 resize-none', 'placeholder': 'Soyez precis pour obtenir une meilleure reponse...'}}) }}
+                        {{ form_errors(form.contenu) }}
+                    </div>
+
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                            <button
+                                id="forum-ai-enhance-btn"
+                                type="button"
+                                data-endpoint="{{ path('app_forum_ai_enhance') }}"
+                                class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 transition"
+                            >
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Ameliorer avec IA
+                            </button>
+                            <span id="forum-ai-status" class="text-sm text-slate-500"></span>
+                        </div>
+                        <div id="forum-ai-tags" class="mt-3 flex flex-wrap gap-2"></div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-teal-600 text-white font-bold py-4 rounded-xl hover:bg-teal-700 transition shadow-lg shadow-teal-600/20 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-paper-plane"></i> Publier ma question
+                    </button>
+                </div>
+            {{ form_end(form) }}
         </div>
-    </main>
+    </div>
 </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function () {
+            const btn = document.getElementById('forum-ai-enhance-btn');
+            if (!btn) return;
+
+            const titleInput = document.getElementById('question_titre');
+            const contentInput = document.getElementById('question_contenu');
+            const status = document.getElementById('forum-ai-status');
+            const tagsBox = document.getElementById('forum-ai-tags');
+
+            const renderTags = (tags) => {
+                tagsBox.innerHTML = '';
+                if (!Array.isArray(tags) || tags.length === 0) return;
+                tags.forEach((tag) => {
+                    const badge = document.createElement('span');
+                    badge.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-teal-100 text-teal-700';
+                    badge.textContent = tag;
+                    tagsBox.appendChild(badge);
+                });
+            };
+
+            btn.addEventListener('click', async () => {
+                const title = (titleInput?.value || '').trim();
+                const content = (contentInput?.value || '').trim();
+
+                if (!title || !content) {
+                    status.textContent = 'Remplissez le titre et le contenu avant la suggestion IA.';
+                    status.className = 'text-sm text-red-500';
+                    return;
+                }
+
+                btn.disabled = true;
+                status.textContent = 'Generation en cours...';
+                status.className = 'text-sm text-slate-500';
+                renderTags([]);
+
+                try {
+                    const response = await fetch(btn.dataset.endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ title, content })
+                    });
+
+                    const data = await response.json();
+                    if (!response.ok || !data.ok) {
+                        throw new Error(data.message || 'Erreur IA');
+                    }
+
+                    titleInput.value = data.title || title;
+                    contentInput.value = data.content || content;
+                    renderTags(data.tags || []);
+                    status.textContent = data.source === 'ai'
+                        ? 'Texte ameliore par IA.'
+                        : 'Suggestion locale appliquee (cle API non configuree).';
+                    status.className = 'text-sm text-emerald-600';
+                } catch (error) {
+                    status.textContent = error.message || 'Erreur lors de la suggestion IA.';
+                    status.className = 'text-sm text-red-500';
+                } finally {
+                    btn.disabled = false;
+                }
+            });
+        })();
+    </script>
 {% endblock %}

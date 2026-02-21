@@ -8,7 +8,9 @@ use App\Entity\User;
 use App\Form\QuestionType;
 use App\Form\ReponseType;
 use App\Repository\QuestionRepository;
+use App\Service\ForumAiAssistant;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,6 +20,45 @@ use Knp\Component\Pager\PaginatorInterface;
 #[Route('/forum')]
 class ForumController extends AbstractController
 {
+    #[Route('/ai/ameliorer-sujet', name: 'app_forum_ai_enhance', methods: ['POST'])]
+    public function enhanceQuestion(Request $request, ForumAiAssistant $forumAiAssistant): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_REMEMBERED');
+
+        $payload = json_decode($request->getContent(), true);
+        if (!is_array($payload)) {
+            return $this->json([
+                'ok' => false,
+                'message' => 'Payload JSON invalide.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        $title = (string) ($payload['title'] ?? '');
+        $content = (string) ($payload['content'] ?? '');
+
+        try {
+            $result = $forumAiAssistant->enhanceQuestion($title, $content);
+
+            return $this->json([
+                'ok' => true,
+                'title' => $result['title'],
+                'content' => $result['content'],
+                'tags' => $result['tags'],
+                'source' => $result['source'],
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            return $this->json([
+                'ok' => false,
+                'message' => $e->getMessage(),
+            ], Response::HTTP_BAD_REQUEST);
+        } catch (\Throwable) {
+            return $this->json([
+                'ok' => false,
+                'message' => 'Impossible de generer une suggestion IA pour le moment.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     // 1. LISTE DES SUJETS
     #[Route('/', name: 'app_forum_index', methods: ['GET'])]
     public function index(QuestionRepository $questionRepository, PaginatorInterface $paginator, Request $request): Response
