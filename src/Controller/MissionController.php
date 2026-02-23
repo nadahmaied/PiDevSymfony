@@ -9,9 +9,11 @@ use App\Form\VolunteerType;
 use App\Repository\MissionVolunteerRepository;
 use App\Service\MissionRecommendationService;
 use App\Service\RecommendationLearningService;
+use App\Service\VolunteerAiAssistant;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -99,6 +101,38 @@ class MissionController extends AbstractController
             'mission' => $mission,
             'form' => $form,
         ]);
+    }
+
+    #[Route('/{id}/ai-conseil', name: 'app_mission_ai_advice', methods: ['POST'])]
+    public function aiAdvice(MissionVolunteer $mission, VolunteerAiAssistant $aiAssistant): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_REMEMBERED');
+
+        try {
+            $period = sprintf(
+                'Du %s au %s',
+                $mission->getDateDebut()?->format('d/m/Y') ?? 'N/A',
+                $mission->getDateFin()?->format('d/m/Y') ?? 'N/A'
+            );
+
+            $result = $aiAssistant->suggestForMission(
+                (string) $mission->getTitre(),
+                (string) $mission->getDescription(),
+                (string) $mission->getLieu(),
+                $period
+            );
+
+            return $this->json([
+                'ok' => true,
+                'advice' => $result['advice'],
+                'source' => $result['source'],
+            ]);
+        } catch (\Throwable) {
+            return $this->json([
+                'ok' => false,
+                'message' => 'Assistance IA indisponible pour le moment.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     #[Route('/{id}', name: 'app_mission_show', methods: ['GET'])]

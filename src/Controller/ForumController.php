@@ -10,12 +10,12 @@ use App\Form\ReponseType;
 use App\Repository\QuestionRepository;
 use App\Service\ForumAiAssistant;
 use Doctrine\ORM\EntityManagerInterface;
+use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Knp\Component\Pager\PaginatorInterface;
 
 #[Route('/forum')]
 class ForumController extends AbstractController
@@ -218,10 +218,6 @@ class ForumController extends AbstractController
 
     private function canManageQuestion(Question $question): bool
     {
-        if ($this->isGranted('ROLE_ADMIN')) {
-            return true;
-        }
-
         $user = $this->getUser();
         if (!$user instanceof User || !$question->getAuteur()) {
             return false;
@@ -232,10 +228,6 @@ class ForumController extends AbstractController
 
     private function canManageReponse(Reponse $reponse): bool
     {
-        if ($this->isGranted('ROLE_ADMIN')) {
-            return true;
-        }
-
         $user = $this->getUser();
         if (!$user instanceof User || !$reponse->getAuteur()) {
             return false;

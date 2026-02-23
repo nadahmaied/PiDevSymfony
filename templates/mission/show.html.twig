@@ -82,6 +82,18 @@
                         Je postule maintenant !
                     </a>
                     
+                    
+                    <button
+                        type="button"
+                        id="js-mission-ai-btn"
+                        data-url="{{ path('app_mission_ai_advice', {'id': mission.id}) }}"
+                        class="block w-full text-center bg-slate-100 text-slate-700 py-3 rounded-xl font-bold text-sm hover:bg-slate-200 transition"
+                    >
+                        <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Aide IA pour cette mission
+                    </button>
+
+                    <div id="js-mission-ai-result" class="hidden text-sm text-slate-700 bg-slate-50 border border-slate-200 rounded-xl p-4 whitespace-pre-line"></div>
+
                     <p class="text-center text-xs text-gray-400 mt-4">
                         <i class="fa-solid fa-shield-halved mr-1"></i> Candidature simplifiée et sécurisée
                     </p>
@@ -158,5 +170,35 @@
             });
         });
     });
+
+    const aiBtn = document.getElementById('js-mission-ai-btn');
+    const aiResult = document.getElementById('js-mission-ai-result');
+    if (aiBtn && aiResult) {
+        const original = aiBtn.innerHTML;
+        aiBtn.addEventListener('click', async () => {
+            aiBtn.disabled = true;
+            aiBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Generation...';
+
+            try {
+                const response = await fetch(aiBtn.dataset.url, { method: 'POST' });
+                const data = await response.json();
+                if (!data.ok) {
+                    alert(data.message || 'Assistance IA indisponible.');
+                } else {
+                    aiResult.textContent = data.advice || '';
+                    aiResult.classList.remove('hidden');
+                }
+            } catch (e) {
+                alert('Erreur reseau.');
+            } finally {
+                aiBtn.disabled = false;
+                aiBtn.innerHTML = original;
+            }
+        });
+    }
 </script>
 {% endblock %}
+
+
+
+

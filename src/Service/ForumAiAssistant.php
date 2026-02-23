@@ -28,12 +28,12 @@ class ForumAiAssistant
         }
 
         $prompt = <<<PROMPT
-Tu es un assistant de rédaction pour un forum santé.
-Améliore le texte en français clair, poli et précis.
-Réponds en JSON strict avec les clés:
+Tu es un assistant de redaction pour un forum sante.
+Ameliore le texte en francais clair, poli et precis.
+Reponds en JSON strict avec les cles:
 - title
 - content
-- tags (tableau de 3 à 5 chaînes courtes)
+- tags (tableau de 3 a 5 chaines courtes)
 Ne mets aucun texte hors JSON.
 PROMPT;
 
@@ -64,7 +64,7 @@ PROMPT;
         $contentRaw = $payload['choices'][0]['message']['content'] ?? null;
 
         if (!is_string($contentRaw) || trim($contentRaw) === '') {
-            throw new \RuntimeException('Réponse IA invalide.');
+            throw new \RuntimeException('Reponse IA invalide.');
         }
 
         $decoded = json_decode($contentRaw, true);
@@ -156,14 +156,12 @@ PROMPT;
         $text = mb_strtolower($text);
         $dictionary = [
             'douleur' => 'Douleur',
-            'fièvre' => 'Fievre',
             'fievre' => 'Fievre',
             'nutrition' => 'Nutrition',
             'stress' => 'Stress',
             'sommeil' => 'Sommeil',
             'sport' => 'Sport',
             'medicament' => 'Medicament',
-            'médicament' => 'Medicament',
             'fatigue' => 'Fatigue',
         ];
 
@@ -181,4 +179,3 @@ PROMPT;
         return array_slice(array_values(array_unique($tags)), 0, 5);
     }
 }
-
