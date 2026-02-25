@@ -34,14 +34,34 @@
 </div>
 
             </div>
+            <div id="rdvModal"
+     class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 relative">
+
+        <button onclick="closeModal()"
+                class="absolute top-4 right-4 text-gray-400 hover:text-red-500">
+            ✖
+        </button>
+
+        <h3 id="modalTitle"
+            class="text-xl font-bold mb-4 text-slate-800">
+        </h3>
+
+        <div id="rdvList" class="space-y-2"></div>
+
+    </div>
+</div>
+
             <script>
 document.addEventListener('DOMContentLoaded', function () {
 
     var calendarEl = document.getElementById('calendar');
 
-    var rdvDates = {{ rdvDates|json_encode|raw }};
+    var rdvData = {{ rdvData|json_encode|raw }};
 
     var calendar = new FullCalendar.Calendar(calendarEl, {
+
         initialView: 'dayGridMonth',
         height: 650,
 
@@ -51,28 +71,38 @@ document.addEventListener('DOMContentLoaded', function () {
             right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
 
-        buttonText: {
-            today: "Aujourd'hui",
-            month: "Mois",
-            week: "Semaine",
-            day: "Jour"
+        dateClick: function(info) {
+
+            const selectedDate = info.dateStr;
+
+           
+
         },
 
         datesSet: function () {
 
             document.querySelectorAll('.fc-daygrid-day').forEach(day => {
+
                 const date = day.getAttribute('data-date');
 
-                if (rdvDates.includes(date)) {
-                    day.style.backgroundColor = "#dcfce7"; // vert clair
+                if (rdvData[date]) {
+                    day.style.backgroundColor = "#dcfce7";
                 }
+
             });
 
         }
+
     });
 
     calendar.render();
 });
+
+function closeModal() {
+    document.getElementById('rdvModal')
+        .classList.add('hidden');
+}
+
 
 </script>
 

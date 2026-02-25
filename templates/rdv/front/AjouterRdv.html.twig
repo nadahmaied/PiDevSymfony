@@ -1,3 +1,5 @@
+{% extends 'baseFront.html.twig' %}
+{% block body %}
 <div class="fixed inset-0 z-50 hidden items-center justify-center">
 
     <div onclick="closeRdvModal()"
@@ -122,8 +124,10 @@
 
     </div>
 </div>
+
 <script>
 function setHeure(time) {
     document.getElementById('heureHidden').value = time;
 }
 </script>
+ {% endblock %} 

@@ -35,6 +35,15 @@
             "./migrations/.gitignore"
         ]
     },
+    "google/apiclient": {
+        "version": "2.19",
+        "recipe": {
+            "repo": "github.com/symfony/recipes-contrib",
+            "branch": "main",
+            "version": "2.10",
+            "ref": "07a97ec434d43b7903c78069a04c92adb6442e52"
+        }
+    },
     "phpunit/phpunit": {
         "version": "9.6",
         "recipe": {
@@ -48,6 +57,15 @@
             "./phpunit.xml.dist",
             "./tests/bootstrap.php"
         ]
+    },
+    "stripe/stripe-php": {
+        "version": "19.3",
+        "recipe": {
+            "repo": "github.com/symfony/recipes-contrib",
+            "branch": "main",
+            "version": "19.0",
+            "ref": "d6829c693e3927a8972c7671d74a1a5c505712b0"
+        }
     },
     "symfony/asset-mapper": {
         "version": "6.4",

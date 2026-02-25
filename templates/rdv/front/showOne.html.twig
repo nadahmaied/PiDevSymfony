@@ -4,7 +4,6 @@
 <div class="flex-1 overflow-y-auto bg-slate-50 p-4 md:p-8 no-scrollbar">
     <div class="max-w-5xl mx-auto">
         
-        <!-- Header avec bouton retour -->
         <div class="mb-6">
             <a href="{{ path('showAllRdvfront') }}" class="inline-flex items-center gap-2 text-slate-600 hover:text-blue-600 font-medium transition">
                 <i class="fa-solid fa-arrow-left"></i>
@@ -12,19 +11,16 @@
             </a>
         </div>
 
-        <!-- Carte principale du RDV -->
         <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-8 text-white shadow-xl relative overflow-hidden mb-6">
             <div class="relative z-10">
                 <div class="inline-block bg-blue-500/30 border border-blue-400/30 rounded-full px-4 py-1.5 text-sm font-bold mb-4">
                     <i class="fa-solid fa-calendar-check mr-2"></i>
                     Détails du Rendez-vous
                 </div>
-                
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
                     <div class="md:col-span-2">
                         <h1 class="text-3xl font-bold mb-2">{{ showOne.medecin }}</h1>
                         <p class="text-blue-100 text-lg mb-4">{{ showOne.motif }}</p>
-                        
                         <div class="flex flex-wrap gap-3 mb-6">
                             <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg px-4 py-2 flex items-center gap-2">
                                 <i class="fa-regular fa-calendar text-blue-200"></i>
@@ -34,12 +30,20 @@
                                 <i class="fa-regular fa-clock text-blue-200"></i>
                                 <span class="font-medium">{{ showOne.hdebut|date('H:i') }} - {{ showOne.hfin|date('H:i') }}</span>
                             </div>
-                            <div class="bg-orange-500 text-white rounded-lg px-4 py-2 flex items-center gap-2 font-bold">
-                                <i class="fa-solid fa-circle-info"></i>
-                                <span>{{ showOne.statut }}</span>
-                            </div>
+                            {% if showOne.statut == 'Confirmé' %}
+                                <div class="bg-green-500 text-white rounded-lg px-4 py-2 flex items-center gap-2 font-bold">
+                                    <i class="fa-solid fa-circle-check"></i><span>{{ showOne.statut }}</span>
+                                </div>
+                            {% elseif showOne.statut == 'Annulé' %}
+                                <div class="bg-red-500 text-white rounded-lg px-4 py-2 flex items-center gap-2 font-bold">
+                                    <i class="fa-solid fa-circle-xmark"></i><span>{{ showOne.statut }}</span>
+                                </div>
+                            {% else %}
+                                <div class="bg-orange-500 text-white rounded-lg px-4 py-2 flex items-center gap-2 font-bold">
+                                    <i class="fa-solid fa-circle-info"></i><span>{{ showOne.statut }}</span>
+                                </div>
+                            {% endif %}
                         </div>
-
                         <div class="flex gap-3">
                             <button class="bg-white text-blue-700 px-6 py-2.5 rounded-lg font-bold shadow-lg hover:bg-blue-50 transition flex items-center gap-2">
                                 <i class="fa-solid fa-video"></i> Lancer Visio
@@ -49,7 +53,6 @@
                             </a>
                         </div>
                     </div>
-
                     <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 text-center">
                         <span class="block text-sm uppercase tracking-widest text-blue-200 mb-2">{{ showOne.date|date('M') }}</span>
                         <span class="block text-6xl font-bold text-white mb-2">{{ showOne.date|date('d') }}</span>
@@ -60,53 +63,48 @@
             <i class="fa-solid fa-stethoscope absolute -right-10 -bottom-10 text-[12rem] text-white opacity-10"></i>
         </div>
 
-        <!-- Grid avec informations détaillées -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            <!-- Informations générales -->
+
             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
                 <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                     <i class="fa-solid fa-circle-info text-blue-600"></i>
                     Informations Générales
                 </h3>
-                
                 <div class="space-y-4">
                     <div class="flex justify-between items-start py-3 border-b border-slate-100">
                         <span class="text-slate-500 font-medium">Médecin</span>
                         <span class="text-slate-800 font-bold text-right">{{ showOne.medecin }}</span>
                     </div>
-                    
                     <div class="flex justify-between items-start py-3 border-b border-slate-100">
                         <span class="text-slate-500 font-medium">Motif</span>
                         <span class="text-slate-800 font-semibold text-right">{{ showOne.motif }}</span>
                     </div>
-                    
                     <div class="flex justify-between items-start py-3 border-b border-slate-100">
                         <span class="text-slate-500 font-medium">Date</span>
                         <span class="text-slate-800 font-semibold">{{ showOne.date|date('d/m/Y') }}</span>
                     </div>
-                    
                     <div class="flex justify-between items-start py-3 border-b border-slate-100">
                         <span class="text-slate-500 font-medium">Horaire</span>
                         <span class="text-slate-800 font-semibold">{{ showOne.hdebut|date('H:i') }} - {{ showOne.hfin|date('H:i') }}</span>
                     </div>
-                    
                     <div class="flex justify-between items-start py-3">
                         <span class="text-slate-500 font-medium">Statut</span>
-                        <span class="bg-orange-100 text-orange-700 text-sm font-bold px-3 py-1 rounded-lg border border-orange-200">
-                            {{ showOne.statut }}
-                        </span>
+                        {% if showOne.statut == 'Confirmé' %}
+                            <span class="bg-green-100 text-green-700 text-sm font-bold px-3 py-1 rounded-lg border border-green-200">✓ {{ showOne.statut }}</span>
+                        {% elseif showOne.statut == 'Annulé' %}
+                            <span class="bg-red-100 text-red-700 text-sm font-bold px-3 py-1 rounded-lg border border-red-200">✗ {{ showOne.statut }}</span>
+                        {% else %}
+                            <span class="bg-orange-100 text-orange-700 text-sm font-bold px-3 py-1 rounded-lg border border-orange-200">⏳ {{ showOne.statut }}</span>
+                        {% endif %}
                     </div>
                 </div>
             </div>
 
-            <!-- Message / Notes -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
                 <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                     <i class="fa-solid fa-comment-dots text-blue-600"></i>
                     Message & Notes
                 </h3>
-                
                 {% if showOne.message %}
                     <div class="bg-blue-50 border border-blue-100 rounded-xl p-4">
                         <p class="text-slate-700 leading-relaxed">{{ showOne.message }}</p>
@@ -118,35 +116,43 @@
                     </div>
                 {% endif %}
 
-                <!-- Actions rapides -->
                 <div class="mt-6 pt-6 border-t border-slate-100">
                     <h4 class="text-sm font-bold text-slate-700 mb-3">Actions Rapides</h4>
-                    <div class="flex gap-2">
+                    <div class="flex gap-2 flex-wrap">
+                        {% if showOne.statut == 'Confirmé' %}
+                            <button onclick="openSmsModal()"
+                               class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-mobile-screen"></i> SMS Rappel
+                            </button>
+                        {% else %}
+                            <button disabled
+                                title="Le SMS de rappel est disponible uniquement pour les RDV confirmés"
+                                class="flex-1 bg-slate-100 text-slate-400 py-2.5 rounded-lg text-sm font-bold cursor-not-allowed flex items-center justify-center gap-2 border border-slate-200">
+                                <i class="fa-solid fa-mobile-screen"></i> SMS Rappel
+                            </button>
+                        {% endif %}
                         <button class="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-700 py-2.5 rounded-lg text-sm font-medium transition flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-bell"></i>
-                            Rappel
-                        </button>
-                        <button class="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-700 py-2.5 rounded-lg text-sm font-medium transition flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-share"></i>
-                            Partager
+                            <i class="fa-solid fa-share"></i> Partager
                         </button>
                     </div>
+                    {% if showOne.statut != 'Confirmé' %}
+                    <p class="text-xs text-slate-400 mt-2 flex items-center gap-1">
+                        <i class="fa-solid fa-circle-info"></i>
+                        Le SMS de rappel est disponible uniquement pour les RDV <strong>Confirmés</strong>.
+                    </p>
+                    {% endif %}
                 </div>
             </div>
 
-            <!-- Instructions / Préparation -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:col-span-2">
                 <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                     <i class="fa-solid fa-clipboard-list text-blue-600"></i>
                     Préparation & Instructions
                 </h3>
-                
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="bg-green-50 border border-green-200 rounded-xl p-4">
                         <div class="flex items-center gap-3 mb-2">
-                            <div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white">
-                                <i class="fa-solid fa-check"></i>
-                            </div>
+                            <div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white"><i class="fa-solid fa-check"></i></div>
                             <h4 class="font-bold text-slate-800">À faire</h4>
                         </div>
                         <ul class="text-sm text-slate-600 space-y-1 ml-1">
@@ -155,39 +161,24 @@
                             <li>• Porter un masque</li>
                         </ul>
                     </div>
-
                     <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
                         <div class="flex items-center gap-3 mb-2">
-                            <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white">
-                                <i class="fa-solid fa-map-marker-alt"></i>
-                            </div>
+                            <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white"><i class="fa-solid fa-map-marker-alt"></i></div>
                             <h4 class="font-bold text-slate-800">Lieu</h4>
                         </div>
-                        <p class="text-sm text-slate-600 ml-1">
-                            Clinique Pasteur<br>
-                            123 Avenue de la Santé<br>
-                            Tunis, Tunisie
-                        </p>
+                        <p class="text-sm text-slate-600 ml-1">Clinique Pasteur<br>123 Avenue de la Santé<br>Tunis, Tunisie</p>
                     </div>
-
                     <div class="bg-orange-50 border border-orange-200 rounded-xl p-4">
                         <div class="flex items-center gap-3 mb-2">
-                            <div class="w-10 h-10 bg-orange-600 rounded-full flex items-center justify-center text-white">
-                                <i class="fa-solid fa-phone"></i>
-                            </div>
+                            <div class="w-10 h-10 bg-orange-600 rounded-full flex items-center justify-center text-white"><i class="fa-solid fa-phone"></i></div>
                             <h4 class="font-bold text-slate-800">Contact</h4>
                         </div>
-                        <p class="text-sm text-slate-600 ml-1">
-                            Tél: +216 71 123 456<br>
-                            Email: contact@clinique.tn
-                        </p>
+                        <p class="text-sm text-slate-600 ml-1">Tél: +216 71 123 456<br>Email: contact@clinique.tn</p>
                     </div>
                 </div>
             </div>
-
         </div>
 
-        <!-- Actions en bas -->
         <div class="mt-6 flex flex-col sm:flex-row gap-3 justify-between items-center bg-white rounded-xl p-4 shadow-sm border border-slate-100">
             <div class="text-sm text-slate-500">
                 <i class="fa-solid fa-info-circle mr-1"></i>
@@ -195,16 +186,105 @@
             </div>
             <div class="flex gap-2">
                 <a href="{{ path('editForm', { id: showOne.id }) }}" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold transition flex items-center gap-2">
-                    <i class="fa-solid fa-pen"></i>
-                    Modifier
+                    <i class="fa-solid fa-pen"></i> Modifier
                 </a>
-                <button onclick="if(confirm('Voulez-vous vraiment annuler ce rendez-vous ?')) { /* logic */ }" class="bg-red-50 hover:bg-red-100 text-red-600 px-5 py-2.5 rounded-xl font-bold transition flex items-center gap-2 border border-red-200">
-                    <i class="fa-solid fa-times"></i>
-                    Annuler RDV
+                <button onclick="openCancelModal()"
+                    class="bg-red-50 hover:bg-red-100 text-red-600 px-5 py-2.5 rounded-xl font-bold transition flex items-center gap-2 border border-red-200">
+                    <i class="fa-solid fa-times"></i> Annuler RDV
                 </button>
             </div>
         </div>
 
+        {% for message in app.flashes('success') %}
+            <div class="mt-4 bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-xl flex items-center gap-2">
+                <i class="fa-solid fa-circle-check text-green-600"></i> {{ message }}
+            </div>
+        {% endfor %}
+        {% for message in app.flashes('error') %}
+            <div class="mt-4 bg-red-100 border border-red-300 text-red-800 px-4 py-3 rounded-xl flex items-center gap-2">
+                <i class="fa-solid fa-circle-xmark text-red-600"></i> {{ message }}
+            </div>
+        {% endfor %}
     </div>
 </div>
+
+{# ===== MODAL SMS RAPPEL ===== #}
+<div id="smsModal" class="fixed inset-0 z-50 hidden flex items-center justify-center">
+    <div onclick="closeSmsModal()" class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+    <div id="smsCard" class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-8 text-center transform scale-95 opacity-0 transition-all duration-200">
+        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fa-solid fa-mobile-screen text-green-600 text-2xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-slate-800 mb-2">Envoyer un SMS de rappel</h3>
+        <p class="text-slate-500 mb-2">Un SMS de rappel sera envoyé pour ce rendez-vous :</p>
+        <div class="bg-slate-50 rounded-xl p-3 mb-6 text-sm text-slate-700 border border-slate-200">
+            <p class="font-bold">{{ showOne.medecin }}</p>
+            <p>{{ showOne.date|date('d/m/Y') }} à {{ showOne.hdebut|date('H:i') }}</p>
+        </div>
+        <div class="flex gap-3">
+            <button onclick="closeSmsModal()" class="flex-1 px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">
+                Annuler
+            </button>
+            <a href="{{ path('rdv_sms', { id: showOne.id }) }}"
+               class="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition shadow-lg flex items-center justify-center gap-2">
+                <i class="fa-solid fa-paper-plane"></i> Envoyer
+            </a>
+        </div>
+    </div>
+</div>
+
+{# ===== MODAL ANNULER RDV ===== #}
+<div id="cancelModal" class="fixed inset-0 z-50 hidden flex items-center justify-center">
+    <div onclick="closeCancelModal()" class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+    <div id="cancelCard" class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-8 text-center transform scale-95 opacity-0 transition-all duration-200">
+        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fa-solid fa-calendar-xmark text-red-600 text-2xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-slate-800 mb-2">Annuler ce rendez-vous ?</h3>
+        <p class="text-slate-500 mb-2">Vous êtes sur le point d'annuler le rendez-vous suivant :</p>
+        <div class="bg-red-50 rounded-xl p-3 mb-6 text-sm text-slate-700 border border-red-100">
+            <p class="font-bold">{{ showOne.medecin }}</p>
+            <p>{{ showOne.date|date('d/m/Y') }} à {{ showOne.hdebut|date('H:i') }}</p>
+        </div>
+        <p class="text-xs text-slate-400 mb-6">Cette action est irréversible.</p>
+        <div class="flex gap-3">
+            <button onclick="closeCancelModal()" class="flex-1 px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">
+                Garder le RDV
+            </button>
+            <form method="POST" action="{{ path('cancelRdv', { id: showOne.id }) }}" class="flex-1">
+                <button type="submit" class="w-full px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition shadow-lg flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-times"></i> Oui, annuler
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openSmsModal() {
+    const modal = document.getElementById('smsModal');
+    const card  = document.getElementById('smsCard');
+    modal.classList.remove('hidden');
+    setTimeout(() => { card.classList.remove('scale-95', 'opacity-0'); card.classList.add('scale-100', 'opacity-100'); }, 10);
+}
+function closeSmsModal() {
+    const modal = document.getElementById('smsModal');
+    const card  = document.getElementById('smsCard');
+    card.classList.remove('scale-100', 'opacity-100'); card.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => modal.classList.add('hidden'), 200);
+}
+
+function openCancelModal() {
+    const modal = document.getElementById('cancelModal');
+    const card  = document.getElementById('cancelCard');
+    modal.classList.remove('hidden');
+    setTimeout(() => { card.classList.remove('scale-95', 'opacity-0'); card.classList.add('scale-100', 'opacity-100'); }, 10);
+}
+function closeCancelModal() {
+    const modal = document.getElementById('cancelModal');
+    const card  = document.getElementById('cancelCard');
+    card.classList.remove('scale-100', 'opacity-100'); card.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => modal.classList.add('hidden'), 200);
+}
+</script>
 {% endblock %}

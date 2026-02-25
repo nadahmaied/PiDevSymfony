@@ -1,0 +1,371 @@
+{% extends 'baseBack.html.twig' %}
+
+{% block body %}
+
+<div class="flex-1 overflow-y-auto p-8">
+
+    <div class="flex justify-start mb-6">
+        <a href="{{ path('showAllRdvBack', {medecinId: medecinId}) }}"
+           class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-3 rounded-xl shadow transition">
+            <i class="fa-solid fa-list"></i> Consulter les rendez-vous
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
+            <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-xl"><i class="fa-solid fa-calendar-day"></i></div>
+            <div><p class="text-gray-500 text-xs font-bold uppercase">Aujourd'hui</p><p class="text-xl font-bold text-gray-800">{{ countAujourdhui }} RDV</p></div>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
+            <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-lg flex items-center justify-center text-xl"><i class="fa-solid fa-clock"></i></div>
+            <div><p class="text-gray-500 text-xs font-bold uppercase">En attente</p><p class="text-xl font-bold text-gray-800">{{ countEnAttente }} Demandes</p></div>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
+            <div class="w-12 h-12 bg-green-50 text-green-600 rounded-lg flex items-center justify-center text-xl"><i class="fa-solid fa-user-check"></i></div>
+            <div><p class="text-gray-500 text-xs font-bold uppercase">Terminés</p><p class="text-xl font-bold text-gray-800">{{ countTermines }} Consultations</p></div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div id="calendar"></div>
+    </div>
+</div>
+
+<!-- MODAL -->
+<div id="dispoModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl p-6 relative max-h-[85vh] overflow-y-auto">
+
+        <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-xl">✖</button>
+
+        <div class="flex items-center gap-3 mb-4">
+            <h3 id="modalTitle" class="text-2xl font-bold text-slate-800"></h3>
+            <span id="badgePassé"
+                  class="hidden items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-200 text-gray-600">
+                <i class="fa-solid fa-lock text-xs"></i> Lecture seule
+            </span>
+        </div>
+
+        <div id="bannierePasse" class="hidden mb-4 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-500 flex items-center gap-2">
+            <i class="fa-solid fa-circle-info text-gray-400"></i>
+            Cette date est passée. Vous pouvez consulter les informations mais aucune modification n'est possible.
+        </div>
+
+        <div class="mb-6">
+            <h4 class="font-semibold mb-2 text-blue-700">Rendez-vous</h4>
+            <div id="rdvList" class="space-y-3"></div>
+        </div>
+
+        <div>
+            <h4 class="font-semibold mb-2 text-green-700">Disponibilités personnalisées</h4>
+            <div id="dispoList" class="space-y-3"></div>
+        </div>
+
+        <div class="mt-6 flex justify-center">
+            <div class="w-full max-w-md border border-amber-200 bg-amber-50 rounded-xl px-4 py-3">
+                <h4 class="font-semibold mb-3 text-amber-700 text-center">Horaires par défaut de ce jour</h4>
+                <div id="defaultHoraires" class="space-y-2 text-sm text-center"></div>
+            </div>
+        </div>
+
+        <div id="sectionActions">
+            <div id="sectionAnnulation" class="mt-4 flex justify-center hidden">
+                <div class="flex flex-wrap gap-2 text-xs sm:text-sm">
+                    <button type="button" id="btnAnnulerMatin"
+                            class="px-3 py-1.5 rounded-md bg-red-50 text-red-700 hover:bg-red-100 border border-red-200"
+                            onclick="toggleCancelSession('matin')">
+                        Annuler la séance du matin (09h‑12h)
+                    </button>
+                    <button type="button" id="btnAnnulerSoir"
+                            class="px-3 py-1.5 rounded-md bg-red-50 text-red-700 hover:bg-red-100 border border-red-200"
+                            onclick="toggleCancelSession('soir')">
+                        Annuler la séance du soir (14h‑17h)
+                    </button>
+                </div>
+            </div>
+
+            <div id="sectionExtra" class="mt-6 border-t pt-4 hidden">
+                <h4 class="font-semibold mb-3 text-slate-800">Disponibilité supplémentaire</h4>
+                <div class="flex items-center justify-between p-3 rounded-lg border bg-gray-50">
+                    <div>
+                        <span class="font-medium text-gray-800" id="extraLabel"></span>
+                        <span class="ml-2 text-xs" id="extraStatutBadge"></span>
+                    </div>
+                    <button type="button" id="btnToggleExtra"
+                            class="px-3 py-1.5 rounded-md text-sm font-medium"
+                            onclick="toggleExtraDispo()">
+                    </button>
+                </div>
+            </div>
+
+            <div id="messageSamedi" class="mt-4 hidden">
+                <div class="bg-gray-100 border border-gray-300 text-gray-600 text-sm rounded-lg px-4 py-3 text-center">
+                    <i class="fa-solid fa-lock mr-1"></i>
+                    Le samedi est limité à <strong>09h00 - 13h00</strong>. Aucun ajout n'est possible.
+                </div>
+            </div>
+        </div>
+
+        <div class="pt-4 border-t mt-6 flex justify-end">
+            <button type="button" onclick="closeModal()"
+                    class="px-4 py-1.5 rounded-md bg-slate-800 text-white text-sm hover:bg-slate-900">
+                Fermer
+            </button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+
+const CURRENT_MED_ID = {{ medecinId }};
+
+let calendar;
+let currentDate            = null;
+let currentDispos          = [];
+let currentSeancesAnnulees = [];
+let currentHorairesDefault = [];
+let currentExtraAutorise   = null;
+let currentExtraActif      = false;
+let currentPeutAnnuler     = false;
+let isDatePassee           = false;
+
+document.addEventListener('DOMContentLoaded', function () {
+    calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+        initialView: 'dayGridMonth',
+        locale: 'fr',
+        height: 650,
+        firstDay: 1,
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        dayCellClassNames: function(arg) {
+            const today    = new Date(); today.setHours(0,0,0,0);
+            const cellDate = new Date(arg.date); cellDate.setHours(0,0,0,0);
+            return cellDate < today ? ['bg-gray-50', 'opacity-70'] : [];
+        },
+        dateClick: function (info) {
+            openModal(info.dateStr);
+        }
+    });
+    calendar.render();
+});
+
+async function openModal(date) {
+    currentDate = date;
+
+    const today    = new Date(); today.setHours(0, 0, 0, 0);
+    const clickedD = new Date(date + 'T00:00:00');
+    isDatePassee   = clickedD < today;
+
+    document.getElementById('modalTitle').innerText      = "Planning du " + formatDate(date);
+    document.getElementById('rdvList').innerHTML         = "<p class='text-gray-500'>Chargement...</p>";
+    document.getElementById('dispoList').innerHTML       = "";
+    document.getElementById('defaultHoraires').innerHTML = "";
+    document.getElementById('dispoModal').classList.remove('hidden');
+
+    const badge    = document.getElementById('badgePassé');
+    const banniere = document.getElementById('bannierePasse');
+    const actions  = document.getElementById('sectionActions');
+
+    if (isDatePassee) {
+        badge.classList.remove('hidden'); badge.classList.add('inline-flex');
+        banniere.classList.remove('hidden');
+        actions.classList.add('hidden');
+    } else {
+        badge.classList.add('hidden'); badge.classList.remove('inline-flex');
+        banniere.classList.add('hidden');
+        actions.classList.remove('hidden');
+    }
+
+    try {
+        // Passer le medecin_id courant à l'API
+        const response = await fetch(`/back/disponibilite/get/${date}?medecin_id=${CURRENT_MED_ID}`);
+        const data     = await response.json();
+
+        if (!data.success) {
+            document.getElementById('rdvList').innerHTML = "<p class='text-red-500'>Erreur de chargement</p>";
+            return;
+        }
+
+        currentDispos          = data.disponibilites  || [];
+        currentSeancesAnnulees = data.seancesAnnulees || [];
+        currentHorairesDefault = data.horairesDefault || [];
+        currentExtraAutorise   = data.extraAutorise;
+        currentExtraActif      = data.extraActif;
+        currentPeutAnnuler     = data.peutAnnulerSeances;
+
+        displayRdvs(data.rdvs, data.date);
+        displayDispos(currentDispos);
+        displayHorairesDefault(currentHorairesDefault, currentSeancesAnnulees);
+
+        if (!isDatePassee) {
+            renderSectionAnnulation(currentPeutAnnuler, currentSeancesAnnulees);
+            renderSectionExtra(data.jour, currentExtraAutorise, currentExtraActif);
+        }
+
+    } catch (e) {
+        document.getElementById('rdvList').innerHTML = "<p class='text-red-500'>Erreur serveur</p>";
+    }
+}
+
+function displayRdvs(rdvs, date) {
+    const container = document.getElementById('rdvList');
+    if (!rdvs || rdvs.length === 0) {
+        container.innerHTML = "<p class='text-gray-500 italic'>Aucun rendez-vous</p>";
+        return;
+    }
+    const dateLabel = formatShortDate(date);
+    container.innerHTML = rdvs.map(rdv => `
+        <div class="border border-blue-200 bg-blue-50 p-4 rounded-lg">
+            <div class="text-xs text-gray-500 mb-1">${dateLabel}</div>
+            <div class="font-semibold text-blue-900">${rdv.hdebut}${rdv.hfin ? ' - ' + rdv.hfin : ''}</div>
+            <div class="text-sm text-gray-700">Motif : ${rdv.motif || ''}</div>
+            <div class="text-xs text-gray-500">${rdv.statut}</div>
+        </div>
+    `).join('');
+}
+
+function displayDispos(dispos) {
+    const container = document.getElementById('dispoList');
+    if (!dispos || dispos.length === 0) {
+        container.innerHTML = "<p class='text-gray-500 italic'>Aucune disponibilité personnalisée</p>";
+        return;
+    }
+    container.innerHTML = dispos.map(dispo => `
+        <div class="border border-green-200 bg-green-50 p-4 rounded-lg flex items-center justify-between">
+            <div>
+                <div class="font-semibold text-green-900">${dispo.hdebut} - ${dispo.hfin}</div>
+                <div class="text-xs text-gray-600">${dispo.statut} · ${dispo.nbrH}h</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function displayHorairesDefault(horaires, seancesAnnulees) {
+    const container = document.getElementById('defaultHoraires');
+    if (!horaires || horaires.length === 0) {
+        container.innerHTML = "<p class='text-gray-500 italic'>Aucun horaire fixe ce jour</p>";
+        return;
+    }
+    const annuleesKeys = seancesAnnulees.map(s => `${s.hdebut}-${s.hfin}`);
+    container.innerHTML = horaires.map(h => {
+        const key     = `${h.debut}-${h.fin}`;
+        const annulee = annuleesKeys.includes(key);
+        return annulee
+            ? `<div class="flex items-center justify-center gap-2 text-red-500 line-through opacity-60">
+                   🚫 ${h.debut} - ${h.fin}
+                   <span class="text-xs no-underline">(annulée)</span>
+               </div>`
+            : `<div class="text-gray-700">${h.debut} - ${h.fin}</div>`;
+    }).join('');
+}
+
+function renderSectionAnnulation(peutAnnuler, seancesAnnulees) {
+    const section = document.getElementById('sectionAnnulation');
+    if (!peutAnnuler) { section.classList.add('hidden'); return; }
+    section.classList.remove('hidden');
+
+    const annuleesKeys = seancesAnnulees.map(s => `${s.hdebut}-${s.hfin}`);
+    const btnMatin     = document.getElementById('btnAnnulerMatin');
+    const btnSoir      = document.getElementById('btnAnnulerSoir');
+
+    if (annuleesKeys.includes('09:00-12:00')) {
+        btnMatin.textContent = '✅ Restaurer la séance du matin (09h‑12h)';
+        btnMatin.className   = 'px-3 py-1.5 rounded-md bg-green-50 text-green-700 hover:bg-green-100 border border-green-200';
+    } else {
+        btnMatin.textContent = 'Annuler la séance du matin (09h‑12h)';
+        btnMatin.className   = 'px-3 py-1.5 rounded-md bg-red-50 text-red-700 hover:bg-red-100 border border-red-200';
+    }
+
+    if (annuleesKeys.includes('14:00-17:00')) {
+        btnSoir.textContent = '✅ Restaurer la séance du soir (14h‑17h)';
+        btnSoir.className   = 'px-3 py-1.5 rounded-md bg-green-50 text-green-700 hover:bg-green-100 border border-green-200';
+    } else {
+        btnSoir.textContent = 'Annuler la séance du soir (14h‑17h)';
+        btnSoir.className   = 'px-3 py-1.5 rounded-md bg-red-50 text-red-700 hover:bg-red-100 border border-red-200';
+    }
+}
+
+function renderSectionExtra(jour, extraAutorise, extraActif) {
+    const sectionExtra  = document.getElementById('sectionExtra');
+    const messageSamedi = document.getElementById('messageSamedi');
+
+    if (jour === 'samedi') {
+        sectionExtra.classList.add('hidden');
+        messageSamedi.classList.remove('hidden');
+        return;
+    }
+    messageSamedi.classList.add('hidden');
+    if (!extraAutorise) { sectionExtra.classList.add('hidden'); return; }
+    sectionExtra.classList.remove('hidden');
+
+    document.getElementById('extraLabel').textContent = `Créneau supplémentaire : ${extraAutorise.debut} - ${extraAutorise.fin}`;
+
+    const badge = document.getElementById('extraStatutBadge');
+    const btn   = document.getElementById('btnToggleExtra');
+
+    if (extraActif) {
+        badge.textContent = '✅ Activé';
+        badge.className   = 'ml-2 text-xs text-green-600 font-semibold';
+        btn.textContent   = 'Supprimer ce créneau';
+        btn.className     = 'px-3 py-1.5 rounded-md text-sm font-medium bg-red-50 text-red-700 hover:bg-red-100 border border-red-200';
+    } else {
+        badge.textContent = '— Non activé';
+        badge.className   = 'ml-2 text-xs text-gray-400';
+        btn.textContent   = 'Ajouter ce créneau';
+        btn.className     = 'px-3 py-1.5 rounded-md text-sm font-medium bg-green-600 text-white hover:bg-green-700';
+    }
+}
+
+async function toggleExtraDispo() {
+    if (!currentDate || isDatePassee) return;
+    const action = currentExtraActif ? 'supprimer' : 'ajouter';
+    const label  = currentExtraAutorise ? `${currentExtraAutorise.debut}-${currentExtraAutorise.fin}` : '';
+    if (!confirm(`Voulez-vous ${action} le créneau ${label} pour ce jour ?`)) return;
+    try {
+        const response = await fetch('/back/disponibilite/toggle-extra', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify({ date: currentDate }),
+        });
+        const data = await response.json();
+        if (data.success) { await openModal(currentDate); } else { alert(data.message || 'Erreur.'); }
+    } catch (e) { alert('Erreur serveur.'); }
+}
+
+async function toggleCancelSession(session) {
+    if (!currentDate || isDatePassee) return;
+    const label   = session === 'matin' ? 'séance du matin (09h-12h)' : 'séance du soir (14h-17h)';
+    const annulee = currentSeancesAnnulees.some(s => session === 'matin' ? s.hdebut === '09:00' : s.hdebut === '14:00');
+    const action  = annulee ? 'restaurer' : 'annuler';
+    if (!confirm(`Voulez-vous ${action} la ${label} pour ce jour ?`)) return;
+    try {
+        const response = await fetch('/back/disponibilite/cancel-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify({ date: currentDate, session }),
+        });
+        const data = await response.json();
+        if (data.success) { await openModal(currentDate); } else { alert(data.message || 'Erreur.'); }
+    } catch (e) { alert('Erreur serveur.'); }
+}
+
+function closeModal() { document.getElementById('dispoModal').classList.add('hidden'); }
+
+function formatDate(dateStr) {
+    return new Date(dateStr + 'T00:00:00').toLocaleDateString('fr-FR', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+}
+function formatShortDate(dateStr) {
+    return new Date(dateStr + 'T00:00:00').toLocaleDateString('fr-FR', {
+        weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric'
+    });
+}
+</script>
+{% endblock %}

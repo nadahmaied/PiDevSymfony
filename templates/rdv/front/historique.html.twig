@@ -1,0 +1,193 @@
+{% extends 'baseFront.html.twig' %}
+
+{% block body %}
+<div class="flex-1 overflow-y-auto bg-slate-50 p-4 md:p-8 no-scrollbar">
+<div class="max-w-4xl mx-auto space-y-8">
+
+    {# ===== HEADER ===== #}
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">
+                <i class="fa-solid fa-clock-rotate-left text-blue-600 mr-2"></i>
+                Historique des RDV
+            </h1>
+            <p class="text-slate-500 text-sm mt-1">Tous vos rendez-vous passés</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="{{ path('showAllRdvfront') }}"
+               class="border border-slate-200 text-slate-600 px-4 py-2 rounded-xl text-sm font-medium hover:bg-slate-100 transition flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Retour
+            </a>
+            <a href="{{ path('historique_pdf') }}" target="_blank"
+               class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow flex items-center gap-2 transition">
+                <i class="fa-solid fa-file-pdf"></i> Exporter PDF
+            </a>
+        </div>
+    </div>
+
+    {# ===== STATS ===== #}
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 text-center">
+            <p class="text-3xl font-bold text-blue-600">{{ total }}</p>
+            <p class="text-xs text-slate-500 mt-1 font-medium">Total RDV</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 text-center">
+            <p class="text-3xl font-bold text-green-600">{{ confirmes }}</p>
+            <p class="text-xs text-slate-500 mt-1 font-medium">Confirmés</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 text-center">
+            <p class="text-3xl font-bold text-red-500">{{ annules }}</p>
+            <p class="text-xs text-slate-500 mt-1 font-medium">Annulés</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 text-center">
+            <p class="text-3xl font-bold text-slate-400">{{ attente }}</p>
+            <p class="text-xs text-slate-500 mt-1 font-medium">Expirés</p>
+        </div>
+    </div>
+
+    {# ===== TIMELINE ===== #}
+    {% if rdvs is empty %}
+        <div class="text-center py-16 text-slate-400">
+            <i class="fa-solid fa-clock-rotate-left text-5xl mb-4 block opacity-30"></i>
+            <p class="font-medium text-lg">Aucun historique pour le moment.</p>
+        </div>
+    {% else %}
+    <div class="relative">
+
+        <div class="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-400 to-slate-200" style="left: 27px;"></div>
+
+        <div class="space-y-6">
+        {% for rdv in rdvs %}
+
+        {# ── Statut affiché : "En attente" passé → "Expiré" ── #}
+        {% if rdv.statut == 'Confirmé' %}
+            {% set dotColor   = 'bg-green-500' %}
+            {% set badgeStyle = 'background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;' %}
+            {% set badgeIcon  = 'fa-regular fa-circle-check' %}
+            {% set badgeLabel = 'Confirmé' %}
+        {% elseif rdv.statut == 'Annulé' %}
+            {% set dotColor   = 'bg-red-500' %}
+            {% set badgeStyle = 'background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;' %}
+            {% set badgeIcon  = 'fa-regular fa-circle-xmark' %}
+            {% set badgeLabel = 'Annulé' %}
+        {% else %}
+            {# En attente + date passée = Expiré #}
+            {% set dotColor   = 'bg-slate-400' %}
+            {% set badgeStyle = 'background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;' %}
+            {% set badgeIcon  = 'fa-solid fa-hourglass-end' %}
+            {% set badgeLabel = '⏰ Expiré' %}
+        {% endif %}
+
+        <div class="flex gap-6 items-start">
+
+            {# Point timeline #}
+            <div class="flex-shrink-0 relative" style="z-index:1;">
+                <div class="w-14 h-14 bg-white border-2 border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-600 shadow-sm">
+                    <span class="text-xs font-bold uppercase text-slate-400">{{ rdv.date|date('M') }}</span>
+                    <span class="text-lg font-bold text-slate-700">{{ rdv.date|date('d') }}</span>
+                </div>
+                <div class="absolute -right-3 top-1/2 -translate-y-1/2 w-3 h-3 {{ dotColor }} rounded-full border-2 border-white shadow"></div>
+            </div>
+
+            {# Card RDV #}
+            <div class="flex-1 bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:border-blue-200 transition
+                        {% if rdv.statut != 'Confirmé' and rdv.statut != 'Annulé' %}opacity-75{% endif %}">
+                <div class="flex justify-between items-start flex-wrap gap-3">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-lg">{{ rdv.medecin }}</h3>
+                        <p class="text-slate-500 text-sm">{{ rdv.motif ?? 'Consultation' }}</p>
+                        <div class="flex items-center gap-3 mt-2 text-sm text-slate-400">
+                            <span><i class="fa-regular fa-clock mr-1"></i>{{ rdv.hdebut|date('H:i') }} - {{ rdv.hfin|date('H:i') }}</span>
+                            {% if rdv.message %}
+                            <span><i class="fa-solid fa-comment mr-1"></i>{{ rdv.message }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-end gap-2">
+                        <span style="font-size:0.75rem;font-weight:700;padding:0.25rem 0.6rem;border-radius:9999px;{{ badgeStyle }}">
+                            <i class="{{ badgeIcon }} mr-1"></i>{{ badgeLabel }}
+                        </span>
+                        {% if rdv.statut != 'Confirmé' and rdv.statut != 'Annulé' %}
+                        <span class="text-xs text-slate-400 italic">Le médecin n'a pas répondu</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {# Boutons QR Code + Détails #}
+                <div class="flex gap-2 mt-4 pt-4 border-t border-slate-100">
+                    <button onclick="showQrCode({{ rdv.id }}, '{{ rdv.medecin|e('js') }}', '{{ rdv.date|date('d/m/Y') }}', '{{ rdv.hdebut|date('H:i') }}', '{{ (rdv.motif ?? 'Consultation')|e('js') }}', '{{ badgeLabel }}')"
+                        style="display:flex;align-items:center;gap:6px;padding:8px 14px;background:#eff6ff;color:#2563eb;border:none;border-radius:10px;font-size:0.78rem;font-weight:700;cursor:pointer;">
+                        <i class="fa-solid fa-qrcode"></i> QR Code
+                    </button>
+                    <a href="{{ path('showOne', { id: rdv.id }) }}"
+                        class="flex items-center gap-2 px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-lg text-xs font-bold transition">
+                        <i class="fa-solid fa-eye"></i> Détails
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+</div>
+
+{# ===== MODAL QR CODE ===== #}
+<div id="qrModal" class="fixed inset-0 z-50 hidden flex items-center justify-center">
+    <div onclick="closeQrModal()" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-8 text-center">
+        <button onclick="closeQrModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+        <h3 class="text-lg font-bold text-slate-800 mb-1">QR Code du RDV</h3>
+        <p id="qrSubtitle" class="text-slate-500 text-sm mb-5"></p>
+
+        <div class="flex justify-center mb-5">
+            <img id="qrImage" src="" alt="QR Code" class="w-48 h-48 rounded-xl border border-slate-100 shadow">
+        </div>
+
+        <div id="qrInfo" class="text-left bg-slate-50 rounded-xl p-4 text-sm text-slate-600 space-y-1 mb-5"></div>
+
+        <button onclick="downloadQr()"
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-download"></i> Télécharger
+        </button>
+    </div>
+</div>
+
+<script>
+let currentQrUrl = '';
+
+function showQrCode(id, medecin, date, heure, motif, statut) {
+    currentQrUrl = `/qrcode/rdv/${id}`;
+    document.getElementById('qrImage').src = '';
+    document.getElementById('qrImage').alt = 'Chargement...';
+
+    fetch(currentQrUrl)
+        .then(res => res.blob())
+        .then(blob => {
+            const reader = new FileReader();
+            reader.onloadend = () => { document.getElementById('qrImage').src = reader.result; };
+            reader.readAsDataURL(blob);
+        });
+
+    document.getElementById('qrSubtitle').textContent = medecin + ' — ' + date;
+    document.getElementById('qrInfo').innerHTML = `
+        <p><i class="fa-solid fa-user-doctor mr-2 text-blue-500"></i><strong>Médecin :</strong> ${medecin}</p>
+        <p><i class="fa-regular fa-calendar mr-2 text-blue-500"></i><strong>Date :</strong> ${date} à ${heure}</p>
+        <p><i class="fa-solid fa-stethoscope mr-2 text-blue-500"></i><strong>Motif :</strong> ${motif}</p>
+        <p><i class="fa-solid fa-circle-info mr-2 text-slate-400"></i><strong>Statut :</strong> ${statut}</p>
+    `;
+    document.getElementById('qrModal').classList.remove('hidden');
+}
+
+function closeQrModal() { document.getElementById('qrModal').classList.add('hidden'); }
+
+function downloadQr() {
+    const a = document.createElement('a');
+    a.href = currentQrUrl; a.download = 'qrcode-rdv.png'; a.target = '_blank'; a.click();
+}
+</script>
+{% endblock %}

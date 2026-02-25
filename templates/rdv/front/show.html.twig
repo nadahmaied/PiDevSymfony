@@ -1,273 +1,641 @@
 {% extends 'baseFront.html.twig' %}
 
 {% block body %}
- <div class="flex-1 overflow-y-auto bg-slate-50 p-4 md:p-8 no-scrollbar">
- <div class="flex justify-end mb-4">
-    <button
-        onclick="openAddRdvModal()"
-        class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg flex items-center gap-2 transition">
-        <i class="fa-solid fa-plus"></i>
-        Ajouter RDV
-    </button>
-</div>
-{% include 'rdv/front/modal.html.twig' %}
 
+{# ===== BANNIERE RAPPEL ===== #}
+<div id="rappelBanner" style="display:none; position:fixed; top:0; left:0; right:0; z-index:9999;"></div>
 
-                <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+<div class="flex-1 overflow-y-auto bg-slate-50 p-4 md:p-8 no-scrollbar">
+    <div class="flex justify-between mb-4">
+        <a href="{{ path('historique') }}"
+           class="bg-white hover:bg-slate-50 text-slate-700 px-5 py-2.5 rounded-xl font-bold shadow-lg flex items-center gap-2 transition border border-slate-200">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            Historique
+        </a>
+        <button
+            onclick="openAddRdvModal()"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg flex items-center gap-2 transition">
+            <i class="fa-solid fa-plus"></i>
+            Ajouter RDV
+        </button>
+    </div>
+    {% include 'rdv/front/modal.html.twig' %}
 
-                    <div class="lg:col-span-8 space-y-6">
-                        
-                        <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-6">
-                            <div class="relative z-10">
-                                <div class="inline-block bg-blue-500/30 border border-blue-400/30 rounded-full px-3 py-1 text-xs font-bold mb-2">
-                                    <i class="fa-solid fa-bell animate-pulse mr-1"></i> Prochain Rendez-vous
-                                </div>
-                                <h2 class="text-2xl font-bold mb-1">Dr. Sarah Amrani</h2>
-                                <p class="text-blue-100 mb-4">Cardiologie • Clinique Pasteur</p>
-                                <div class="flex gap-3">
-                                    <button class="bg-white text-blue-700 px-4 py-2 rounded-lg text-sm font-bold shadow hover:bg-blue-50 transition">
-                                        <i class="fa-solid fa-video mr-1"></i> Lancer Visio
-                                    </button>
-                                    <button class="bg-blue-800/50 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-800 transition">
-                                        Détails
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4 text-center min-w-[100px]">
-                                <span class="block text-sm uppercase tracking-widest text-blue-200">Fév</span>
-                                <span class="block text-4xl font-bold text-white">14</span>
-                                <span class="block text-sm font-medium text-blue-100 mt-1">10:00</span>
-                            </div>
-                            <i class="fa-solid fa-user-doctor absolute -right-6 -bottom-6 text-9xl text-white opacity-10"></i>
-                        </div>
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-                        <div class="flex items-center justify-between border-b border-slate-200 pb-1">
-                            <div class="flex gap-6">
-                                <button class="text-blue-600 font-bold border-b-2 border-blue-600 pb-3 px-1">À venir (2)</button>
-                                <button class="text-slate-500 font-medium hover:text-slate-800 pb-3 px-1 transition">Historique</button>
-                                <button class="text-slate-500 font-medium hover:text-slate-800 pb-3 px-1 transition">Annulés</button>
-                            </div>
-                        </div>
+        <div class="lg:col-span-8 space-y-6">
 
-                        <div class="space-y-4">
-                            {% for rdv in rdvs %}
-                            <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col sm:flex-row items-start sm:items-center gap-5 hover:border-orange-200 transition group">
-                                <div class="flex-shrink-0 w-16 h-16 bg-orange-50 rounded-xl flex flex-col items-center justify-center text-orange-600 border border-orange-100 group-hover:bg-orange-100 transition">
-                                    <span class="text-xs font-bold uppercase">{{ rdv.date|date('M') }}</span>
-                                    <span class="text-xl font-bold">{{ rdv.date|date('d') }}</span>
-                                </div>
-                                
-                                <div class="flex-1">
-                                    <div class="flex justify-between items-start">
-                                        <div>
-                                            <h3 class="font-bold text-slate-800 text-lg">{{ rdv.medecin }}</h3>
-                                            <p class="text-slate-500 text-sm">{{ rdv.motif }}</p>
-                                        </div>
-                                        <span class="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-1 rounded-md border border-orange-200">
-                                            <i class="fa-regular fa-clock mr-1"></i> {{ rdv.statut }}
-                                        </span>
-                                    </div>
-                                    <div class="mt-3 flex items-center gap-4 text-sm text-slate-500">
-                                        <span class="flex items-center gap-1"><i class="fa-regular fa-clock"></i> {{ rdv.hdebut|date('H:i') }} - {{ rdv.hfin|date('H:i') }}</span>
-                                        {% if rdv.message %}<span class="flex items-center gap-1"><i class="fa-solid fa-comment"></i> {{ rdv.message }}</span>{% endif %}
-                                    </div>
-                                </div>
-
-                                <div class="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-                                    <button 
-                                        onclick="openEditRdvModal({{ rdv.id }})" 
-                                        class="flex-1 sm:flex-none border border-slate-200 text-slate-600 p-2 rounded-lg hover:bg-slate-50 transition text-center" 
-                                        title="Modifier">
-                                        <i class="fa-solid fa-pen"></i>
-                                    </button>
-                                    <a href="{{ path('showOne', { id: rdv.id }) }}" class="flex-1 sm:flex-none border border-slate-200 text-blue-500 p-2 rounded-lg hover:bg-blue-50 transition text-center" title="Détails">
-                                        <i class="fa-solid fa-eye"></i>
-                                    </a>
-                                    <button
-    onclick="openDeleteModal({{ rdv.id }}, '{{ csrf_token('delete' ~ rdv.id) }}')"
-    class="flex-1 sm:flex-none border border-red-200 text-red-600 p-2 rounded-lg hover:bg-red-50 transition text-center"
-    title="Supprimer">
-    <i class="fa-solid fa-trash"></i>
-</button>
-
-
-                                </div>
-                            </div>
-                            {% else %}
-                            <p class="text-slate-500 text-center py-8">Aucun rendez-vous pour le moment.</p>
-                            {% endfor %}
-                        </div>
+            {% if prochainRdv %}
+            <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div class="relative z-10">
+                    <div class="inline-block bg-blue-500/30 border border-blue-400/30 rounded-full px-3 py-1 text-xs font-bold mb-2">
+                        <i class="fa-solid fa-bell animate-pulse mr-1"></i> Prochain Rendez-vous
                     </div>
-
-                    <div class="lg:col-span-4 space-y-6">
-                        
-                        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                            <h4 class="font-bold text-slate-800 mb-4">Février 2026</h4>
-                            <div class="grid grid-cols-7 gap-1 text-center text-sm mb-2 text-slate-400 font-medium">
-                                <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
-                            </div>
-                            <div class="grid grid-cols-7 gap-1 text-center text-sm font-medium text-slate-600">
-                                <span class="p-2 text-slate-300">26</span><span class="p-2 text-slate-300">27</span><span class="p-2 text-slate-300">28</span><span class="p-2 text-slate-300">29</span><span class="p-2 text-slate-300">30</span><span class="p-2">1</span><span class="p-2">2</span>
-                                <span class="p-2">3</span><span class="p-2">4</span><span class="p-2">5</span><span class="p-2">6</span><span class="p-2">7</span><span class="p-2">8</span><span class="p-2">9</span>
-                                <span class="p-2">10</span><span class="p-2">11</span><span class="p-2">12</span><span class="p-2">13</span><span class="bg-blue-600 text-white rounded-lg shadow-md p-2">14</span><span class="p-2">15</span><span class="p-2">16</span>
-                                <span class="p-2">17</span><span class="p-2">18</span><span class="p-2">19</span><span class="p-2">20</span><span class="p-2">21</span><span class="p-2">22</span><span class="p-2">23</span>
-                            </div>
-                        </div>
-
-                        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                            <div class="flex justify-between items-center mb-4">
-                                <h4 class="font-bold text-slate-800">Mes Médecins</h4>
-                                <button class="text-blue-600 text-xs font-bold hover:underline">Voir tout</button>
-                            </div>
-                            
-                            <div class="space-y-4">
-                                <div class="flex items-center gap-3 group cursor-pointer">
-                                    <div class="relative">
-                                        <img src="https://ui-avatars.com/api/?name=Sarah+Amrani&background=random" class="w-10 h-10 rounded-full">
-                                        <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white"></div>
-                                    </div>
-                                    <div class="flex-1">
-                                        <p class="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition">Dr. S. Amrani</p>
-                                        <p class="text-xs text-slate-500">Cardiologue</p>
-                                    </div>
-                                    <button class="w-8 h-8 rounded-full bg-slate-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition">
-                                        <i class="fa-solid fa-calendar-plus text-xs"></i>
-                                    </button>
-                                </div>
-                                <div class="flex items-center gap-3 group cursor-pointer">
-                                    <img src="https://ui-avatars.com/api/?name=Mohamed+Kallel&background=random" class="w-10 h-10 rounded-full grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition">
-                                    <div class="flex-1">
-                                        <p class="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition">Dr. M. Kallel</p>
-                                        <p class="text-xs text-slate-500">Ophtalmo</p>
-                                    </div>
-                                    <button class="w-8 h-8 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-blue-600 hover:text-white transition">
-                                        <i class="fa-solid fa-calendar-plus text-xs"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            <button class="w-full mt-6 py-2 border border-dashed border-slate-300 text-slate-500 rounded-xl text-sm font-medium hover:border-blue-400 hover:text-blue-600 transition flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-magnifying-glass"></i> Trouver un spécialiste
-                            </button>
-                        </div>
-
+                    <h2 class="text-2xl font-bold mb-1">{{ prochainRdv.medecin }}</h2>
+                    <p class="text-blue-100 mb-4">{{ prochainRdv.motif ?? 'Consultation' }}</p>
+                    <div class="flex gap-3">
+                        <button class="bg-white text-blue-700 px-4 py-2 rounded-lg text-sm font-bold shadow hover:bg-blue-50 transition">
+                            <i class="fa-solid fa-video mr-1"></i> Lancer Visio
+                        </button>
+                        <a href="{{ path('showOne', { id: prochainRdv.id }) }}"
+                           class="bg-blue-800/50 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-800 transition">
+                            Détails
+                        </a>
                     </div>
-
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4 text-center min-w-[100px]">
+                    <span class="block text-sm uppercase tracking-widest text-blue-200">{{ prochainRdv.date|date('M') }}</span>
+                    <span class="block text-4xl font-bold text-white">{{ prochainRdv.date|date('d') }}</span>
+                    <span class="block text-sm font-medium text-blue-100 mt-1">{{ prochainRdv.hdebut|date('H:i') }}</span>
+                </div>
+                <i class="fa-solid fa-user-doctor absolute -right-6 -bottom-6 text-9xl text-white opacity-10"></i>
+            </div>
+            {% else %}
+            <div class="bg-gradient-to-br from-slate-400 to-slate-500 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden flex items-center justify-center">
+                <div class="text-center">
+                    <i class="fa-solid fa-calendar-check text-4xl mb-3 opacity-60"></i>
+                    <p class="font-bold text-lg">Aucun prochain rendez-vous</p>
+                    <p class="text-slate-200 text-sm mt-1">Ajoutez un RDV pour le voir ici</p>
                 </div>
             </div>
-<!-- Modal Suppression -->
-<div id="deleteModal"
-     class="fixed inset-0 z-50 hidden flex items-center justify-center">
+            {% endif %}
 
-    <!-- Overlay -->
-    <div onclick="closeDeleteModal()"
-         class="absolute inset-0 bg-black/60 backdrop-blur-sm">
+            {# ===== ONGLETS + BARRE DE RECHERCHE ===== #}
+            <div class="flex items-center justify-between border-b border-slate-200 pb-1 gap-4 flex-wrap">
+                <div class="flex gap-6 items-center">
+                    <button id="tab-avenir"  onclick="filterTab('avenir')"  class="text-blue-600 font-bold border-b-2 border-blue-600 pb-3 px-1 transition">À venir</button>
+                    <button id="tab-passes"  onclick="filterTab('passes')"  class="text-slate-500 font-medium hover:text-slate-800 pb-3 px-1 transition">📅 Passés</button>
+                    <button id="tab-annules" onclick="filterTab('annules')" class="text-slate-500 font-medium hover:text-slate-800 pb-3 px-1 transition">Annulés</button>
+                </div>
+
+                {# Barre de recherche #}
+                <div style="position:relative; z-index:100;">
+                    <div id="searchBox"
+                         style="display:flex; align-items:center; gap:8px; background:white; border:2px solid #e2e8f0; border-radius:1rem; padding:8px 14px; box-shadow:0 1px 4px rgba(0,0,0,0.06); width:180px; transition: width 0.35s ease, border-color 0.3s, box-shadow 0.3s;">
+                        <i id="searchIcon" class="fa-solid fa-magnifying-glass" style="color:#94a3b8; font-size:0.8rem; flex-shrink:0; transition:color 0.3s;"></i>
+                        <input type="text" id="searchRdv" placeholder="Rechercher..." autocomplete="off"
+                            style="border:none; outline:none; background:transparent; font-size:0.875rem; color:#334155; width:100%; font-family:inherit;">
+                        <i id="searchSpinner" class="fa-solid fa-spinner fa-spin" style="color:#3b82f6; font-size:0.8rem; display:none; flex-shrink:0;"></i>
+                        <button id="clearSearch" onclick="clearSearchInput()"
+                                style="display:none; background:none; border:none; cursor:pointer; padding:0; color:#94a3b8; flex-shrink:0;"
+                                onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'">
+                            <i class="fa-solid fa-xmark" style="font-size:0.75rem;"></i>
+                        </button>
+                    </div>
+                    <div id="searchDropdown"
+                         style="display:none; position:absolute; top:calc(100% + 8px); left:0; right:0; min-width:300px; background:white; border:1px solid #e2e8f0; border-radius:1rem; box-shadow:0 10px 40px rgba(0,0,0,0.12); overflow:hidden;">
+                        <div id="searchDropdownContent"></div>
+                    </div>
+                </div>
+            </div>
+
+            {# ===== LISTE DES RDV — data-date + data-statut sur chaque carte ===== #}
+            <div id="rdvList" class="space-y-4">
+                {% for rdv in rdvs %}
+                <div class="rdv-card bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col sm:flex-row items-start sm:items-center gap-5 hover:border-orange-200 transition group"
+                     data-date="{{ rdv.date|date('Y-m-d') }}"
+                     data-statut="{{ rdv.statut }}">
+                    <div class="flex-shrink-0 w-16 h-16 bg-orange-50 rounded-xl flex flex-col items-center justify-center text-orange-600 border border-orange-100 group-hover:bg-orange-100 transition">
+                        <span class="text-xs font-bold uppercase">{{ rdv.date|date('M') }}</span>
+                        <span class="text-xl font-bold">{{ rdv.date|date('d') }}</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-bold text-slate-800 text-lg">{{ rdv.medecin }}</h3>
+                                <p class="text-slate-500 text-sm">{{ rdv.motif }}</p>
+                            </div>
+                            <span id="statut-{{ rdv.id }}"
+                                  style="font-size:0.75rem; font-weight:700; padding:0.25rem 0.5rem; border-radius:0.375rem; border:1px solid;
+                                  {% if rdv.statut == 'Confirmé' %}background-color:#dcfce7;color:#15803d;border-color:#bbf7d0;
+                                  {% elseif rdv.statut == 'Annulé' %}background-color:#fee2e2;color:#b91c1c;border-color:#fecaca;
+                                  {% else %}background-color:#ffedd5;color:#c2410c;border-color:#fed7aa;{% endif %}">
+                                {% if rdv.statut == 'Confirmé' %}<i class="fa-regular fa-circle-check mr-1"></i> Confirmé
+                                {% elseif rdv.statut == 'Annulé' %}<i class="fa-regular fa-circle-xmark mr-1"></i> Annulé
+                                {% else %}<i class="fa-regular fa-clock mr-1"></i> En attente{% endif %}
+                            </span>
+                        </div>
+                        <div class="mt-3 flex items-center gap-4 text-sm text-slate-500">
+                            <span class="flex items-center gap-1"><i class="fa-regular fa-clock"></i> {{ rdv.hdebut|date('H:i') }} - {{ rdv.hfin|date('H:i') }}</span>
+                            {% if rdv.message %}<span class="flex items-center gap-1"><i class="fa-solid fa-comment"></i> {{ rdv.message }}</span>{% endif %}
+                        </div>
+                    </div>
+                    <div class="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                        <button onclick="openEditRdvModal({{ rdv.id }})" class="flex-1 sm:flex-none border border-slate-200 text-slate-600 p-2 rounded-lg hover:bg-slate-50 transition text-center" title="Modifier">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <a href="{{ path('showOne', { id: rdv.id }) }}" class="flex-1 sm:flex-none border border-slate-200 text-blue-500 p-2 rounded-lg hover:bg-blue-50 transition text-center" title="Détails">
+                            <i class="fa-solid fa-eye"></i>
+                        </a>
+                        <button onclick="openDeleteModal({{ rdv.id }}, '{{ csrf_token('delete' ~ rdv.id) }}')" class="flex-1 sm:flex-none border border-red-200 text-red-600 p-2 rounded-lg hover:bg-red-50 transition text-center" title="Supprimer">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-slate-500 text-center py-8">Aucun rendez-vous pour le moment.</p>
+                {% endfor %}
+            </div>
+
+            {# Message "aucun résultat" pour les onglets #}
+            <div id="emptyTabMsg" class="hidden text-center py-10 text-slate-400">
+                <i class="fa-solid fa-calendar-xmark text-4xl mb-3 block opacity-40"></i>
+                <p class="font-semibold" id="emptyTabText">Aucun rendez-vous dans cet onglet.</p>
+            </div>
+
+        </div>
+
+        {# ===== COLONNE DROITE ===== #}
+        <div class="lg:col-span-4 space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="font-bold text-slate-800 text-sm" id="sideCalMonthTitle">—</h4>
+                    <div class="flex gap-1">
+                        <button onclick="sideCalChangeMonth(-1)" class="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition text-slate-500">
+                            <i class="fa-solid fa-chevron-left" style="font-size:0.6rem;"></i>
+                        </button>
+                        <button onclick="sideCalChangeMonth(1)" class="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition text-slate-500">
+                            <i class="fa-solid fa-chevron-right" style="font-size:0.6rem;"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-7 gap-0.5 text-center mb-1">
+                    <span class="text-slate-400 text-xs font-semibold py-1">L</span>
+                    <span class="text-slate-400 text-xs font-semibold py-1">M</span>
+                    <span class="text-slate-400 text-xs font-semibold py-1">M</span>
+                    <span class="text-slate-400 text-xs font-semibold py-1">J</span>
+                    <span class="text-slate-400 text-xs font-semibold py-1">V</span>
+                    <span class="text-orange-400 text-xs font-semibold py-1">S</span>
+                    <span class="text-red-400 text-xs font-semibold py-1">D</span>
+                </div>
+                <div id="sideCalGrid" class="grid grid-cols-7 gap-0.5 text-center"></div>
+                <p class="text-xs text-slate-400 text-center mt-3">
+                    <i class="fa-regular fa-hand-pointer mr-1"></i> Cliquez sur une date pour prendre RDV
+                </p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="font-bold text-slate-800">Mes Médecins</h4>
+                    <button onclick="toggleMedecins()" id="voirToutBtn" class="text-blue-600 text-xs font-bold hover:underline">Voir tout</button>
+                </div>
+                <div id="medecinsList" class="space-y-4 overflow-hidden transition-all duration-500" style="max-height: 160px;">
+                    <div class="flex items-center gap-3 group cursor-pointer">
+                        <div class="relative">
+                            <img src="https://ui-avatars.com/api/?name=Sarah+Amrani&background=random" class="w-10 h-10 rounded-full">
+                            <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white"></div>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition">Dr. S. Amrani</p>
+                            <p class="text-xs text-slate-500">Cardiologue</p>
+                        </div>
+                        <button class="w-8 h-8 rounded-full bg-slate-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition">
+                            <i class="fa-solid fa-calendar-plus text-xs"></i>
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-3 group cursor-pointer">
+                        <img src="https://ui-avatars.com/api/?name=Mohamed+Kallel&background=random" class="w-10 h-10 rounded-full grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition">
+                        <div class="flex-1">
+                            <p class="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition">Dr. M. Kallel</p>
+                            <p class="text-xs text-slate-500">Ophtalmo</p>
+                        </div>
+                        <button class="w-8 h-8 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-blue-600 hover:text-white transition">
+                            <i class="fa-solid fa-calendar-plus text-xs"></i>
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-3 group cursor-pointer">
+                        <img src="https://ui-avatars.com/api/?name=Ali+Zouhaier&background=random" class="w-10 h-10 rounded-full grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition">
+                        <div class="flex-1">
+                            <p class="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition">Dr. A. Zouhaier</p>
+                            <p class="text-xs text-slate-500">Neurologie</p>
+                        </div>
+                        <button class="w-8 h-8 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-blue-600 hover:text-white transition">
+                            <i class="fa-solid fa-calendar-plus text-xs"></i>
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-3 group cursor-pointer">
+                        <img src="https://ui-avatars.com/api/?name=Fatma+Zouari&background=random" class="w-10 h-10 rounded-full grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition">
+                        <div class="flex-1">
+                            <p class="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition">Dr. F. Zouari</p>
+                            <p class="text-xs text-slate-500">Dermatologie</p>
+                        </div>
+                        <button class="w-8 h-8 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-blue-600 hover:text-white transition">
+                            <i class="fa-solid fa-calendar-plus text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+                <button onclick="openSpecialisteModal()"
+                    class="w-full mt-6 py-2 border border-dashed border-slate-300 text-slate-500 rounded-xl text-sm font-medium hover:border-blue-400 hover:text-blue-600 transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-magnifying-glass"></i> Trouver un spécialiste
+                </button>
+            </div>
+        </div>
+
     </div>
+</div>
 
-    <!-- Card -->
-    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-8 transform transition-all scale-95 opacity-0"
-         id="deleteCard">
-
+<!-- Modal Suppression -->
+<div id="deleteModal" class="fixed inset-0 z-50 hidden flex items-center justify-center">
+    <div onclick="closeDeleteModal()" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-8 transform transition-all scale-95 opacity-0" id="deleteCard">
         <div class="text-center">
             <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <i class="fa-solid fa-trash text-red-600 text-2xl"></i>
             </div>
-
-            <h3 class="text-xl font-bold text-slate-800 mb-2">
-                Supprimer ce rendez-vous ?
-            </h3>
-
-            <p class="text-slate-500 mb-6">
-                Cette action est irréversible.
-            </p>
-
+            <h3 class="text-xl font-bold text-slate-800 mb-2">Supprimer ce rendez-vous ?</h3>
+            <p class="text-slate-500 mb-6">Cette action est irréversible.</p>
             <form id="deleteForm" method="POST">
                 <input type="hidden" name="_token" id="deleteToken">
-
                 <div class="flex gap-3">
-                    <button type="button"
-                            onclick="closeDeleteModal()"
-                            class="flex-1 px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">
-                        Annuler
-                    </button>
-
-                    <button type="submit"
-                            class="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition shadow-lg">
-                        Supprimer
-                    </button>
+                    <button type="button" onclick="closeDeleteModal()" class="flex-1 px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">Annuler</button>
+                    <button type="submit" class="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition shadow-lg">Supprimer</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-  <script>
+{# ===== MODAL TROUVER UN SPECIALISTE ===== #}
+<div id="specialisteModal" class="fixed inset-0 z-50 {{ searched ? '' : 'hidden' }} flex items-center justify-center">
+    <div onclick="closeSpecialisteModal()" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 p-8 max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-bold text-slate-800"><i class="fa-solid fa-magnifying-glass text-blue-600 mr-2"></i>Trouver un Spécialiste</h3>
+            <button onclick="closeSpecialisteModal()" class="text-slate-400 hover:text-slate-700 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+        </div>
+        <form method="GET" action="{{ path('showAllRdvfront') }}">
+            <div class="mb-4">
+                <p class="text-sm font-semibold text-slate-600 mb-2">Spécialité</p>
+                <div class="flex flex-wrap gap-2">
+                    {% set specialites = ['Cardiologie', 'Ophtalmologie', 'Neurologie', 'Dermatologie', 'Pédiatrie', 'Gynécologie'] %}
+                    {% for sp in specialites %}
+                    <button type="button" onclick="selectSpecialite('{{ sp }}')"
+                        id="tag-{{ sp|lower|replace({' ': '-', 'é': 'e', 'è': 'e', 'ô': 'o'}) }}"
+                        class="specialite-tag px-3 py-1.5 rounded-full text-sm font-medium border border-slate-200 text-slate-600 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition {{ specialite == sp ? 'bg-blue-600 text-white border-blue-600' : '' }}">
+                        {{ sp }}
+                    </button>
+                    {% endfor %}
+                </div>
+                <input type="hidden" name="specialite" id="specialiteInput" value="{{ specialite }}">
+            </div>
+            <div class="mb-4">
+                <label class="text-sm font-semibold text-slate-600 mb-1 block">Nom du médecin</label>
+                <input type="text" name="nom" value="{{ nom }}" placeholder="Ex: Amrani, Kallel..." class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-400 transition">
+            </div>
+            <div class="mb-6">
+                <label class="text-sm font-semibold text-slate-600 mb-1 block">Type de consultation</label>
+                <select name="type" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-400 transition">
+                    <option value="">Tous</option>
+                    <option value="En ligne" {{ type == 'En ligne' ? 'selected' : '' }}>En ligne</option>
+                    <option value="Présentiel" {{ type == 'Présentiel' ? 'selected' : '' }}>Présentiel</option>
+                    <option value="Les deux" {{ type == 'Les deux' ? 'selected' : '' }}>Les deux</option>
+                </select>
+            </div>
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition shadow-lg flex items-center justify-center gap-2">
+                <i class="fa-solid fa-magnifying-glass"></i> Rechercher
+            </button>
+        </form>
+        {% if searched %}
+        <div class="mt-6 border-t border-slate-100 pt-6">
+            <p class="text-sm text-slate-500 mb-4 font-medium">{{ medecins|length }} résultat{{ medecins|length > 1 ? 's' : '' }} trouvé{{ medecins|length > 1 ? 's' : '' }}</p>
+            {% if medecins is empty %}
+                <div class="text-center py-8 text-slate-400">
+                    <i class="fa-solid fa-user-doctor text-4xl mb-3 block"></i>
+                    <p>Aucun médecin trouvé pour ces critères.</p>
+                </div>
+            {% else %}
+                <div class="space-y-3">
+                {% for medecin in medecins %}
+                <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-blue-200 transition">
+                    <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-700 font-bold text-sm flex items-center justify-center flex-shrink-0">
+                        {{ medecin.prenom|first|upper }}{{ medecin.nom|first|upper }}
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-bold text-slate-800">Dr. {{ medecin.prenom }} {{ medecin.nom }}</p>
+                        <p class="text-xs text-slate-500">{{ medecin.specialite }} · {{ medecin.type }}</p>
+                    </div>
+                    <span style="font-size:0.75rem;font-weight:700;padding:0.25rem 0.5rem;border-radius:9999px;{{ medecin.disponible ? 'background-color:#dcfce7;color:#15803d;' : 'background-color:#fee2e2;color:#b91c1c;' }}">
+                        {{ medecin.disponible ? '🟢 Disponible' : '🔴 Complet' }}
+                    </span>
+                    {% if medecin.disponible %}
+                    <a href="{{ path('AjouterRdv') }}" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition flex-shrink-0">+ RDV</a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// ====================================================
+// DATE DU JOUR (format YYYY-MM-DD pour comparaison)
+// ====================================================
+const TODAY_STR = '{{ "now"|date("Y-m-d") }}';
+const today     = new Date(TODAY_STR + 'T00:00:00');
+
+// ====================================================
+// FILTRES ONGLETS — 100% côté client, par data-date
+// ====================================================
+let activeTab = 'avenir'; // onglet actif par défaut
+
+function filterTab(tab) {
+    activeTab = tab;
+
+    // Reset style de tous les onglets boutons
+    ['avenir', 'passes', 'annules'].forEach(t => {
+        document.getElementById('tab-' + t).className =
+            'text-slate-500 font-medium hover:text-slate-800 pb-3 px-1 transition';
+    });
+    // Activer l'onglet sélectionné
+    document.getElementById('tab-' + tab).className =
+        'text-blue-600 font-bold border-b-2 border-blue-600 pb-3 px-1 transition';
+
+    const cards    = document.querySelectorAll('.rdv-card');
+    const emptyMsg = document.getElementById('emptyTabMsg');
+    const emptyTxt = document.getElementById('emptyTabText');
+    let   visible  = 0;
+
+    cards.forEach(card => {
+        const rdvDate  = new Date(card.dataset.date + 'T00:00:00');
+        const statut   = card.dataset.statut;
+        const isPast   = rdvDate < today;   // strictement avant aujourd'hui
+        const isFuture = rdvDate >= today;  // aujourd'hui inclus = à venir
+        const isAnnule = statut === 'Annulé';
+
+        let show = false;
+
+        if (tab === 'avenir') {
+            // Aujourd'hui + futur, pas annulé
+            show = isFuture && !isAnnule;
+        } else if (tab === 'passes') {
+            // Strictement avant aujourd'hui (non annulé — les annulés ont leur propre onglet)
+            show = isPast && !isAnnule;
+        } else if (tab === 'annules') {
+            // Tous les annulés, passés ou futurs
+            show = isAnnule;
+        }
+
+        card.style.display = show ? '' : 'none';
+        if (show) visible++;
+    });
+
+    // Message vide
+    if (visible === 0) {
+        const messages = {
+            avenir:  'Aucun rendez-vous à venir.',
+            passes:  'Aucun rendez-vous passé.',
+            annules: 'Aucun rendez-vous annulé.',
+        };
+        emptyTxt.textContent = messages[tab] || '';
+        emptyMsg.classList.remove('hidden');
+    } else {
+        emptyMsg.classList.add('hidden');
+    }
+}
+
+// ── Appliquer "À venir" au chargement automatiquement ──
+filterTab('avenir');
+
+// ====================================================
+// MODALS RDV (inchangé)
+// ====================================================
 function openAddRdvModal() {
-    fetch('{{ path('AjouterRdv') }}', {
-        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    })
-        .then(res => res.text())
-        .then(html => {
-            document.getElementById('rdvModalContent').innerHTML = html;
-            openRdvModal();
-        })
-        .catch(err => { 
-            console.error(err); 
-            openRdvModal(); 
-            document.getElementById('rdvModalContent').innerHTML = '<p class="text-red-500">Erreur chargement du formulaire.</p>'; 
-        });
+    fetch('{{ path('AjouterRdv') }}', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(res => res.text()).then(html => {
+        document.getElementById('rdvModalContent').innerHTML = html;
+        openRdvModal(); attachFormSubmit();
+    });
 }
-
+function attachFormSubmit() {
+    const form = document.querySelector('#rdvModalContent form');
+    if (!form) return;
+    form.addEventListener('submit', function(e) {
+        e.preventDefault(); e.stopPropagation();
+        fetch('{{ path('AjouterRdv') }}', { method:'POST', body:new FormData(form), headers:{'X-Requested-With':'XMLHttpRequest'} })
+        .then(async res => { const ct=res.headers.get('content-type')||''; return ct.includes('application/json') ? res.json().then(d=>({type:'json',data:d})) : res.text().then(d=>({type:'html',data:d})); })
+        .then(result => { if(result.type==='json'&&result.data.success){closeRdvModal();window.location.reload();} else if(result.type==='html'){document.getElementById('rdvModalContent').innerHTML=result.data;attachFormSubmit();} })
+        .catch(err => console.error(err));
+    });
+}
 function openEditRdvModal(id) {
-    fetch(`{{ path('editForm', {id: '__ID__'}) }}`.replace('__ID__', id), {
-        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    })
-        .then(res => res.text())
-        .then(html => {
-            document.getElementById('rdvModalContent').innerHTML = html;
-            openRdvModal();
-        })
-        .catch(err => { 
-            console.error(err); 
-            alert('Erreur lors du chargement du formulaire de modification.'); 
+    fetch(`{{ path('editForm', {id: '__ID__'}) }}`.replace('__ID__', id), { headers:{'X-Requested-With':'XMLHttpRequest'} })
+    .then(res => res.text()).then(html => {
+        document.getElementById('rdvModalContent').innerHTML = html; openRdvModal();
+        const form = document.getElementById('editRdvForm');
+        if (!form) return;
+        form.addEventListener('submit', function(e) {
+            e.preventDefault(); e.stopPropagation();
+            fetch(form.action, { method:'POST', body:new FormData(form), headers:{'X-Requested-With':'XMLHttpRequest'} })
+            .then(async res => { const ct=res.headers.get('content-type')||''; return ct.includes('application/json') ? res.json().then(d=>({type:'json',data:d})) : res.text().then(d=>({type:'html',data:d})); })
+            .then(result => { if(result.type==='json'&&result.data.success){closeRdvModal();window.location.reload();} else if(result.type==='html'){document.getElementById('rdvModalContent').innerHTML=result.data;openEditRdvModal(id);} })
+            .catch(err => console.error(err));
         });
+    });
 }
-
-function openRdvModal() {
-    document.getElementById('rdvModal').classList.remove('hidden');
-}
-
-function closeRdvModal() {
-    document.getElementById('rdvModal').classList.add('hidden');
-}
+function openRdvModal()   { document.getElementById('rdvModal').classList.remove('hidden'); }
+function closeRdvModal()  { document.getElementById('rdvModal').classList.add('hidden'); }
 function openDeleteModal(id, token) {
-    const modal = document.getElementById('deleteModal');
-    const card = document.getElementById('deleteCard');
-    const form = document.getElementById('deleteForm');
-    const tokenInput = document.getElementById('deleteToken');
-
-    form.action = `/delete/${id}`;
-    tokenInput.value = token;
-
+    const modal=document.getElementById('deleteModal'), card=document.getElementById('deleteCard');
+    document.getElementById('deleteForm').action=`/delete/${id}`;
+    document.getElementById('deleteToken').value=token;
     modal.classList.remove('hidden');
-
-    setTimeout(() => {
-        card.classList.remove('scale-95', 'opacity-0');
-        card.classList.add('scale-100', 'opacity-100');
-    }, 10);
+    setTimeout(()=>{card.classList.remove('scale-95','opacity-0');card.classList.add('scale-100','opacity-100');},10);
+}
+function closeDeleteModal() {
+    const modal=document.getElementById('deleteModal'), card=document.getElementById('deleteCard');
+    card.classList.remove('scale-100','opacity-100'); card.classList.add('scale-95','opacity-0');
+    setTimeout(()=>{ modal.classList.add('hidden'); },200);
+}
+function openSpecialisteModal()  { document.getElementById('specialisteModal').classList.remove('hidden'); }
+function closeSpecialisteModal() { document.getElementById('specialisteModal').classList.add('hidden'); }
+function selectSpecialite(sp) {
+    document.getElementById('specialiteInput').value=sp;
+    document.querySelectorAll('.specialite-tag').forEach(btn=>{btn.classList.remove('bg-blue-600','text-white','border-blue-600');btn.classList.add('text-slate-600','border-slate-200');});
+    event.target.classList.add('bg-blue-600','text-white','border-blue-600');
+    event.target.classList.remove('text-slate-600','border-slate-200');
+}
+let expanded=false;
+function toggleMedecins() {
+    const list=document.getElementById('medecinsList'), btn=document.getElementById('voirToutBtn');
+    if(!expanded){list.style.maxHeight=list.scrollHeight+'px';btn.textContent='Réduire';expanded=true;}
+    else{list.style.maxHeight='160px';btn.textContent='Voir tout';expanded=false;}
 }
 
-function closeDeleteModal() {
-    const modal = document.getElementById('deleteModal');
-    const card = document.getElementById('deleteCard');
+// ====================================================
+// API STATUTS (polling auto)
+// ====================================================
+async function fetchStatuts() {
+    try {
+        const data = await (await fetch('/api/rdv/statuts')).json();
+        data.forEach(rdv => {
+            const el = document.getElementById('statut-'+rdv.id);
+            if (!el) return;
+            if (rdv.statut==='Confirmé'){el.style.backgroundColor='#dcfce7';el.style.color='#15803d';el.style.borderColor='#bbf7d0';el.innerHTML='<i class="fa-regular fa-circle-check" style="margin-right:0.25rem;"></i> Confirmé';}
+            else if(rdv.statut==='Annulé'){el.style.backgroundColor='#fee2e2';el.style.color='#b91c1c';el.style.borderColor='#fecaca';el.innerHTML='<i class="fa-regular fa-circle-xmark" style="margin-right:0.25rem;"></i> Annulé';}
+            else{el.style.backgroundColor='#ffedd5';el.style.color='#c2410c';el.style.borderColor='#fed7aa';el.innerHTML='<i class="fa-regular fa-clock" style="margin-right:0.25rem;"></i> En attente';}
+        });
+        // Re-filtrer après mise à jour des statuts (un annulé peut changer d'onglet)
+        data.forEach(rdv => {
+            const card = document.querySelector(`.rdv-card [id="statut-${rdv.id}"]`)?.closest('.rdv-card');
+            if (card) card.dataset.statut = rdv.statut;
+        });
+        filterTab(activeTab);
+    } catch(e){ console.error('Erreur statuts:',e); }
+}
+fetchStatuts(); setInterval(fetchStatuts, 10000);
 
-    card.classList.remove('scale-100', 'opacity-100');
-    card.classList.add('scale-95', 'opacity-0');
+// ====================================================
+// API RAPPELS
+// ====================================================
+async function fetchRappels() {
+    try {
+        const data=await(await fetch('/api/rappels')).json();
+        const banner=document.getElementById('rappelBanner');
+        if(data.count===0){banner.style.display='none';return;}
+        const top=data.rappels[0];
+        if(top.niveau==='urgent'){
+            banner.style.cssText='display:block;position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(135deg,#dc2626,#b91c1c);color:white;padding:1rem 2rem;animation:blink 1s infinite;box-shadow:0 4px 20px rgba(220,38,38,0.5);';
+            banner.innerHTML=`<div style="max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:1rem;"><i class="fa-solid fa-triangle-exclamation" style="font-size:1.5rem;"></i><div><p style="font-weight:800;font-size:1rem;">${top.message}</p><p style="font-size:0.75rem;opacity:0.9;">Cliquez pour fermer</p></div></div><button onclick="fermerRappel()" style="background:rgba(255,255,255,0.2);border:2px solid white;color:white;padding:0.5rem 1rem;border-radius:0.5rem;font-weight:700;cursor:pointer;">✓ OK, J'ai vu !</button></div>`;
+        } else if(top.niveau==='today'){
+            banner.style.cssText='display:block;position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(135deg,#f97316,#ea580c);color:white;padding:0.75rem 2rem;box-shadow:0 4px 15px rgba(249,115,22,0.4);';
+            banner.innerHTML=`<div style="max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:1rem;"><i class="fa-solid fa-bell" style="font-size:1.25rem;"></i><p style="font-weight:700;">${top.message}</p></div><button onclick="fermerRappel()" style="background:rgba(255,255,255,0.2);border:2px solid white;color:white;padding:0.4rem 0.8rem;border-radius:0.5rem;font-weight:700;cursor:pointer;">✓ Fermer</button></div>`;
+        } else {
+            banner.style.cssText='display:block;position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;padding:0.75rem 2rem;box-shadow:0 4px 15px rgba(59,130,246,0.4);';
+            banner.innerHTML=`<div style="max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:1rem;"><i class="fa-solid fa-calendar-check" style="font-size:1.25rem;"></i><p style="font-weight:700;">${top.message}</p></div><button onclick="fermerRappel()" style="background:rgba(255,255,255,0.2);border:2px solid white;color:white;padding:0.4rem 0.8rem;border-radius:0.5rem;font-weight:700;cursor:pointer;">✓ Fermer</button></div>`;
+        }
+    } catch(e){ console.error('Erreur rappels:',e); }
+}
+function fermerRappel(){ document.getElementById('rappelBanner').style.display='none'; }
+const styleEl=document.createElement('style');
+styleEl.textContent='@keyframes blink{0%,100%{opacity:1}50%{opacity:0.7}}';
+document.head.appendChild(styleEl);
+fetchRappels(); setInterval(fetchRappels,60000);
 
+// ====================================================
+// RECHERCHE AJAX
+// ====================================================
+const searchInput     = document.getElementById('searchRdv');
+const searchBox       = document.getElementById('searchBox');
+const searchIcon      = document.getElementById('searchIcon');
+const searchSpinner   = document.getElementById('searchSpinner');
+const clearBtn        = document.getElementById('clearSearch');
+const dropdown        = document.getElementById('searchDropdown');
+const dropdownContent = document.getElementById('searchDropdownContent');
+let debounceTimer;
+
+searchInput.addEventListener('focus', () => {
+    searchBox.style.width='300px'; searchBox.style.borderColor='#3b82f6';
+    searchBox.style.boxShadow='0 4px 20px rgba(59,130,246,0.15)'; searchIcon.style.color='#3b82f6';
+});
+searchInput.addEventListener('blur', () => {
     setTimeout(() => {
-        modal.classList.add('hidden');
+        dropdown.style.display='none';
+        if(searchInput.value.trim()===''){
+            searchBox.style.width='180px'; searchBox.style.borderColor='#e2e8f0';
+            searchBox.style.boxShadow='none'; searchIcon.style.color='#94a3b8';
+        }
     }, 200);
+});
+searchInput.addEventListener('input', function() {
+    clearTimeout(debounceTimer);
+    const query = this.value.trim();
+    clearBtn.style.display = query.length > 0 ? 'block' : 'none';
+    if(query.length < 1){
+        dropdown.style.display='none';
+        // Rétablir le filtre d'onglet actif
+        filterTab(activeTab);
+        return;
+    }
+    searchSpinner.style.display='block';
+    debounceTimer=setTimeout(()=>{
+        fetch(`/rdv/search?q=${encodeURIComponent(query)}`)
+        .then(res=>res.json())
+        .then(rdvs=>{
+            searchSpinner.style.display='none';
+            renderDropdown(rdvs,query);
+            // Afficher tous les résultats sans filtre d'onglet pendant la recherche
+            const cards=document.querySelectorAll('.rdv-card');
+            cards.forEach(c=>{
+                const h3=c.querySelector('h3');
+                const motif=c.querySelector('p.text-slate-500');
+                const txt=(h3?h3.textContent:'')+(motif?motif.textContent:'');
+                c.style.display=txt.toLowerCase().includes(query.toLowerCase())?'':'none';
+            });
+            document.getElementById('emptyTabMsg').classList.add('hidden');
+        })
+        .catch(err=>{searchSpinner.style.display='none';console.error(err);});
+    },300);
+});
+function clearSearchInput(){
+    searchInput.value=''; clearBtn.style.display='none'; dropdown.style.display='none';
+    searchBox.style.width='180px'; searchBox.style.borderColor='#e2e8f0';
+    searchBox.style.boxShadow='none'; searchIcon.style.color='#94a3b8';
+    filterTab(activeTab); searchInput.focus();
+}
+function highlight(text,q){
+    if(!text)return'';
+    const regex=new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+    return text.replace(regex,`<mark style="background:#dbeafe;color:#1d4ed8;border-radius:3px;padding:0 2px;font-weight:700;">$1</mark>`);
+}
+function renderDropdown(rdvs,query){
+    if(rdvs.length===0){
+        dropdownContent.innerHTML=`<div style="padding:14px 16px;text-align:center;color:#94a3b8;font-size:0.875rem;"><i class="fa-solid fa-face-frown" style="margin-right:6px;"></i>Aucun résultat pour "<strong style="color:#64748b;">${query}</strong>"</div>`;
+        dropdown.style.display='block'; return;
+    }
+    const header=`<div style="padding:8px 16px;font-size:0.7rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #f1f5f9;background:#f8fafc;"><i class="fa-solid fa-list" style="margin-right:6px;"></i>${rdvs.length} résultat${rdvs.length>1?'s':''}</div>`;
+    const items=rdvs.slice(0,5).map(rdv=>{
+        const bg=rdv.statut==='Confirmé'?'#dcfce7':rdv.statut==='Annulé'?'#fee2e2':'#ffedd5';
+        const color=rdv.statut==='Confirmé'?'#15803d':rdv.statut==='Annulé'?'#b91c1c':'#c2410c';
+        return `<div style="display:flex;align-items:center;gap:12px;padding:10px 16px;cursor:pointer;border-bottom:1px solid #f8fafc;transition:background 0.15s;" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='white'">
+            <div style="width:34px;height:34px;border-radius:50%;background:#dbeafe;color:#1d4ed8;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.8rem;flex-shrink:0;">${(rdv.medecin||'?').charAt(0).toUpperCase()}</div>
+            <div style="flex:1;min-width:0;"><p style="font-weight:600;color:#1e293b;font-size:0.875rem;margin:0;">${highlight(rdv.medecin,query)}</p>
+            <p style="color:#94a3b8;font-size:0.72rem;margin:2px 0 0;">${highlight(rdv.motif||'',query)}</p></div>
+            <span style="font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:9999px;background:${bg};color:${color};flex-shrink:0;">${rdv.statut}</span>
+        </div>`;
+    }).join('');
+    dropdownContent.innerHTML=header+items;
+    dropdown.style.display='block';
 }
 </script>
 
- {% endblock %}
+{% include 'rdv/front/modal_calendrier.html.twig' %}
+
+<script>
+// ====================================================
+// MINI CALENDRIER LATÉRAL
+// ====================================================
+const MOIS_SIDE=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+let sideCalDate=new Date();
+
+function sideCalRender(){
+    const year=sideCalDate.getFullYear(), month=sideCalDate.getMonth();
+    const todaySide=new Date(); todaySide.setHours(0,0,0,0);
+    document.getElementById('sideCalMonthTitle').textContent=MOIS_SIDE[month]+' '+year;
+    let startDow=new Date(year,month,1).getDay();
+    startDow=startDow===0?6:startDow-1;
+    const lastDay=new Date(year,month+1,0).getDate();
+    const grid=document.getElementById('sideCalGrid');
+    grid.innerHTML='';
+    for(let i=0;i<startDow;i++){const e=document.createElement('div');e.style.cssText='padding:6px 0;';grid.appendChild(e);}
+    for(let d=1;d<=lastDay;d++){
+        const date=new Date(year,month,d), dow=date.getDay(), past=date<todaySide, isToday=date.getTime()===todaySide.getTime();
+        const el=document.createElement('div');
+        el.textContent=d;
+        el.style.cssText='padding:6px 0;border-radius:8px;font-size:0.75rem;font-weight:600;transition:all 0.15s;cursor:pointer;';
+        if(isToday){el.style.background='#2563eb';el.style.color='white';}
+        else if(past){el.style.color='#cbd5e1';el.style.cursor='default';el.style.textDecoration='line-through';}
+        else if(dow===0){el.style.color='#fca5a5';el.style.cursor='not-allowed';el.title='Fermé le dimanche';}
+        else if(dow===6){el.style.color='#fb923c';el.addEventListener('mouseover',()=>{el.style.background='#fff7ed';});el.addEventListener('mouseout',()=>{el.style.background='transparent';});}
+        else{el.style.color='#475569';el.addEventListener('mouseover',()=>{el.style.background='#eff6ff';el.style.color='#2563eb';});el.addEventListener('mouseout',()=>{el.style.background='transparent';el.style.color='#475569';});}
+        if(!past&&dow!==0){el.addEventListener('click',()=>{calState.currentDate=new Date(year,month,1);calState.selectedDate=new Date(year,month,d);openCalModal();});}
+        grid.appendChild(el);
+    }
+}
+function sideCalChangeMonth(delta){sideCalDate=new Date(sideCalDate.getFullYear(),sideCalDate.getMonth()+delta,1);sideCalRender();}
+sideCalRender();
+</script>
+
+{% endblock %}
