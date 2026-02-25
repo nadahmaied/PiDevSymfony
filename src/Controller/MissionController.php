@@ -3,89 +3,97 @@
 namespace App\Controller;
 
 use App\Entity\MissionVolunteer;
+use App\Entity\User;
 use App\Entity\Volunteer;
 use App\Form\VolunteerType;
 use App\Repository\MissionVolunteerRepository;
+use App\Service\MissionRecommendationService;
+use App\Service\RecommendationLearningService;
+use App\Service\VolunteerAiAssistant;
 use Doctrine\ORM\EntityManagerInterface;
+use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
-use App\Entity\User;
-use Knp\Component\Pager\PaginatorInterface;
 
 #[Route('/missions')]
 class MissionController extends AbstractController
 {
-    /**
-     * 1. AFFICHER LA LISTE DES MISSIONS (Page avec les cartes)
-     */
     #[Route('/', name: 'app_missions_index', methods: ['GET'])]
-    public function index(MissionVolunteerRepository $missionRepository, PaginatorInterface $paginator, Request $request): Response
-    {
-        // 1. On récupère le terme de recherche s'il existe (depuis la barre de recherche)
+    public function index(
+        MissionVolunteerRepository $missionRepository,
+        PaginatorInterface $paginator,
+        Request $request,
+        MissionRecommendationService $recommendationService
+    ): Response {
         $searchTerm = $request->query->get('q');
 
-        // 2. On prépare la requête (QueryBuilder)
         $qb = $missionRepository->createQueryBuilder('m')
             ->where('m.statut = :statut')
             ->setParameter('statut', 'Ouverte')
             ->orderBy('m.dateDebut', 'DESC');
 
-        // 3. Si une recherche est faite, on filtre les résultats
         if ($searchTerm) {
             $qb->andWhere('m.titre LIKE :search OR m.description LIKE :search OR m.lieu LIKE :search')
-               ->setParameter('search', '%' . $searchTerm . '%');
+                ->setParameter('search', '%' . $searchTerm . '%');
         }
 
-        // 4. On active la pagination (6 missions par page)
+        $recommendedMissions = [];
+        $user = $this->getUser();
+        if ($user instanceof User) {
+            $candidateMissions = $missionRepository->findBy(['statut' => 'Ouverte']);
+            $recommendedMissions = $recommendationService->recommendForUser($user, $candidateMissions, 5);
+        }
+
         $pagination = $paginator->paginate(
-            $qb->getQuery(), /* La requête */
-            $request->query->getInt('page', 1), /* Numéro de page actuel */
-            6 /* Limite par page */
+            $qb->getQuery(),
+            $request->query->getInt('page', 1),
+            6
         );
 
-        // 5. On envoie "pagination" à la vue (C'est ce que votre Twig attend !)
         return $this->render('mission/index.html.twig', [
             'pagination' => $pagination,
+            'recommendedMissions' => $recommendedMissions,
         ]);
     }
 
-    /**
-     * 2. GÉRER LE FORMULAIRE DE CANDIDATURE (Page Orange)
-     */
     #[Route('/{id}/postuler', name: 'app_missions_apply', methods: ['GET', 'POST'])]
-    public function apply(Request $request, MissionVolunteer $mission, EntityManagerInterface $entityManager): Response
-    {
+    public function apply(
+        Request $request,
+        MissionVolunteer $mission,
+        EntityManagerInterface $entityManager,
+        RecommendationLearningService $learningService
+    ): Response {
         $volunteer = new Volunteer();
-        
-        // 2. RÉCUPÉRATION INTELLIGENTE DE L'UTILISATEUR
-        $user = $this->getUser(); // Essaie de récupérer l'utilisateur connecté
+        $user = $this->getUser();
 
-        // Si personne n'est connecté (votre cas actuel), on prend le premier user de la base "au hasard"
         if (!$user) {
-            // On cherche le premier utilisateur dans la table 'user'
             $user = $entityManager->getRepository(User::class)->findOneBy([]);
-            
-            // Si la table user est vide, on arrête tout car ça plantera la base de données
             if (!$user) {
-                dd("ERREUR : Il faut créer au moins un utilisateur dans la base de données (table 'user') pour tester, même manuellement via phpMyAdmin.");
+                dd("ERREUR : Il faut creer au moins un utilisateur dans la base de donnees (table 'user') pour tester.");
             }
         }
 
         $volunteer->setMission($mission);
-        $volunteer->setUser($user); // On utilise l'utilisateur (réel ou simulé)
+        $volunteer->setUser($user);
         $volunteer->setStatut('En attente');
 
-        // ... Le reste du code ne change pas ...
         $form = $this->createForm(VolunteerType::class, $volunteer);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->persist($volunteer);
+            if ($user instanceof User) {
+                $learningService->track($user, $mission, 'apply_created', 1.0, [
+                    'disponibilites' => $volunteer->getDisponibilites(),
+                ]);
+            }
             $entityManager->flush();
-            $this->addFlash('success', 'Candidature envoyée (Mode Test) !');
+
+            $this->addFlash('success', 'Candidature envoyee !');
+
             return $this->redirectToRoute('app_missions_index');
         }
 
@@ -94,6 +102,39 @@ class MissionController extends AbstractController
             'form' => $form,
         ]);
     }
+
+    #[Route('/{id}/ai-conseil', name: 'app_mission_ai_advice', methods: ['POST'])]
+    public function aiAdvice(MissionVolunteer $mission, VolunteerAiAssistant $aiAssistant): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_REMEMBERED');
+
+        try {
+            $period = sprintf(
+                'Du %s au %s',
+                $mission->getDateDebut()?->format('d/m/Y') ?? 'N/A',
+                $mission->getDateFin()?->format('d/m/Y') ?? 'N/A'
+            );
+
+            $result = $aiAssistant->suggestForMission(
+                (string) $mission->getTitre(),
+                (string) $mission->getDescription(),
+                (string) $mission->getLieu(),
+                $period
+            );
+
+            return $this->json([
+                'ok' => true,
+                'advice' => $result['advice'],
+                'source' => $result['source'],
+            ]);
+        } catch (\Throwable) {
+            return $this->json([
+                'ok' => false,
+                'message' => 'Assistance IA indisponible pour le moment.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     #[Route('/{id}', name: 'app_mission_show', methods: ['GET'])]
     public function show(MissionVolunteer $mission): Response
     {

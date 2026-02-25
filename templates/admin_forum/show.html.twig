@@ -1,12 +1,12 @@
 {% extends 'baseBack.html.twig' %}
 
-{% block title %}Détail Sujet{% endblock %}
+{% block title %}Detail Sujet{% endblock %}
 
 {% block body %}
     <div class="p-8 max-w-5xl mx-auto">
-        
+
         <a href="{{ path('app_admin_forum_index') }}" class="text-gray-500 hover:text-gray-800 mb-4 inline-block">
-            <i class="fa-solid fa-arrow-left mr-2"></i> Retour à la liste
+            <i class="fa-solid fa-arrow-left mr-2"></i> Retour a la liste
         </a>
 
         <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6 mb-8">
@@ -14,8 +14,8 @@
                 <div>
                     <h1 class="text-2xl font-bold text-gray-800">{{ question.titre }}</h1>
                     <p class="text-sm text-gray-500 mt-1">
-                        Par <span class="font-bold text-blue-600">{{ question.auteur ? question.auteur.email : 'Anonyme' }}</span> 
-                        le {{ question.dateCreation|date('d/m/Y à H:i') }}
+                        Par <span class="font-bold text-blue-600">{{ question.auteur ? question.auteur.email : 'Anonyme' }}</span>
+                        le {{ question.dateCreation|date('d/m/Y a H:i') }}
                     </p>
                 </div>
                 <span class="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold">Question</span>
@@ -26,7 +26,7 @@
         </div>
 
         <h3 class="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
-            <i class="fa-solid fa-comments text-orange-500"></i> Réponses ({{ question.reponses|length }})
+            <i class="fa-solid fa-comments text-orange-500"></i> Reponses ({{ question.reponses|length }})
         </h3>
 
         <div class="space-y-4 mb-12">
@@ -47,32 +47,34 @@
                     </div>
 
                     <div class="flex flex-col gap-2">
-                        <a href="{{ path('app_admin_forum_edit_reponse', {'id': reponse.id}) }}" class="text-gray-400 hover:text-yellow-500 transition p-1" title="Modifier">
-                            <i class="fa-solid fa-pen"></i>
-                        </a>
+                        {% if app.user and reponse.auteur and app.user.id == reponse.auteur.id %}
+                            <a href="{{ path('app_admin_forum_edit_reponse', {'id': reponse.id}) }}" class="text-gray-400 hover:text-yellow-500 transition p-1" title="Modifier">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
 
-                        <form method="post" action="{{ path('app_admin_forum_delete_reponse', {'id': reponse.id}) }}" onsubmit="return confirm('Supprimer ce commentaire ?');">
-                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ reponse.id) }}">
-                            <button class="text-gray-400 hover:text-red-500 transition p-1" title="Supprimer">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                        </form>
+                            <form method="post" action="{{ path('app_admin_forum_delete_reponse', {'id': reponse.id}) }}" onsubmit="return confirm('Supprimer ce commentaire ?');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ reponse.id) }}">
+                                <button class="text-gray-400 hover:text-red-500 transition p-1" title="Supprimer">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </form>
+                        {% endif %}
                     </div>
                 </div>
             {% else %}
-                <p class="text-gray-400 italic">Aucune réponse pour le moment.</p>
+                <p class="text-gray-400 italic">Aucune reponse pour le moment.</p>
             {% endfor %}
         </div>
 
         <div class="bg-gray-100 rounded-xl p-6 border border-gray-200">
-            <h4 class="font-bold text-gray-700 mb-4">Répondre en tant qu'administrateur</h4>
+            <h4 class="font-bold text-gray-700 mb-4">Repondre</h4>
             {{ form_start(form) }}
                 <div class="mb-4">
                     {{ form_widget(form.contenu) }}
                     {{ form_errors(form.contenu) }}
                 </div>
                 <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 transition w-full sm:w-auto">
-                    <i class="fa-solid fa-paper-plane mr-2"></i> Envoyer la réponse
+                    <i class="fa-solid fa-paper-plane mr-2"></i> Envoyer la reponse
                 </button>
             {{ form_end(form) }}
         </div>

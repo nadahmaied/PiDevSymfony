@@ -1,0 +1,157 @@
+{% extends 'baseFront.html.twig' %}
+
+{% block title %}
+    <h1 class="text-2xl font-bold text-gray-800">Assistant Virtuel</h1>
+{% endblock %}
+
+{% block body %}
+<div class="p-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-sm overflow-hidden" style="height: 600px; display: flex; flex-direction: column;">
+            <div class="bg-gradient-to-r from-blue-600 to-blue-700 p-4 text-white">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                        <i class="fa-solid fa-robot text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-semibold">Assistant VitalTech</h2>
+                        <p class="text-xs text-blue-100">En ligne - Prêt à vous aider</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+                <div class="flex gap-3">
+                    <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white flex-shrink-0">
+                        <i class="fa-solid fa-robot text-sm"></i>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 shadow-sm max-w-md">
+                        <p class="text-sm text-gray-800">Bonjour ! Je suis votre assistant virtuel VitalTech. Comment puis-je vous aider aujourd'hui ?</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 bg-white border-t">
+                <form id="chatForm" class="flex gap-2">
+                    <input 
+                        type="text" 
+                        id="messageInput" 
+                        placeholder="Posez votre question..." 
+                        class="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        autocomplete="off"
+                    >
+                    <button 
+                        type="submit" 
+                        id="sendButton"
+                        class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+                    >
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>Envoyer</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const chatMessages = document.getElementById('chatMessages');
+const chatForm = document.getElementById('chatForm');
+const messageInput = document.getElementById('messageInput');
+const sendButton = document.getElementById('sendButton');
+
+function addMessage(content, isUser = false) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'flex gap-3' + (isUser ? ' justify-end' : '');
+    
+    if (isUser) {
+        messageDiv.innerHTML = `
+            <div class="bg-blue-600 text-white rounded-lg p-3 shadow-sm max-w-md">
+                <p class="text-sm">${content}</p>
+            </div>
+            <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0">
+                <i class="fa-solid fa-user text-sm text-gray-600"></i>
+            </div>
+        `;
+    } else {
+        messageDiv.innerHTML = `
+            <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white flex-shrink-0">
+                <i class="fa-solid fa-robot text-sm"></i>
+            </div>
+            <div class="bg-white rounded-lg p-3 shadow-sm max-w-md">
+                <p class="text-sm text-gray-800">${content}</p>
+            </div>
+        `;
+    }
+    
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function addTypingIndicator() {
+    const typingDiv = document.createElement('div');
+    typingDiv.id = 'typingIndicator';
+    typingDiv.className = 'flex gap-3';
+    typingDiv.innerHTML = `
+        <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white flex-shrink-0">
+            <i class="fa-solid fa-robot text-sm"></i>
+        </div>
+        <div class="bg-white rounded-lg p-3 shadow-sm">
+            <div class="flex gap-1">
+                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
+                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+            </div>
+        </div>
+    `;
+    chatMessages.appendChild(typingDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function removeTypingIndicator() {
+    const typingIndicator = document.getElementById('typingIndicator');
+    if (typingIndicator) {
+        typingIndicator.remove();
+    }
+}
+
+chatForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const message = messageInput.value.trim();
+    if (!message) return;
+    
+    addMessage(message, true);
+    messageInput.value = '';
+    sendButton.disabled = true;
+    
+    addTypingIndicator();
+    
+    try {
+        const response = await fetch('{{ path('chatbot_message') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message: message })
+        });
+        
+        const data = await response.json();
+        
+        removeTypingIndicator();
+        
+        if (data.response) {
+            addMessage(data.response, false);
+        } else {
+            addMessage('Désolé, je n\'ai pas pu traiter votre demande.', false);
+        }
+    } catch (error) {
+        removeTypingIndicator();
+        addMessage('Erreur de connexion. Veuillez réessayer.', false);
+    }
+    
+    sendButton.disabled = false;
+    messageInput.focus();
+});
+</script>
+{% endblock %}

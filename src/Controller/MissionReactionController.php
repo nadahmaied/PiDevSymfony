@@ -5,66 +5,78 @@ namespace App\Controller;
 use App\Entity\MissionLike;
 use App\Entity\MissionRating;
 use App\Entity\MissionVolunteer;
+use App\Entity\User;
 use App\Repository\MissionLikeRepository;
 use App\Repository\MissionRatingRepository;
+use App\Service\RecommendationLearningService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request; // Import correct
 use Symfony\Component\Routing\Annotation\Route;
 
 #[Route('/reaction/mission')]
 class MissionReactionController extends AbstractController
 {
-    // --- GESTION DU LIKE ---
     #[Route('/like/{id}', name: 'app_mission_like_action')]
-    public function like(MissionVolunteer $mission, EntityManagerInterface $em, MissionLikeRepository $likeRepo): JsonResponse
-    {
+    public function like(
+        MissionVolunteer $mission,
+        EntityManagerInterface $em,
+        MissionLikeRepository $likeRepo,
+        RecommendationLearningService $learningService
+    ): JsonResponse {
         $user = $this->getUser();
-        if (!$user) return $this->json(['code' => 403, 'message' => 'Non connecté'], 403);
+        if (!$user instanceof User) {
+            return $this->json(['code' => 403, 'message' => 'Non connecte'], 403);
+        }
 
-        // Est-ce que l'utilisateur a déjà liké cette mission ?
         $existingLike = $likeRepo->findOneBy(['mission' => $mission, 'user' => $user]);
 
         if ($existingLike) {
-            // Si oui, on ENLÈVE le like (Dislike)
             $em->remove($existingLike);
+            $learningService->track($user, $mission, 'mission_ignored', 0.6);
             $em->flush();
-            
+
             return $this->json([
-                'code' => 200, 
-                'message' => 'Like supprimé', 
+                'code' => 200,
+                'message' => 'Like supprime',
                 'likesCount' => $likeRepo->count(['mission' => $mission]),
-                'isLiked' => false
+                'isLiked' => false,
             ]);
-        } 
-        
-        // Sinon, on AJOUTE le like
+        }
+
         $like = new MissionLike();
         $like->setMission($mission);
         $like->setUser($user);
-        
+
         $em->persist($like);
+        $learningService->track($user, $mission, 'mission_liked', 1.0);
         $em->flush();
 
         return $this->json([
-            'code' => 200, 
-            'message' => 'Like ajouté', 
+            'code' => 200,
+            'message' => 'Like ajoute',
             'likesCount' => $likeRepo->count(['mission' => $mission]),
-            'isLiked' => true
+            'isLiked' => true,
         ]);
     }
 
-    // --- GESTION DES ÉTOILES (RATING) ---
-    #[Route('/rate/{id}/{note}', name: 'app_mission_rate_action', methods: ['POST'])] // Ajout de methods POST pour sécurité
-    public function rate(MissionVolunteer $mission, int $note, EntityManagerInterface $em, MissionRatingRepository $ratingRepo): JsonResponse
-    {
+    #[Route('/rate/{id}/{note}', name: 'app_mission_rate_action', methods: ['POST'])]
+    public function rate(
+        MissionVolunteer $mission,
+        int $note,
+        EntityManagerInterface $em,
+        MissionRatingRepository $ratingRepo,
+        RecommendationLearningService $learningService
+    ): JsonResponse {
         $user = $this->getUser();
-        if (!$user) return $this->json(['code' => 403, 'message' => 'Non connecté'], 403);
+        if (!$user instanceof User) {
+            return $this->json(['code' => 403, 'message' => 'Non connecte'], 403);
+        }
 
-        if ($note < 1 || $note > 5) return $this->json(['code' => 400, 'message' => 'Note invalide'], 400);
+        if ($note < 1 || $note > 5) {
+            return $this->json(['code' => 400, 'message' => 'Note invalide'], 400);
+        }
 
-        // On cherche si l'utilisateur a déjà noté
         $rating = $ratingRepo->findOneBy(['mission' => $mission, 'user' => $user]);
 
         if (!$rating) {
@@ -73,23 +85,23 @@ class MissionReactionController extends AbstractController
             $rating->setUser($user);
         }
 
-        $rating->setNote($note); // On met à jour ou on crée la note
+        $rating->setNote($note);
         $em->persist($rating);
+        $learningService->track($user, $mission, 'mission_rated', $note / 5, ['note' => $note]);
         $em->flush();
 
-        // Calcul de la nouvelle moyenne
         $allRatings = $ratingRepo->findBy(['mission' => $mission]);
         $total = 0;
         foreach ($allRatings as $r) {
-            $total += $r->getNote();
+            $total += $r->getNote() ?? 0;
         }
         $average = count($allRatings) > 0 ? round($total / count($allRatings), 1) : 0;
 
         return $this->json([
             'code' => 200,
-            'message' => 'Note enregistrée',
+            'message' => 'Note enregistree',
             'average' => $average,
-            'count' => count($allRatings)
+            'count' => count($allRatings),
         ]);
     }
 }

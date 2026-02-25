@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
@@ -19,7 +20,7 @@ class AccountController extends AbstractController
         $user = $this->getUser();
 
         if (!$user instanceof User) {
-            return $this->redirectToRoute('app_login');
+            return $this->redirectToRoute('front_login');
         }
 
         return $this->render('account/show.html.twig', [
@@ -35,13 +36,29 @@ class AccountController extends AbstractController
         $user = $this->getUser();
 
         if (!$user instanceof User) {
-            return $this->redirectToRoute('app_login');
+            return $this->redirectToRoute('front_login');
         }
 
         $form = $this->createForm(UserProfileType::class, $user);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $profilePictureFile = $form->get('profilePictureFile')->getData();
+
+            if ($profilePictureFile) {
+                $newFilename = uniqid().'.'.$profilePictureFile->guessExtension();
+
+                try {
+                    $profilePictureFile->move(
+                        $this->getParameter('kernel.project_dir').'/public/uploads/profiles',
+                        $newFilename
+                    );
+                    $user->setProfilePicture($newFilename);
+                } catch (FileException $e) {
+                    $this->addFlash('error', 'Erreur lors du téléchargement de l\'image.');
+                }
+            }
+
             $entityManager->flush();
 
             $this->addFlash('success', 'Vos informations ont été mises à jour.');
@@ -63,7 +80,7 @@ class AccountController extends AbstractController
         $user = $this->getUser();
 
         if (!$user instanceof User) {
-            return $this->redirectToRoute('app_login');
+            return $this->redirectToRoute('front_login');
         }
 
         if (!$this->isCsrfTokenValid('delete_account', (string) $request->request->get('_token'))) {
@@ -80,7 +97,14 @@ class AccountController extends AbstractController
 
         $this->addFlash('success', 'Votre compte a été supprimé.');
 
-        return $this->redirectToRoute('app_login');
+        return $this->redirectToRoute('front_login');
+    }
+
+    #[Route('/account/delete', name: 'account_delete_get', methods: ['GET'])]
+    public function deleteGet(): Response
+    {
+        $this->addFlash('error', 'Méthode non autorisée. Utilisez le formulaire pour supprimer votre compte.');
+        return $this->redirectToRoute('account_show');
     }
 }
 

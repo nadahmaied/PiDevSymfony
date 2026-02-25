@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Entity\User;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -50,6 +51,16 @@ class RegistrationFormType extends AbstractType
                     new Assert\NotBlank(),
                     new Assert\Length(min: 6),
                 ],
+            ])
+            ->add('role', ChoiceType::class, [
+                'label' => 'Rôle',
+                'mapped' => false,
+                'choices' => [
+                    'Patient' => 'ROLE_PATIENT',
+                    'Médecin' => 'ROLE_MEDECIN',
+                    'Administrateur' => 'ROLE_ADMIN',
+                ],
+                'data' => 'ROLE_PATIENT',
             ])
         ;
     }

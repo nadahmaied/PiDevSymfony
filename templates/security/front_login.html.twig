@@ -80,12 +80,17 @@
             </button>
         </form>
 
-        <p class="mt-4 text-center text-xs text-slate-500">
-            Pas encore de compte ?
-            <a href="{{ path('front_register') }}" class="font-medium text-sky-600 hover:text-sky-700 hover:underline">
-                Créer un compte patient
+        <div class="mt-4 flex items-center justify-between text-xs text-slate-500">
+            <a href="{{ path('forgot_password') }}" class="font-medium text-sky-600 hover:text-sky-700 hover:underline">
+                Mot de passe oublié ?
             </a>
-        </p>
+            <p>
+                Pas encore de compte ?
+                <a href="{{ path('front_register') }}" class="font-medium text-sky-600 hover:text-sky-700 hover:underline">
+                    Créer un compte
+                </a>
+            </p>
+        </div>
     </div>
 
     <p class="mt-6 text-center text-[11px] text-slate-400">

@@ -48,7 +48,23 @@
                     <p class="text-blue-700 text-sm">Donnez votre avis ou ajoutez-la à vos favoris.</p>
                 </div>
                 
-                <div class="flex gap-4">
+                <div class="flex gap-4 items-center">
+                    {% set totalRating = 0 %}
+                    {% for r in mission.missionRatings %}
+                        {% set totalRating = totalRating + r.note %}
+                    {% endfor %}
+                    {% set avg = mission.missionRatings|length > 0 ? (totalRating / mission.missionRatings|length) : 0 %}
+
+                    <div class="flex text-yellow-400 js-rating-stars"
+                         data-rate-base="{{ path('app_mission_rate_action', {'id': mission.id, 'note': 0}) }}">
+                        {% for i in 1..5 %}
+                            <button type="button" class="js-rate-star px-0.5" data-note="{{ i }}" aria-label="Noter {{ i }}/5">
+                                <i class="{{ i <= avg ? 'fa-solid' : 'fa-regular' }} fa-star"></i>
+                            </button>
+                        {% endfor %}
+                    </div>
+                    <span class="text-xs text-blue-800 js-rating-count">({{ mission.missionRatings|length }} avis)</span>
+
                     <button data-url="{{ path('app_mission_like_action', {'id': mission.id}) }}" class="js-like-button bg-white text-gray-400 w-12 h-12 rounded-full flex items-center justify-center shadow hover:text-red-500 transition">
                         <i class="fa-heart text-xl {% if app.user and mission.missionLikes|filter(l => l.user == app.user)|length > 0 %} fa-solid text-red-500 {% else %} fa-regular {% endif %}"></i>
                     </button>
@@ -66,6 +82,18 @@
                         Je postule maintenant !
                     </a>
                     
+                    
+                    <button
+                        type="button"
+                        id="js-mission-ai-btn"
+                        data-url="{{ path('app_mission_ai_advice', {'id': mission.id}) }}"
+                        class="block w-full text-center bg-slate-100 text-slate-700 py-3 rounded-xl font-bold text-sm hover:bg-slate-200 transition"
+                    >
+                        <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Aide IA pour cette mission
+                    </button>
+
+                    <div id="js-mission-ai-result" class="hidden text-sm text-slate-700 bg-slate-50 border border-slate-200 rounded-xl p-4 whitespace-pre-line"></div>
+
                     <p class="text-center text-xs text-gray-400 mt-4">
                         <i class="fa-solid fa-shield-halved mr-1"></i> Candidature simplifiée et sécurisée
                     </p>
@@ -102,5 +130,75 @@
                 });
         });
     });
+
+    document.querySelectorAll('.js-rating-stars').forEach(block => {
+        const baseUrl = block.dataset.rateBase;
+        const countEl = document.querySelector('.js-rating-count');
+
+        const paintStars = (value) => {
+            block.querySelectorAll('.js-rate-star').forEach(btn => {
+                const note = parseInt(btn.dataset.note, 10);
+                const icon = btn.querySelector('i');
+                if (note <= value) {
+                    icon.classList.remove('fa-regular');
+                    icon.classList.add('fa-solid');
+                } else {
+                    icon.classList.remove('fa-solid');
+                    icon.classList.add('fa-regular');
+                }
+            });
+        };
+
+        block.querySelectorAll('.js-rate-star').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const note = parseInt(this.dataset.note, 10);
+                const url = baseUrl.replace('/0', '/' + note);
+
+                fetch(url, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.code === 200) {
+                            paintStars(Math.round(data.average));
+                            if (countEl) {
+                                countEl.textContent = `(${data.count} avis)`;
+                            }
+                        } else if (data.code === 403) {
+                            alert('Connectez-vous pour noter !');
+                        }
+                    })
+                    .catch(err => console.error('Erreur rating:', err));
+            });
+        });
+    });
+
+    const aiBtn = document.getElementById('js-mission-ai-btn');
+    const aiResult = document.getElementById('js-mission-ai-result');
+    if (aiBtn && aiResult) {
+        const original = aiBtn.innerHTML;
+        aiBtn.addEventListener('click', async () => {
+            aiBtn.disabled = true;
+            aiBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Generation...';
+
+            try {
+                const response = await fetch(aiBtn.dataset.url, { method: 'POST' });
+                const data = await response.json();
+                if (!data.ok) {
+                    alert(data.message || 'Assistance IA indisponible.');
+                } else {
+                    aiResult.textContent = data.advice || '';
+                    aiResult.classList.remove('hidden');
+                }
+            } catch (e) {
+                alert('Erreur reseau.');
+            } finally {
+                aiBtn.disabled = false;
+                aiBtn.innerHTML = original;
+            }
+        });
+    }
 </script>
 {% endblock %}
+
+
+
+

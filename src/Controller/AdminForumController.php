@@ -1,58 +1,52 @@
 <?php
+
 namespace App\Controller;
+
 use App\Entity\Question;
 use App\Entity\Reponse;
+use App\Entity\User;
 use App\Form\QuestionType;
+use App\Form\ReponseType;
 use App\Repository\QuestionRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use App\Entity\User;
-use App\Form\ReponseType;
-use Knp\Component\Pager\PaginatorInterface;
 
 #[Route('/admin/forum')]
 class AdminForumController extends AbstractController
 {
-    // 1. LISTE (INDEX)
     #[Route('/', name: 'app_admin_forum_index', methods: ['GET'])]
     public function index(QuestionRepository $questionRepository, PaginatorInterface $paginator, Request $request): Response
     {
-        // 1. Récupérer le terme de recherche
         $searchTerm = $request->query->get('q');
 
-        // 2. Construire la requête (QueryBuilder)
         $qb = $questionRepository->createQueryBuilder('q')
-            ->leftJoin('q.auteur', 'u') // On joint l'utilisateur pour chercher par email
+            ->leftJoin('q.auteur', 'u')
             ->addSelect('u');
 
-        // 3. Recherche (Titre, Contenu ou Email auteur)
         if ($searchTerm) {
             $qb->andWhere('q.titre LIKE :search OR q.contenu LIKE :search OR u.email LIKE :search')
                ->setParameter('search', '%' . $searchTerm . '%');
         }
 
-        // 4. Tri par défaut (Si on ne clique pas sur les colonnes, on trie par date récente)
         if (!$request->query->get('sort')) {
             $qb->orderBy('q.dateCreation', 'DESC');
         }
 
-        // 5. Pagination (10 questions par page)
         $pagination = $paginator->paginate(
             $qb->getQuery(),
             $request->query->getInt('page', 1),
-            5 
+            5
         );
 
-        // On envoie 'pagination' à la vue au lieu de 'questions'
         return $this->render('admin_forum/index.html.twig', [
             'pagination' => $pagination,
         ]);
     }
 
-    // 2. AJOUTER UN SUJET (NEW)
     #[Route('/new', name: 'app_admin_forum_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
@@ -61,24 +55,18 @@ class AdminForumController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            
-            // --- CORRECTION PROVISOIRE ---
-            // Au lieu de $this->getUser(), on récupère le premier utilisateur de la base
-            $user = $entityManager->getRepository(User::class)->findOneBy([]);
-            
-            if (!$user) {
-                throw new \Exception('Erreur : Aucun utilisateur trouvé dans la table "user". Ajoutez-en un via phpMyAdmin !');
+            $user = $this->getUser();
+            if (!$user instanceof User) {
+                throw $this->createAccessDeniedException('Vous devez etre connecte pour publier un sujet.');
             }
-            
-            $question->setAuteur($user);
-            // -----------------------------
 
+            $question->setAuteur($user);
             $question->setDateCreation(new \DateTimeImmutable());
 
             $entityManager->persist($question);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Sujet créé avec succès !');
+            $this->addFlash('success', 'Sujet cree avec succes !');
             return $this->redirectToRoute('app_admin_forum_index');
         }
 
@@ -88,17 +76,20 @@ class AdminForumController extends AbstractController
         ]);
     }
 
-    // 3. MODIFIER UN SUJET (EDIT)
     #[Route('/{id}/edit', name: 'app_admin_forum_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Question $question, EntityManagerInterface $entityManager): Response
     {
+        if (!$this->canManageQuestion($question)) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas modifier ce sujet.');
+        }
+
         $form = $this->createForm(QuestionType::class, $question);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
 
-            $this->addFlash('success', 'Sujet modifié avec succès !');
+            $this->addFlash('success', 'Sujet modifie avec succes !');
             return $this->redirectToRoute('app_admin_forum_index');
         }
 
@@ -108,79 +99,85 @@ class AdminForumController extends AbstractController
         ]);
     }
 
-    // 4. VOIR DÉTAIL (SHOW)
     #[Route('/{id}', name: 'app_admin_forum_show', methods: ['GET', 'POST'])]
     public function show(Request $request, Question $question, EntityManagerInterface $entityManager): Response
     {
-        // Création d'une nouvelle réponse vide
         $reponse = new Reponse();
         $form = $this->createForm(ReponseType::class, $reponse);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // --- FIX AUTEUR (comme tout à l'heure) ---
-            $user = $entityManager->getRepository(User::class)->findOneBy([]);
-            $reponse->setAuteur($user); // On force le 1er user trouvé
-            // -----------------------------------------
+            $user = $this->getUser();
+            if (!$user instanceof User) {
+                throw $this->createAccessDeniedException('Vous devez etre connecte pour repondre.');
+            }
 
+            $reponse->setAuteur($user);
             $reponse->setDateCreation(new \DateTimeImmutable());
-            $reponse->setQuestion($question); // On lie la réponse à la question actuelle
+            $reponse->setQuestion($question);
 
             $entityManager->persist($reponse);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Votre réponse a été publiée !');
-            
-            // On recharge la page pour voir la réponse
+            $this->addFlash('success', 'Votre reponse a ete publiee !');
             return $this->redirectToRoute('app_admin_forum_show', ['id' => $question->getId()]);
         }
 
         return $this->render('admin_forum/show.html.twig', [
             'question' => $question,
-            'form' => $form, // On envoie le formulaire à la vue
+            'form' => $form,
         ]);
     }
 
-    // 5. SUPPRIMER SUJET (DELETE QUESTION)
     #[Route('/{id}', name: 'app_admin_forum_delete_question', methods: ['POST'])]
     public function deleteQuestion(Request $request, Question $question, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$question->getId(), $request->request->get('_token'))) {
+        if (!$this->canManageQuestion($question)) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas supprimer ce sujet.');
+        }
+
+        if ($this->isCsrfTokenValid('delete' . $question->getId(), (string) $request->request->get('_token'))) {
             $entityManager->remove($question);
             $entityManager->flush();
-            $this->addFlash('success', 'Sujet supprimé.');
+            $this->addFlash('success', 'Sujet supprime.');
         }
 
         return $this->redirectToRoute('app_admin_forum_index');
     }
 
-    // 6. SUPPRIMER RÉPONSE (DELETE REPONSE)
     #[Route('/reponse/{id}/delete', name: 'app_admin_forum_delete_reponse', methods: ['POST'])]
     public function deleteReponse(Request $request, Reponse $reponse, EntityManagerInterface $entityManager): Response
     {
         $questionId = $reponse->getQuestion()->getId();
 
-        if ($this->isCsrfTokenValid('delete'.$reponse->getId(), $request->request->get('_token'))) {
+        if (!$this->canManageReponse($reponse)) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas supprimer cette reponse.');
+        }
+
+        if ($this->isCsrfTokenValid('delete' . $reponse->getId(), (string) $request->request->get('_token'))) {
             $entityManager->remove($reponse);
             $entityManager->flush();
-            $this->addFlash('success', 'Réponse supprimée.');
+            $this->addFlash('success', 'Reponse supprimee.');
         }
 
         return $this->redirectToRoute('app_admin_forum_show', ['id' => $questionId]);
     }
 
-    // 7. MODIFIER UNE RÉPONSE (NOUVEAU)
     #[Route('/reponse/{id}/edit', name: 'app_admin_forum_edit_reponse', methods: ['GET', 'POST'])]
     public function editReponse(Request $request, Reponse $reponse, EntityManagerInterface $entityManager): Response
     {
-        $questionId = $reponse->getQuestion()->getId(); // Pour le retour
+        if (!$this->canManageReponse($reponse)) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas modifier cette reponse.');
+        }
+
+        $questionId = $reponse->getQuestion()->getId();
         $form = $this->createForm(ReponseType::class, $reponse);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
 
-            $this->addFlash('success', 'La réponse a été modifiée.');
+            $this->addFlash('success', 'La reponse a ete modifiee.');
             return $this->redirectToRoute('app_admin_forum_show', ['id' => $questionId]);
         }
 
@@ -188,5 +185,25 @@ class AdminForumController extends AbstractController
             'reponse' => $reponse,
             'form' => $form,
         ]);
+    }
+
+    private function canManageQuestion(Question $question): bool
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User || !$question->getAuteur()) {
+            return false;
+        }
+
+        return $question->getAuteur()->getId() === $user->getId();
+    }
+
+    private function canManageReponse(Reponse $reponse): bool
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User || !$reponse->getAuteur()) {
+            return false;
+        }
+
+        return $reponse->getAuteur()->getId() === $user->getId();
     }
 }

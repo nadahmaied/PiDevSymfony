@@ -8,69 +8,100 @@ use App\Entity\User;
 use App\Form\QuestionType;
 use App\Form\ReponseType;
 use App\Repository\QuestionRepository;
+use App\Service\ForumAiAssistant;
 use Doctrine\ORM\EntityManagerInterface;
+use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Knp\Component\Pager\PaginatorInterface;
 
 #[Route('/forum')]
 class ForumController extends AbstractController
 {
-    // 1. LISTE DES SUJETS
+    #[Route('/ai/ameliorer-sujet', name: 'app_forum_ai_enhance', methods: ['POST'])]
+    public function enhanceQuestion(Request $request, ForumAiAssistant $forumAiAssistant): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_REMEMBERED');
+
+        $payload = json_decode($request->getContent(), true);
+        if (!is_array($payload)) {
+            return $this->json([
+                'ok' => false,
+                'message' => 'Payload JSON invalide.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        $title = (string) ($payload['title'] ?? '');
+        $content = (string) ($payload['content'] ?? '');
+
+        try {
+            $result = $forumAiAssistant->enhanceQuestion($title, $content);
+
+            return $this->json([
+                'ok' => true,
+                'title' => $result['title'],
+                'content' => $result['content'],
+                'tags' => $result['tags'],
+                'source' => $result['source'],
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            return $this->json([
+                'ok' => false,
+                'message' => $e->getMessage(),
+            ], Response::HTTP_BAD_REQUEST);
+        } catch (\Throwable) {
+            return $this->json([
+                'ok' => false,
+                'message' => 'Impossible de generer une suggestion IA pour le moment.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     #[Route('/', name: 'app_forum_index', methods: ['GET'])]
     public function index(QuestionRepository $questionRepository, PaginatorInterface $paginator, Request $request): Response
     {
-        // 1. Récupération des paramètres (Recherche & Filtre)
         $searchTerm = $request->query->get('q');
-        $filter = $request->query->get('filter', 'recent'); // par défaut 'recent'
+        $filter = $request->query->get('filter', 'recent');
 
-        // 2. Construction de la requête de base
         $qb = $questionRepository->createQueryBuilder('q')
             ->leftJoin('q.auteur', 'u')
             ->leftJoin('q.reponses', 'r')
-            ->addSelect('u', 'r'); // Optimisation (évite trop de requêtes SQL)
+            ->addSelect('u', 'r');
 
-        // 3. Gestion de la Recherche
         if ($searchTerm) {
             $qb->andWhere('q.titre LIKE :search OR q.contenu LIKE :search')
                ->setParameter('search', '%' . $searchTerm . '%');
         }
 
-        // 4. Gestion des Filtres (Onglets)
         switch ($filter) {
             case 'popular':
-                // Trie par nombre de réponses (le plus commenté en premier)
                 $qb->orderBy('SIZE(q.reponses)', 'DESC');
                 break;
             case 'unanswered':
-                // Filtre uniquement ceux qui ont 0 réponse
                 $qb->andWhere('SIZE(q.reponses) = 0')
                    ->orderBy('q.dateCreation', 'DESC');
                 break;
             case 'recent':
             default:
-                // Par défaut : du plus récent au plus ancien
                 $qb->orderBy('q.dateCreation', 'DESC');
                 break;
         }
 
-        // 5. Pagination (6 questions par page pour que ce soit joli)
         $pagination = $paginator->paginate(
             $qb->getQuery(),
             $request->query->getInt('page', 1),
-            6 
+            6
         );
 
         return $this->render('forum/index.html.twig', [
             'pagination' => $pagination,
             'searchTerm' => $searchTerm,
-            'currentFilter' => $filter
+            'currentFilter' => $filter,
         ]);
     }
 
-    // 2. CRÉER UN NOUVEAU SUJET
     #[Route('/nouveau', name: 'app_forum_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
@@ -79,17 +110,18 @@ class ForumController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // --- FIX USER (Simulation) ---
-            $user = $entityManager->getRepository(User::class)->findOneBy([]); 
-            $question->setAuteur($user); 
-            // -----------------------------
-            
+            $user = $this->getUser();
+            if (!$user instanceof User) {
+                throw $this->createAccessDeniedException('Vous devez etre connecte pour publier un sujet.');
+            }
+
+            $question->setAuteur($user);
             $question->setDateCreation(new \DateTimeImmutable());
-            
+
             $entityManager->persist($question);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Votre sujet a été publié !');
+            $this->addFlash('success', 'Votre sujet a ete publie !');
             return $this->redirectToRoute('app_forum_index');
         }
 
@@ -98,28 +130,27 @@ class ForumController extends AbstractController
         ]);
     }
 
-    // 3. VOIR LE DÉTAIL + RÉPONDRE
     #[Route('/sujet/{id}', name: 'app_forum_show', methods: ['GET', 'POST'])]
     public function show(Request $request, Question $question, EntityManagerInterface $entityManager): Response
     {
-        // Traitement du formulaire de réponse (sur la même page)
         $reponse = new Reponse();
         $form = $this->createForm(ReponseType::class, $reponse);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // --- FIX USER ---
-            $user = $entityManager->getRepository(User::class)->findOneBy([]); 
+            $user = $this->getUser();
+            if (!$user instanceof User) {
+                throw $this->createAccessDeniedException('Vous devez etre connecte pour repondre.');
+            }
+
             $reponse->setAuteur($user);
-            // ----------------
-            
             $reponse->setDateCreation(new \DateTimeImmutable());
             $reponse->setQuestion($question);
 
             $entityManager->persist($reponse);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Votre réponse a été ajoutée !');
+            $this->addFlash('success', 'Votre reponse a ete ajoutee !');
             return $this->redirectToRoute('app_forum_show', ['id' => $question->getId()]);
         }
 
@@ -129,18 +160,19 @@ class ForumController extends AbstractController
         ]);
     }
 
-    // 4. MODIFIER UN SUJET
     #[Route('/sujet/{id}/edit', name: 'app_forum_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Question $question, EntityManagerInterface $entityManager): Response
     {
-        // Ici, on devrait vérifier si $this->getUser() == $question->getAuteur()
-        
+        if (!$this->canManageQuestion($question)) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas modifier ce sujet.');
+        }
+
         $form = $this->createForm(QuestionType::class, $question);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
-            $this->addFlash('success', 'Sujet modifié avec succès.');
+            $this->addFlash('success', 'Sujet modifie avec succes.');
             return $this->redirectToRoute('app_forum_show', ['id' => $question->getId()]);
         }
 
@@ -150,28 +182,57 @@ class ForumController extends AbstractController
         ]);
     }
 
-    // 5. SUPPRIMER UN SUJET
     #[Route('/sujet/{id}/delete', name: 'app_forum_delete', methods: ['POST'])]
     public function delete(Request $request, Question $question, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$question->getId(), $request->request->get('_token'))) {
+        if (!$this->canManageQuestion($question)) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas supprimer ce sujet.');
+        }
+
+        if ($this->isCsrfTokenValid('delete' . $question->getId(), (string) $request->request->get('_token'))) {
             $entityManager->remove($question);
             $entityManager->flush();
-            $this->addFlash('success', 'Sujet supprimé.');
+            $this->addFlash('success', 'Sujet supprime.');
         }
+
         return $this->redirectToRoute('app_forum_index');
     }
 
-    // 6. SUPPRIMER UNE REPONSE
     #[Route('/reponse/{id}/delete', name: 'app_forum_delete_reponse', methods: ['POST'])]
     public function deleteReponse(Request $request, Reponse $reponse, EntityManagerInterface $entityManager): Response
     {
         $questionId = $reponse->getQuestion()->getId();
-        if ($this->isCsrfTokenValid('delete'.$reponse->getId(), $request->request->get('_token'))) {
+
+        if (!$this->canManageReponse($reponse)) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas supprimer cette reponse.');
+        }
+
+        if ($this->isCsrfTokenValid('delete' . $reponse->getId(), (string) $request->request->get('_token'))) {
             $entityManager->remove($reponse);
             $entityManager->flush();
-            $this->addFlash('success', 'Réponse supprimée.');
+            $this->addFlash('success', 'Reponse supprimee.');
         }
+
         return $this->redirectToRoute('app_forum_show', ['id' => $questionId]);
+    }
+
+    private function canManageQuestion(Question $question): bool
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User || !$question->getAuteur()) {
+            return false;
+        }
+
+        return $question->getAuteur()->getId() === $user->getId();
+    }
+
+    private function canManageReponse(Reponse $reponse): bool
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User || !$reponse->getAuteur()) {
+            return false;
+        }
+
+        return $reponse->getAuteur()->getId() === $user->getId();
     }
 }
