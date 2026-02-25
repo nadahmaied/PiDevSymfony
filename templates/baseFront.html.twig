@@ -97,17 +97,36 @@
                         <i class="fa-solid fa-bell text-xl"></i>
                         <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">3</span>
                     </button>
-                    <div class="flex items-center gap-3 pl-6 border-l border-gray-200">
-                        <div class="text-right hidden sm:block">
-                            {% if app.user %}
-                                <p class="text-sm font-bold text-gray-700">{{ app.user.prenom }} {{ app.user.nom }}</p>
-                                <p class="text-xs text-gray-500">{{ app.user.email }}</p>
+                    <div class="relative pl-6 border-l border-gray-200">
+                        <button id="userMenuButton" class="flex items-center gap-3 hover:opacity-80 transition">
+                            <div class="text-right hidden sm:block">
+                                {% if app.user %}
+                                    <p class="text-sm font-bold text-gray-700">{{ app.user.prenom }} {{ app.user.nom }}</p>
+                                    <p class="text-xs text-gray-500">{{ app.user.email }}</p>
+                                {% else %}
+                                    <p class="text-sm font-bold text-gray-700">Invité</p>
+                                    <p class="text-xs text-gray-500">Veuillez vous connecter</p>
+                                {% endif %}
+                            </div>
+                            {% if app.user and app.user.profilePicture %}
+                                <img src="{{ asset('uploads/profiles/' ~ app.user.profilePicture) }}" alt="Profil" class="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover">
                             {% else %}
-                                <p class="text-sm font-bold text-gray-700">Invité</p>
-                                <p class="text-xs text-gray-500">Veuillez vous connecter</p>
+                                <img src="https://ui-avatars.com/api/?name={{ app.user ? app.user.prenom ~ '+' ~ app.user.nom : 'Invited+User' }}&background=0D8ABC&color=fff" alt="Profil" class="w-10 h-10 rounded-full border-2 border-white shadow-sm">
                             {% endif %}
+                            <i class="fa-solid fa-chevron-down text-xs text-gray-400"></i>
+                        </button>
+                        
+                        <div id="userMenuDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                            <a href="{{ path('account_show') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition">
+                                <i class="fa-solid fa-user w-4"></i>
+                                <span>Mon profil</span>
+                            </a>
+                            <hr class="my-1 border-gray-100">
+                            <a href="{{ path('front_logout') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition">
+                                <i class="fa-solid fa-right-from-bracket w-4"></i>
+                                <span>Déconnexion</span>
+                            </a>
                         </div>
-                        <img src="https://ui-avatars.com/api/?name={{ app.user ? app.user.prenom ~ '+' ~ app.user.nom : 'Invited+User' }}&background=0D8ABC&color=fff" alt="Profil" class="w-10 h-10 rounded-full border-2 border-white shadow-sm">
                     </div>
                 </div>
             </div>
@@ -117,41 +136,225 @@
   {% endblock %} 
 
     </main>
+
+    <!-- Floating Chatbot Widget -->
+    <div id="chatWidget" class="fixed bottom-6 right-6 z-50">
+        <!-- Chat Button -->
+        <button id="chatToggle" class="w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110">
+            <i class="fa-solid fa-robot text-xl"></i>
+        </button>
+
+        <!-- Chat Window -->
+        <div id="chatWindow" class="hidden absolute bottom-16 right-0 w-96 bg-white rounded-2xl shadow-2xl overflow-hidden" style="height: 500px;">
+            <div class="bg-gradient-to-r from-blue-600 to-blue-700 p-4 text-white flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-sm">Assistant VitalTech</h3>
+                        <p class="text-xs text-blue-100">En ligne</p>
+                    </div>
+                </div>
+                <button id="chatClose" class="text-white hover:text-blue-100">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+
+            <div id="widgetChatMessages" class="h-80 overflow-y-auto p-4 space-y-3 bg-gray-50">
+                <div class="flex gap-2">
+                    <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white flex-shrink-0">
+                        <i class="fa-solid fa-robot text-xs"></i>
+                    </div>
+                    <div class="bg-white rounded-lg p-2 shadow-sm text-sm max-w-xs">
+                        Bonjour ! Comment puis-je vous aider ?
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-3 bg-white border-t">
+                <form id="widgetChatForm" class="flex gap-2">
+                    <input 
+                        type="text" 
+                        id="widgetMessageInput" 
+                        placeholder="Votre message..." 
+                        class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        autocomplete="off"
+                    >
+                    <button 
+                        type="submit" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                    >
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
 {% block javascripts %}
     <script>
-        const ctx = document.getElementById('healthChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
-                datasets: [{
-                    label: 'Glycémie (g/L)',
-                    data: [0.95, 1.02, 0.98, 1.10, 0.92, 0.96, 0.94],
-                    borderColor: '#3B82F6', // Blue
-                    tension: 0.4,
-                    fill: true,
-                    backgroundColor: 'rgba(59, 130, 246, 0.05)'
-                },
-                {
-                    label: 'Tension (Sys)',
-                    data: [12.1, 12.3, 11.9, 12.5, 12.0, 12.2, 11.8],
-                    borderColor: '#EF4444', // Red
-                    tension: 0.4,
-                    borderDash: [5, 5]
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'top', align: 'end' }
-                },
-                scales: {
-                    y: { beginAtZero: false, grid: { borderDash: [2, 2] } },
-                    x: { grid: { display: false } }
-                }
+        // Floating Chatbot Widget
+        const chatToggle = document.getElementById('chatToggle');
+        const chatWindow = document.getElementById('chatWindow');
+        const chatClose = document.getElementById('chatClose');
+        const widgetChatMessages = document.getElementById('widgetChatMessages');
+        const widgetChatForm = document.getElementById('widgetChatForm');
+        const widgetMessageInput = document.getElementById('widgetMessageInput');
+
+        chatToggle.addEventListener('click', () => {
+            chatWindow.classList.toggle('hidden');
+            if (!chatWindow.classList.contains('hidden')) {
+                widgetMessageInput.focus();
             }
         });
+
+        chatClose.addEventListener('click', () => {
+            chatWindow.classList.add('hidden');
+        });
+
+        function addWidgetMessage(content, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex gap-2' + (isUser ? ' justify-end' : '');
+            
+            if (isUser) {
+                messageDiv.innerHTML = `
+                    <div class="bg-blue-600 text-white rounded-lg p-2 shadow-sm text-sm max-w-xs">
+                        ${content}
+                    </div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white flex-shrink-0">
+                        <i class="fa-solid fa-robot text-xs"></i>
+                    </div>
+                    <div class="bg-white rounded-lg p-2 shadow-sm text-sm max-w-xs">
+                        ${content}
+                    </div>
+                `;
+            }
+            
+            widgetChatMessages.appendChild(messageDiv);
+            widgetChatMessages.scrollTop = widgetChatMessages.scrollHeight;
+        }
+
+        function addWidgetTyping() {
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'widgetTyping';
+            typingDiv.className = 'flex gap-2';
+            typingDiv.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white flex-shrink-0">
+                    <i class="fa-solid fa-robot text-xs"></i>
+                </div>
+                <div class="bg-white rounded-lg p-2 shadow-sm">
+                    <div class="flex gap-1">
+                        <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+                        <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+                    </div>
+                </div>
+            `;
+            widgetChatMessages.appendChild(typingDiv);
+            widgetChatMessages.scrollTop = widgetChatMessages.scrollHeight;
+        }
+
+        function removeWidgetTyping() {
+            const typing = document.getElementById('widgetTyping');
+            if (typing) typing.remove();
+        }
+
+        widgetChatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const message = widgetMessageInput.value.trim();
+            if (!message) return;
+            
+            addWidgetMessage(message, true);
+            widgetMessageInput.value = '';
+            
+            addWidgetTyping();
+            
+            try {
+                const response = await fetch('{{ path('chatbot_message') }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+                
+                const data = await response.json();
+                removeWidgetTyping();
+                
+                console.log('Chatbot response:', data);
+                
+                if (data.response) {
+                    addWidgetMessage(data.response, false);
+                } else if (data.error) {
+                    addWidgetMessage('Erreur: ' + data.error, false);
+                    console.error('Chatbot error:', data.error);
+                } else {
+                    addWidgetMessage('Désolé, erreur de traitement.', false);
+                }
+            } catch (error) {
+                removeWidgetTyping();
+                addWidgetMessage('Erreur de connexion: ' + error.message, false);
+                console.error('Fetch error:', error);
+            }
+        });
+
+        // User menu dropdown toggle
+        const userMenuButton = document.getElementById('userMenuButton');
+        const userMenuDropdown = document.getElementById('userMenuDropdown');
+        
+        if (userMenuButton && userMenuDropdown) {
+            userMenuButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userMenuDropdown.classList.toggle('hidden');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!userMenuButton.contains(e.target) && !userMenuDropdown.contains(e.target)) {
+                    userMenuDropdown.classList.add('hidden');
+                }
+            });
+        }
+        
+        // Health chart
+        const ctx = document.getElementById('healthChart');
+        if (ctx) {
+            new Chart(ctx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+                    datasets: [{
+                        label: 'Glycémie (g/L)',
+                        data: [0.95, 1.02, 0.98, 1.10, 0.92, 0.96, 0.94],
+                        borderColor: '#3B82F6', // Blue
+                        tension: 0.4,
+                        fill: true,
+                        backgroundColor: 'rgba(59, 130, 246, 0.05)'
+                    },
+                    {
+                        label: 'Tension (Sys)',
+                        data: [12.1, 12.3, 11.9, 12.5, 12.0, 12.2, 11.8],
+                        borderColor: '#EF4444', // Red
+                        tension: 0.4,
+                        borderDash: [5, 5]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', align: 'end' }
+                    },
+                    scales: {
+                        y: { beginAtZero: false, grid: { borderDash: [2, 2] } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
     </script>
 {% endblock %} 
 

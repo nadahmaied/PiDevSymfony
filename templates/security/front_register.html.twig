@@ -18,7 +18,21 @@
     </div>
 
     <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl shadow-emerald-100/60 p-6 border border-slate-100">
-        {{ form_start(registrationForm) }}
+        {% for message in app.flashes('error') %}
+            <div class="mb-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 text-sm flex items-start gap-2">
+                <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
+                <span>{{ message }}</span>
+            </div>
+        {% endfor %}
+
+        {% for message in app.flashes('warning') %}
+            <div class="mb-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 text-sm flex items-start gap-2">
+                <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
+                <span>{{ message }}</span>
+            </div>
+        {% endfor %}
+
+        {{ form_start(registrationForm, {'attr': {'enctype': 'multipart/form-data'}}) }}
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="md:col-span-2 space-y-1.5">
@@ -87,6 +101,44 @@
             </div>
 
             <div class="md:col-span-2 space-y-1.5">
+                {{ form_label(registrationForm.role, null, {'label_attr': {'class': 'block text-sm font-medium text-slate-700'}}) }}
+                {{ form_widget(registrationForm.role, {
+                    'attr': {
+                        'class': 'w-full rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/60 text-sm px-3 py-2.5 bg-white',
+                        'id': 'roleSelect'
+                    }
+                }) }}
+                <div class="text-xs text-rose-500">
+                    {{ form_errors(registrationForm.role) }}
+                </div>
+            </div>
+
+            <div id="doctor-documents" class="md:col-span-2 space-y-4" style="display: none;">
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <div class="flex items-start gap-2">
+                        <i class="fa-solid fa-info-circle text-blue-600 mt-0.5"></i>
+                        <div class="text-sm text-blue-800">
+                            <p class="font-medium">Vérification requise pour les médecins</p>
+                            <p class="text-xs mt-1">Veuillez télécharger votre diplôme médical. Notre système vérifiera automatiquement que votre nom correspond.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    {{ form_label(registrationForm.diplomaFile, null, {'label_attr': {'class': 'block text-sm font-medium text-slate-700'}}) }}
+                    {{ form_widget(registrationForm.diplomaFile, {
+                        'attr': {
+                            'class': 'w-full text-sm',
+                            'accept': 'image/*,application/pdf'
+                        }
+                    }) }}
+                    <div class="text-xs text-rose-500">
+                        {{ form_errors(registrationForm.diplomaFile) }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="md:col-span-2 space-y-1.5">
                 {{ form_label(registrationForm.plainPassword, null, {'label_attr': {'class': 'block text-sm font-medium text-slate-700'}}) }}
                 {{ form_widget(registrationForm.plainPassword, {
                     'attr': {
@@ -126,6 +178,69 @@
         </a>
     </p>
 </div>
+
+<script>
+    // Show/hide doctor documents based on role selection
+    document.addEventListener('DOMContentLoaded', function() {
+        // Try multiple ways to find the role select
+        let roleSelect = document.getElementById('roleSelect');
+        
+        // If not found by ID, try by name attribute
+        if (!roleSelect) {
+            roleSelect = document.querySelector('select[name*="role"]');
+            console.log('Found by name selector:', roleSelect);
+        }
+        
+        // If still not found, try finding all selects and look for the one with role options
+        if (!roleSelect) {
+            const allSelects = document.querySelectorAll('select');
+            console.log('All selects found:', allSelects.length);
+            allSelects.forEach((select, index) => {
+                console.log(`Select ${index}:`, select.name, select.id);
+                // Check if this select has ROLE_MEDECIN option
+                const options = Array.from(select.options).map(opt => opt.value);
+                if (options.includes('ROLE_MEDECIN')) {
+                    roleSelect = select;
+                    console.log('Found role select by options:', roleSelect);
+                }
+            });
+        }
+        
+        const doctorDocuments = document.getElementById('doctor-documents');
+        
+        console.log('Script loaded');
+        console.log('Role select:', roleSelect);
+        console.log('Doctor documents:', doctorDocuments);
+        
+        if (roleSelect && doctorDocuments) {
+            function toggleDoctorFields() {
+                const selectedValue = roleSelect.value;
+                console.log('Selected role:', selectedValue);
+                
+                if (selectedValue === 'ROLE_MEDECIN') {
+                    doctorDocuments.style.display = 'block';
+                    console.log('Showing doctor documents');
+                } else {
+                    doctorDocuments.style.display = 'none';
+                    console.log('Hiding doctor documents');
+                }
+            }
+            
+            // Listen for changes
+            roleSelect.addEventListener('change', function() {
+                console.log('Role changed');
+                toggleDoctorFields();
+            });
+            
+            // Check initial value
+            toggleDoctorFields();
+        } else {
+            console.error('Elements not found!');
+            if (!roleSelect) console.error('roleSelect is null');
+            if (!doctorDocuments) console.error('doctorDocuments is null');
+        }
+    });
+</script>
 </body>
 </html>
 

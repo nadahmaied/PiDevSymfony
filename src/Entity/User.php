@@ -61,6 +61,21 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255)]
     private ?string $role = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $profilePicture = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $diplomaDocument = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $idCardDocument = null;
+
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $isVerified = false;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $verificationStatus = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -185,5 +200,65 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function eraseCredentials(): void
     {
         $this->plainPassword = null;
+    }
+
+    public function getProfilePicture(): ?string
+    {
+        return $this->profilePicture;
+    }
+
+    public function setProfilePicture(?string $profilePicture): static
+    {
+        $this->profilePicture = $profilePicture;
+
+        return $this;
+    }
+
+    public function getDiplomaDocument(): ?string
+    {
+        return $this->diplomaDocument;
+    }
+
+    public function setDiplomaDocument(?string $diplomaDocument): static
+    {
+        $this->diplomaDocument = $diplomaDocument;
+
+        return $this;
+    }
+
+    public function getIdCardDocument(): ?string
+    {
+        return $this->idCardDocument;
+    }
+
+    public function setIdCardDocument(?string $idCardDocument): static
+    {
+        $this->idCardDocument = $idCardDocument;
+
+        return $this;
+    }
+
+    public function isVerified(): bool
+    {
+        return $this->isVerified;
+    }
+
+    public function setIsVerified(bool $isVerified): static
+    {
+        $this->isVerified = $isVerified;
+
+        return $this;
+    }
+
+    public function getVerificationStatus(): ?string
+    {
+        return $this->verificationStatus;
+    }
+
+    public function setVerificationStatus(?string $verificationStatus): static
+    {
+        $this->verificationStatus = $verificationStatus;
+
+        return $this;
     }
 }

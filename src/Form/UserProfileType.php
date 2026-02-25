@@ -4,10 +4,13 @@ namespace App\Form;
 
 use App\Entity\User;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
+use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints as Assert;
 
 class UserProfileType extends AbstractType
 {
@@ -30,6 +33,26 @@ class UserProfileType extends AbstractType
             ->add('telephone', TextType::class, [
                 'label' => 'Téléphone',
                 'required' => false,
+            ])
+            ->add('role', ChoiceType::class, [
+                'label' => 'Rôle',
+                'choices' => [
+                    'Patient' => 'ROLE_PATIENT',
+                    'Médecin' => 'ROLE_MEDECIN',
+                    'Administrateur' => 'ROLE_ADMIN',
+                ],
+            ])
+            ->add('profilePictureFile', FileType::class, [
+                'label' => 'Photo de profil',
+                'mapped' => false,
+                'required' => false,
+                'constraints' => [
+                    new Assert\Image([
+                        'maxSize' => '2M',
+                        'mimeTypes' => ['image/jpeg', 'image/png', 'image/gif'],
+                        'mimeTypesMessage' => 'Veuillez télécharger une image valide (JPEG, PNG, GIF)',
+                    ]),
+                ],
             ])
         ;
     }

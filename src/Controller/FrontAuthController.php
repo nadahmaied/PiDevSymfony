@@ -3,7 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\User;
-use App\Form\RegistrationFormType;
+use App\Form\FrontRegistrationFormType;
+use App\Service\DocumentVerificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,14 +19,15 @@ class FrontAuthController extends AbstractController
     public function register(
         Request $request,
         EntityManagerInterface $entityManager,
-        UserPasswordHasherInterface $passwordHasher
+        UserPasswordHasherInterface $passwordHasher,
+        DocumentVerificationService $verificationService
     ): Response {
         if ($this->getUser()) {
             return $this->redirectToRoute('baseFont');
         }
 
         $user = new User();
-        $form = $this->createForm(RegistrationFormType::class, $user);
+        $form = $this->createForm(FrontRegistrationFormType::class, $user);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -34,12 +36,53 @@ class FrontAuthController extends AbstractController
                 (string) $user->getPlainPassword()
             );
             $user->setPassword($hashedPassword);
-            $user->setRole('ROLE_USER');
+
+            $selectedRole = (string) $form->get('role')->getData();
+            $user->setRole($selectedRole);
+
+            // Handle document verification for doctors
+            if ($selectedRole === 'ROLE_MEDECIN') {
+                $diplomaFile = $form->get('diplomaFile')->getData();
+
+                if (!$diplomaFile) {
+                    $this->addFlash('error', 'Les médecins doivent soumettre leur diplôme médical.');
+                    return $this->render('security/front_register.html.twig', [
+                        'registrationForm' => $form->createView(),
+                    ]);
+                }
+
+                // Save document
+                $diplomaFilename = uniqid() . '.' . $diplomaFile->guessExtension();
+
+                try {
+                    $uploadsDir = $this->getParameter('kernel.project_dir') . '/public/uploads/documents';
+                    if (!is_dir($uploadsDir)) {
+                        mkdir($uploadsDir, 0777, true);
+                    }
+
+                    $diplomaFile->move($uploadsDir, $diplomaFilename);
+                    $user->setDiplomaDocument($diplomaFilename);
+
+                    // Save diploma for manual admin verification
+                    // AI verification is unreliable due to API limitations
+                    $user->setIsVerified(false);
+                    $user->setVerificationStatus('pending_review');
+                    
+                    $this->addFlash('info', 'Votre diplôme a été soumis avec succès. Un administrateur vérifiera votre compte sous peu. Vous recevrez une notification une fois approuvé.');
+                } catch (\Exception $e) {
+                    $this->addFlash('error', 'Erreur lors du téléchargement du document.');
+                    return $this->render('security/front_register.html.twig', [
+                        'registrationForm' => $form->createView(),
+                    ]);
+                }
+            } else {
+                // Patients are automatically verified
+                $user->setIsVerified(true);
+                $user->setVerificationStatus('verified');
+            }
 
             $entityManager->persist($user);
             $entityManager->flush();
-
-            $this->addFlash('success', 'Votre compte a été créé. Vous pouvez vous connecter.');
 
             return $this->redirectToRoute('front_login');
         }
@@ -53,6 +96,9 @@ class FrontAuthController extends AbstractController
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
         if ($this->getUser()) {
+            if ($this->isGranted('ROLE_ADMIN')) {
+                return $this->redirectToRoute('admin_user_index');
+            }
             return $this->redirectToRoute('baseFont');
         }
 

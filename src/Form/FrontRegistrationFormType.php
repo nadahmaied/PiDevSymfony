@@ -6,13 +6,14 @@ use App\Entity\User;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
+use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints as Assert;
 
-class RegistrationFormType extends AbstractType
+class FrontRegistrationFormType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
@@ -53,14 +54,28 @@ class RegistrationFormType extends AbstractType
                 ],
             ])
             ->add('role', ChoiceType::class, [
-                'label' => 'Rôle',
+                'label' => 'Je suis',
                 'mapped' => false,
                 'choices' => [
                     'Patient' => 'ROLE_PATIENT',
                     'Médecin' => 'ROLE_MEDECIN',
-                    'Administrateur' => 'ROLE_ADMIN',
                 ],
-                'data' => 'ROLE_PATIENT',
+                'placeholder' => 'Choisissez votre rôle',
+                'constraints' => [
+                    new Assert\NotBlank(message: 'Veuillez choisir un rôle.'),
+                ],
+            ])
+            ->add('diplomaFile', FileType::class, [
+                'label' => 'Diplôme médical (requis pour médecins)',
+                'mapped' => false,
+                'required' => false,
+                'constraints' => [
+                    new Assert\Image([
+                        'maxSize' => '5M',
+                        'mimeTypes' => ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'],
+                        'mimeTypesMessage' => 'Veuillez télécharger une image ou un PDF',
+                    ]),
+                ],
             ])
         ;
     }
