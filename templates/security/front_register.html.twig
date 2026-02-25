@@ -119,7 +119,7 @@
                         <i class="fa-solid fa-info-circle text-blue-600 mt-0.5"></i>
                         <div class="text-sm text-blue-800">
                             <p class="font-medium">Vérification requise pour les médecins</p>
-                            <p class="text-xs mt-1">Veuillez télécharger votre diplôme médical. Notre système vérifiera que votre nom correspond.</p>
+                            <p class="text-xs mt-1">Veuillez télécharger votre diplôme médical. Un administrateur vérifiera votre document et activera votre compte sous peu.</p>
                         </div>
                     </div>
                 </div>
@@ -180,65 +180,230 @@
 </div>
 
 <script>
-    // Show/hide doctor documents based on role selection
+    // JavaScript validation
     document.addEventListener('DOMContentLoaded', function() {
-        // Try multiple ways to find the role select
-        let roleSelect = document.getElementById('roleSelect');
-        
-        // If not found by ID, try by name attribute
-        if (!roleSelect) {
-            roleSelect = document.querySelector('select[name*="role"]');
-            console.log('Found by name selector:', roleSelect);
+        const form = document.querySelector('form[name="front_registration_form"]');
+        if (!form) {
+            console.error('Form not found');
+            return;
         }
-        
-        // If still not found, try finding all selects and look for the one with role options
-        if (!roleSelect) {
-            const allSelects = document.querySelectorAll('select');
-            console.log('All selects found:', allSelects.length);
-            allSelects.forEach((select, index) => {
-                console.log(`Select ${index}:`, select.name, select.id);
-                // Check if this select has ROLE_MEDECIN option
-                const options = Array.from(select.options).map(opt => opt.value);
-                if (options.includes('ROLE_MEDECIN')) {
-                    roleSelect = select;
-                    console.log('Found role select by options:', roleSelect);
-                }
-            });
-        }
-        
+
+        // Get form fields
+        const emailField = form.querySelector('input[type="email"]');
+        const nomField = form.querySelector('input[name*="nom"]');
+        const prenomField = form.querySelector('input[name*="prenom"]');
+        const telephoneField = form.querySelector('input[name*="telephone"]');
+        const passwordField = form.querySelector('input[type="password"]');
+        const roleSelect = form.querySelector('select[name*="role"]');
+        const diplomaFile = form.querySelector('input[type="file"]');
         const doctorDocuments = document.getElementById('doctor-documents');
-        
-        console.log('Script loaded');
-        console.log('Role select:', roleSelect);
-        console.log('Doctor documents:', doctorDocuments);
-        
+
+        // Show/hide doctor documents based on role selection
         if (roleSelect && doctorDocuments) {
             function toggleDoctorFields() {
                 const selectedValue = roleSelect.value;
-                console.log('Selected role:', selectedValue);
-                
                 if (selectedValue === 'ROLE_MEDECIN') {
                     doctorDocuments.style.display = 'block';
-                    console.log('Showing doctor documents');
                 } else {
                     doctorDocuments.style.display = 'none';
-                    console.log('Hiding doctor documents');
                 }
             }
             
-            // Listen for changes
-            roleSelect.addEventListener('change', function() {
-                console.log('Role changed');
-                toggleDoctorFields();
-            });
-            
-            // Check initial value
+            roleSelect.addEventListener('change', toggleDoctorFields);
             toggleDoctorFields();
-        } else {
-            console.error('Elements not found!');
-            if (!roleSelect) console.error('roleSelect is null');
-            if (!doctorDocuments) console.error('doctorDocuments is null');
         }
+
+        // Validation functions
+        function showError(field, message) {
+            const errorDiv = field.closest('.space-y-1\\.5').querySelector('.text-rose-500');
+            if (errorDiv) {
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+            }
+            field.classList.add('border-rose-500');
+            field.classList.remove('border-slate-200');
+        }
+
+        function clearError(field) {
+            const errorDiv = field.closest('.space-y-1\\.5').querySelector('.text-rose-500');
+            if (errorDiv) {
+                errorDiv.textContent = '';
+                errorDiv.style.display = 'none';
+            }
+            field.classList.remove('border-rose-500');
+            field.classList.add('border-slate-200');
+        }
+
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        function validateName(name) {
+            // No numbers allowed
+            const re = /^[^\d]+$/;
+            return re.test(name);
+        }
+
+        function validatePhone(phone) {
+            // Only digits allowed
+            const re = /^\d+$/;
+            return phone === '' || re.test(phone);
+        }
+
+        // Real-time validation
+        if (emailField) {
+            emailField.addEventListener('blur', function() {
+                if (this.value.trim() === '') {
+                    showError(this, 'L\'email est obligatoire.');
+                } else if (!validateEmail(this.value)) {
+                    showError(this, 'Veuillez saisir une adresse email valide.');
+                } else {
+                    clearError(this);
+                }
+            });
+        }
+
+        if (nomField) {
+            nomField.addEventListener('blur', function() {
+                if (this.value.trim() === '') {
+                    showError(this, 'Le nom est obligatoire.');
+                } else if (!validateName(this.value)) {
+                    showError(this, 'Le nom ne doit pas contenir de chiffres.');
+                } else {
+                    clearError(this);
+                }
+            });
+        }
+
+        if (prenomField) {
+            prenomField.addEventListener('blur', function() {
+                if (this.value.trim() === '') {
+                    showError(this, 'Le prénom est obligatoire.');
+                } else if (!validateName(this.value)) {
+                    showError(this, 'Le prénom ne doit pas contenir de chiffres.');
+                } else {
+                    clearError(this);
+                }
+            });
+        }
+
+        if (telephoneField) {
+            telephoneField.addEventListener('blur', function() {
+                if (!validatePhone(this.value)) {
+                    showError(this, 'Le numéro de téléphone doit contenir uniquement des chiffres.');
+                } else {
+                    clearError(this);
+                }
+            });
+        }
+
+        if (passwordField) {
+            passwordField.addEventListener('blur', function() {
+                if (this.value.trim() === '') {
+                    showError(this, 'Le mot de passe est obligatoire.');
+                } else if (this.value.length < 6) {
+                    showError(this, 'Le mot de passe doit contenir au moins 6 caractères.');
+                } else {
+                    clearError(this);
+                }
+            });
+        }
+
+        // Form submission validation
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+
+            // Validate email
+            if (emailField) {
+                if (emailField.value.trim() === '') {
+                    showError(emailField, 'L\'email est obligatoire.');
+                    isValid = false;
+                } else if (!validateEmail(emailField.value)) {
+                    showError(emailField, 'Veuillez saisir une adresse email valide.');
+                    isValid = false;
+                }
+            }
+
+            // Validate nom
+            if (nomField) {
+                if (nomField.value.trim() === '') {
+                    showError(nomField, 'Le nom est obligatoire.');
+                    isValid = false;
+                } else if (!validateName(nomField.value)) {
+                    showError(nomField, 'Le nom ne doit pas contenir de chiffres.');
+                    isValid = false;
+                }
+            }
+
+            // Validate prenom
+            if (prenomField) {
+                if (prenomField.value.trim() === '') {
+                    showError(prenomField, 'Le prénom est obligatoire.');
+                    isValid = false;
+                } else if (!validateName(prenomField.value)) {
+                    showError(prenomField, 'Le prénom ne doit pas contenir de chiffres.');
+                    isValid = false;
+                }
+            }
+
+            // Validate telephone
+            if (telephoneField && telephoneField.value.trim() !== '') {
+                if (!validatePhone(telephoneField.value)) {
+                    showError(telephoneField, 'Le numéro de téléphone doit contenir uniquement des chiffres.');
+                    isValid = false;
+                }
+            }
+
+            // Validate password
+            if (passwordField) {
+                if (passwordField.value.trim() === '') {
+                    showError(passwordField, 'Le mot de passe est obligatoire.');
+                    isValid = false;
+                } else if (passwordField.value.length < 6) {
+                    showError(passwordField, 'Le mot de passe doit contenir au moins 6 caractères.');
+                    isValid = false;
+                }
+            }
+
+            // Validate role
+            if (roleSelect) {
+                if (roleSelect.value === '') {
+                    showError(roleSelect, 'Veuillez choisir un rôle.');
+                    isValid = false;
+                }
+            }
+
+            // Validate diploma for doctors
+            if (roleSelect && roleSelect.value === 'ROLE_MEDECIN' && diplomaFile) {
+                if (!diplomaFile.files || diplomaFile.files.length === 0) {
+                    showError(diplomaFile, 'Les médecins doivent soumettre leur diplôme médical.');
+                    isValid = false;
+                } else {
+                    const file = diplomaFile.files[0];
+                    const maxSize = 5 * 1024 * 1024; // 5MB
+                    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+                    
+                    if (file.size > maxSize) {
+                        showError(diplomaFile, 'Le fichier ne doit pas dépasser 5 Mo.');
+                        isValid = false;
+                    } else if (!allowedTypes.includes(file.type)) {
+                        showError(diplomaFile, 'Veuillez télécharger une image (JPEG, PNG) ou un PDF.');
+                        isValid = false;
+                    }
+                }
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+                // Scroll to first error
+                const firstError = form.querySelector('.border-rose-500');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstError.focus();
+                }
+            }
+        });
     });
 </script>
 </body>
