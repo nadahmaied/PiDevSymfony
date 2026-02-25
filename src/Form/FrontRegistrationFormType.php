@@ -85,6 +85,7 @@ class FrontRegistrationFormType extends AbstractType
         $resolver->setDefaults([
             'data_class' => User::class,
             'validation_groups' => ['Default', 'registration'],
+            'attr' => ['novalidate' => 'novalidate'], // Disable HTML5 validation
         ]);
     }
 }
