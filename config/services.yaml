@@ -22,3 +22,8 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    App\Service\TextToSpeechService:
+        arguments:
+            $apiKey: '%env(default::AZURE_TTS_KEY)%'
+            $region: '%env(default::AZURE_TTS_REGION)%'

@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\AnnonceRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -35,6 +37,7 @@ class Annonce
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     #[Assert\NotNull(message: 'La date de publication est obligatoire.')]
+    #[Assert\GreaterThanOrEqual('today', message: 'La date de publication ne peut pas être dans le passé.')]
     private ?\DateTimeInterface $datePublication = null;
 
     #[ORM\Column(length: 50)]
@@ -53,9 +56,14 @@ class Annonce
     )]
     private ?string $etatAnnonce = null;
 
-    #[ORM\OneToOne(inversedBy: 'annonce', cascade: ['persist', 'remove'])]
-    #[ORM\JoinColumn(nullable: True)]
-    private ?Donation $donation = null;
+    #[ORM\OneToMany(mappedBy: 'annonce', targetEntity: Donation::class, cascade: ['persist', 'remove'])]
+    private Collection $donations;
+
+    public function __construct()
+    {
+        $this->donations = new ArrayCollection();
+        $this->datePublication = new \DateTime();
+    }
 
     public function getId(): ?int
     {
@@ -67,7 +75,7 @@ class Annonce
         return $this->titreAnnonce;
     }
 
-    public function setTitreAnnonce(string $titreAnnonce): static
+    public function setTitreAnnonce(?string $titreAnnonce): static
     {
         $this->titreAnnonce = $titreAnnonce;
 
@@ -79,7 +87,7 @@ class Annonce
         return $this->description;
     }
 
-    public function setDescription(string $description): static
+    public function setDescription(?string $description): static
     {
         $this->description = $description;
 
@@ -103,7 +111,7 @@ class Annonce
         return $this->urgence;
     }
 
-    public function setUrgence(string $urgence): static
+    public function setUrgence(?string $urgence): static
     {
         $this->urgence = $urgence;
 
@@ -115,21 +123,39 @@ class Annonce
         return $this->etatAnnonce;
     }
 
-    public function setEtatAnnonce(string $etatAnnonce): static
+    public function setEtatAnnonce(?string $etatAnnonce): static
     {
         $this->etatAnnonce = $etatAnnonce;
 
         return $this;
     }
 
-    public function getDonation(): ?Donation
+    /**
+     * @return Collection<int, Donation>
+     */
+    public function getDonations(): Collection
     {
-        return $this->donation;
+        return $this->donations;
     }
 
-    public function setDonation(Donation $donation): static
+    public function addDonation(Donation $donation): static
     {
-        $this->donation = $donation;
+        if (!$this->donations->contains($donation)) {
+            $this->donations->add($donation);
+            $donation->setAnnonce($this);
+        }
+
+        return $this;
+    }
+
+    public function removeDonation(Donation $donation): static
+    {
+        if ($this->donations->removeElement($donation)) {
+            // set the owning side to null (unless already changed)
+            if ($donation->getAnnonce() === $this) {
+                $donation->setAnnonce(null);
+            }
+        }
 
         return $this;
     }

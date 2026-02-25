@@ -40,7 +40,8 @@ class Donation
     )]
     private ?string $statut = null;
 
-    #[ORM\OneToOne(mappedBy: 'donation', cascade: ['persist', 'remove'])]
+    #[ORM\ManyToOne(inversedBy: 'donations', targetEntity: Annonce::class)]
+    #[ORM\JoinColumn(nullable: true)]
     private ?Annonce $annonce = null;
 
     public function getId(): ?int
@@ -53,7 +54,7 @@ class Donation
         return $this->typeDon;
     }
 
-    public function setTypeDon(string $typeDon): static
+    public function setTypeDon(?string $typeDon): static
     {
         $this->typeDon = $typeDon;
 
@@ -65,7 +66,7 @@ class Donation
         return $this->quantite;
     }
 
-    public function setQuantite(int $quantite): static
+    public function setQuantite(?int $quantite): static
     {
         $this->quantite = $quantite;
 
@@ -89,7 +90,7 @@ class Donation
         return $this->statut;
     }
 
-    public function setStatut(string $statut): static
+    public function setStatut(?string $statut): static
     {
         $this->statut = $statut;
 
@@ -101,13 +102,8 @@ class Donation
         return $this->annonce;
     }
 
-    public function setAnnonce(Annonce $annonce): static
+    public function setAnnonce(?Annonce $annonce): static
     {
-        // set the owning side of the relation if necessary
-        if ($annonce->getDonation() !== $this) {
-            $annonce->setDonation($this);
-        }
-
         $this->annonce = $annonce;
 
         return $this;
