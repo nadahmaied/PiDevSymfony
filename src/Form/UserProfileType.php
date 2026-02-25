@@ -7,6 +7,7 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
+use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -24,14 +25,46 @@ class UserProfileType extends AbstractType
                 'label' => 'Nom',
             ])
             ->add('prenom', TextType::class, [
-                'label' => 'Prénom',
+                'label' => 'Prenom',
             ])
             ->add('adresse', TextType::class, [
                 'label' => 'Adresse',
                 'required' => false,
             ])
             ->add('telephone', TextType::class, [
-                'label' => 'Téléphone',
+                'label' => 'Telephone',
+                'required' => false,
+            ])
+            ->add('skillsProfile', TextType::class, [
+                'label' => 'Competences (CSV)',
+                'required' => false,
+                'attr' => ['placeholder' => 'premiers soins, conduite, enseignement'],
+            ])
+            ->add('interestsProfile', TextType::class, [
+                'label' => 'Centres d interet (CSV)',
+                'required' => false,
+                'attr' => ['placeholder' => 'enfants, seniors, environnement'],
+            ])
+            ->add('availabilityProfile', TextType::class, [
+                'label' => 'Disponibilites (CSV)',
+                'required' => false,
+                'attr' => ['placeholder' => 'soir, weekend, matin'],
+            ])
+            ->add('preferredCity', TextType::class, [
+                'label' => 'Ville preferee',
+                'required' => false,
+            ])
+            ->add('actionRadiusKm', IntegerType::class, [
+                'label' => 'Rayon d action (km)',
+                'required' => false,
+                'attr' => ['min' => 1, 'max' => 300],
+            ])
+            ->add('latitude', TextType::class, [
+                'label' => 'Latitude',
+                'required' => false,
+            ])
+            ->add('longitude', TextType::class, [
+                'label' => 'Longitude',
                 'required' => false,
             ])
             ->add('role', ChoiceType::class, [
@@ -64,4 +97,3 @@ class UserProfileType extends AbstractType
         ]);
     }
 }
-

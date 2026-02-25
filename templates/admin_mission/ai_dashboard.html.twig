@@ -1,0 +1,65 @@
+{% extends 'baseBack.html.twig' %}
+
+{% block title %}Dashboard IA Missions{% endblock %}
+
+{% block body %}
+<div class="p-8 space-y-8">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Dashboard IA - Missions</h1>
+            <p class="text-sm text-gray-500">Vue predictive sur les besoins benevoles et les missions a risque.</p>
+        </div>
+        <a href="{{ path('app_admin_missions_index') }}" class="text-sm text-orange-600 hover:underline">Retour aux missions</a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+            <p class="text-sm text-gray-500">Missions ouvertes</p>
+            <p class="text-3xl font-bold text-gray-800 mt-2">{{ insights.openCount }}</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+            <p class="text-sm text-gray-500">Missions urgentes (>= 4/5)</p>
+            <p class="text-3xl font-bold text-red-600 mt-2">{{ insights.urgentCount }}</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+            <p class="text-sm text-gray-500">Missions difficiles (>= 4/5)</p>
+            <p class="text-3xl font-bold text-amber-600 mt-2">{{ insights.hardCount }}</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Competences les plus demandees</h2>
+            {% if insights.topMissingSkills is not empty %}
+                <div class="space-y-3">
+                    {% for skill, count in insights.topMissingSkills %}
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-700">{{ skill|capitalize }}</span>
+                            <span class="bg-orange-50 text-orange-700 px-2 py-1 rounded font-semibold">{{ count }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-sm text-gray-500">Aucune donnee de competences pour le moment.</p>
+            {% endif %}
+        </div>
+
+        <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Missions a risque</h2>
+            {% if atRiskMissions is not empty %}
+                <div class="space-y-4">
+                    {% for item in atRiskMissions %}
+                        <div class="border border-red-100 bg-red-50/50 rounded-xl p-3">
+                            <p class="text-sm font-semibold text-gray-800">{{ item.mission.titre }}</p>
+                            <p class="text-xs text-gray-600 mt-1">{{ item.mission.lieu }} - score risque: {{ item.riskScore }}/5</p>
+                            <p class="text-xs text-gray-500 mt-1">Candidatures actuelles: {{ item.applications }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-sm text-gray-500">Aucune mission critique detectee.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

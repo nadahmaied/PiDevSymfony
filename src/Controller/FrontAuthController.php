@@ -22,8 +22,9 @@ class FrontAuthController extends AbstractController
         UserPasswordHasherInterface $passwordHasher,
         DocumentVerificationService $verificationService
     ): Response {
+        // 👇 CORRECTION ICI : Si on est déjà connecté, on va vers l'accueil
         if ($this->getUser()) {
-            return $this->redirectToRoute('baseFont');
+            return $this->redirectToRoute('app_home');
         }
 
         $user = new User();
@@ -31,9 +32,10 @@ class FrontAuthController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // On crypte le mot de passe
             $hashedPassword = $passwordHasher->hashPassword(
                 $user,
-                (string) $user->getPlainPassword()
+                (string) $form->get('plainPassword')->getData() // Petite sécurité supplémentaire ici
             );
             $user->setPassword($hashedPassword);
 
@@ -95,11 +97,12 @@ class FrontAuthController extends AbstractController
     #[Route('/login', name: 'front_login')]
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
+        // 👇 CORRECTION ICI : Si on est déjà connecté, on va vers l'accueil
         if ($this->getUser()) {
             if ($this->isGranted('ROLE_ADMIN')) {
                 return $this->redirectToRoute('admin_user_index');
             }
-            return $this->redirectToRoute('baseFont');
+            return $this->redirectToRoute('app_home');
         }
 
         $error = $authenticationUtils->getLastAuthenticationError();
@@ -118,4 +121,3 @@ class FrontAuthController extends AbstractController
         throw new \LogicException('Intercepted by Symfony Security.');
     }
 }
-

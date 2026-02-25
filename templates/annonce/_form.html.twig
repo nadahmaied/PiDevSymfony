@@ -1,0 +1,53 @@
+{{ form_start(form, {'attr': {'class': 'space-y-6', 'novalidate': 'novalidate'}}) }}
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-5">
+        <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-bullhorn text-orange-500"></i>
+            {{ button_label is defined and button_label == 'Mettre à jour' ? 'Modifier une annonce' : 'Créer une nouvelle annonce' }}
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="md:col-span-2 space-y-1.5">
+                {{ form_label(form.titreAnnonce, 'Titre de l\'annonce', {'label_attr': {'class': 'block text-sm font-medium text-slate-700'}}) }}
+                {{ form_widget(form.titreAnnonce, {'attr': {'class': 'mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2.5 text-sm text-slate-800 shadow-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none'}}) }}
+                {{ form_errors(form.titreAnnonce) }}
+            </div>
+
+            <div class="md:col-span-2 space-y-1.5">
+                {{ form_label(form.description, 'Description détaillée', {'label_attr': {'class': 'block text-sm font-medium text-slate-700'}}) }}
+                {{ form_widget(form.description, {'attr': {'rows': 4, 'class': 'mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2.5 text-sm text-slate-800 shadow-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none'}}) }}
+                {{ form_errors(form.description) }}
+            </div>
+
+            <div class="space-y-1.5">
+                {{ form_label(form.datePublication, 'Date de publication', {'label_attr': {'class': 'block text-sm font-medium text-slate-700'}}) }}
+                {{ form_widget(form.datePublication, {'attr': {'class': 'mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2.5 text-sm text-slate-800 shadow-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none'}}) }}
+                {{ form_errors(form.datePublication) }}
+            </div>
+
+            <div class="space-y-1.5">
+                {{ form_label(form.urgence, 'Niveau d\'urgence', {'label_attr': {'class': 'block text-sm font-medium text-slate-700'}}) }}
+                {{ form_widget(form.urgence, {'attr': {'class': 'mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2.5 text-sm text-slate-800 shadow-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none'}}) }}
+                {{ form_errors(form.urgence) }}
+            </div>
+
+            <div class="space-y-1.5">
+                {{ form_label(form.etatAnnonce, 'État de l\'annonce', {'label_attr': {'class': 'block text-sm font-medium text-slate-700'}}) }}
+                {{ form_widget(form.etatAnnonce, {'attr': {'class': 'mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2.5 text-sm text-slate-800 shadow-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none'}}) }}
+                {{ form_errors(form.etatAnnonce) }}
+            </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-4 border-t border-slate-100">
+            <a href="{{ path('app_annonce_index') }}" class="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-700">
+                <i class="fa-solid fa-arrow-left"></i>
+                Retour à la liste
+            </a>
+            <button class="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2">
+                <i class="fa-solid fa-paper-plane"></i>
+                {{ button_label|default('Enregistrer') }}
+            </button>
+        </div>
+    </div>
+
+    {{ form_rest(form) }}
+{{ form_end(form) }}

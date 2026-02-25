@@ -6,6 +6,14 @@
 parameters:
     gemini_api_key: '%env(GEMINI_API_KEY)%'
     groq_api_key: '%env(GROQ_API_KEY)%'
+    mission_images_directory: '%kernel.project_dir%/public/uploads/missions'
+    ml_model_path: '%kernel.project_dir%/var/ml/recommendation_model.json'
+    forum_ai_api_key: '%env(FORUM_AI_API_KEY)%'
+    forum_ai_api_url: '%env(FORUM_AI_API_URL)%'
+    forum_ai_model: '%env(FORUM_AI_MODEL)%'
+    volunteer_ai_api_key: '%env(VOLUNTEER_AI_API_KEY)%'
+    volunteer_ai_api_url: '%env(VOLUNTEER_AI_API_URL)%'
+    volunteer_ai_model: '%env(VOLUNTEER_AI_MODEL)%'
 
 services:
     # default configuration for services in *this* file
@@ -31,6 +39,31 @@ services:
     App\Controller\ChatbotController:
         arguments:
             $groqApiKey: '%groq_api_key%'
+
+    App\Service\MlModelScoringService:
+        arguments:
+            $modelPath: '%ml_model_path%'
+
+    App\Command\ExportRecommendationTrainingDataCommand:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
+    App\Command\TrainRecommendationModelCommand:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+            $modelPath: '%ml_model_path%'
+
+    App\Service\ForumAiAssistant:
+        arguments:
+            $apiKey: '%forum_ai_api_key%'
+            $apiUrl: '%forum_ai_api_url%'
+            $model: '%forum_ai_model%'
+
+    App\Service\VolunteerAiAssistant:
+        arguments:
+            $apiKey: '%volunteer_ai_api_key%'
+            $apiUrl: '%volunteer_ai_api_url%'
+            $model: '%volunteer_ai_model%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
