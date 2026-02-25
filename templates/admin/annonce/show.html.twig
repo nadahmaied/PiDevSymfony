@@ -53,6 +53,64 @@
                     {{ annonce.description }}
                 </p>
             </div>
+
+            <div class="pt-4 border-t border-slate-100">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm font-semibold text-slate-700 uppercase tracking-wide flex items-center gap-2">
+                        <i class="fa-solid fa-hand-holding-heart text-emerald-500"></i>
+                        Donations associées
+                    </h2>
+                    <span class="text-xs text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
+                        {{ annonce.donations|length }} donation{{ annonce.donations|length > 1 ? 's' : '' }}
+                    </span>
+                </div>
+                
+                {% if annonce.donations|length > 0 %}
+                    <div class="space-y-3">
+                        {% for donation in annonce.donations %}
+                            <div class="border border-slate-200 rounded-xl p-4 hover:bg-slate-50 transition-colors">
+                                <div class="flex items-start justify-between gap-4">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <h3 class="font-semibold text-slate-800 text-sm">{{ donation.typeDon }}</h3>
+                                            {% set statutColor = 
+                                                donation.statut == 'accepté' ? 'bg-emerald-100 text-emerald-700' :
+                                                (donation.statut == 'refusé' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700')
+                                            %}
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ statutColor }}">
+                                                {{ donation.statut|capitalize }}
+                                            </span>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-3 text-xs text-slate-600">
+                                            <div>
+                                                <span class="text-slate-500">Quantité:</span>
+                                                <span class="font-medium text-slate-700 ml-1">{{ donation.quantite }}</span>
+                                            </div>
+                                            <div>
+                                                <span class="text-slate-500">Date:</span>
+                                                <span class="font-medium text-slate-700 ml-1">{{ donation.dateDonation ? donation.dateDonation|date('d M Y') : '—' }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <a href="{{ path('admin_donation_show', {'id': donation.id}) }}" class="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium">
+                                            Voir <i class="fa-solid fa-arrow-right"></i>
+                                        </a>
+                                        <a href="{{ path('admin_donation_edit', {'id': donation.id}) }}" class="inline-flex items-center gap-1 text-xs text-orange-600 hover:text-orange-700 font-medium">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8 text-slate-400">
+                        <i class="fa-solid fa-inbox text-3xl mb-2"></i>
+                        <p class="text-sm">Aucune donation associée à cette annonce pour le moment.</p>
+                    </div>
+                {% endif %}
+            </div>
         </div>
 
         <div class="space-y-4">

@@ -13,14 +13,26 @@
             </div>
 
             <div class="md:col-span-2 space-y-1.5">
-                {{ form_label(form.description, 'Description détaillée', {'label_attr': {'class': 'block text-sm font-medium text-slate-700'}}) }}
-                {{ form_widget(form.description, {'attr': {'rows': 4, 'class': 'mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2.5 text-sm text-slate-800 shadow-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none'}}) }}
+                <div class="flex items-center justify-between">
+                    {{ form_label(form.description, 'Description détaillée', {'label_attr': {'class': 'block text-sm font-medium text-slate-700'}}) }}
+                    <button type="button" id="ai-enhance-btn" class="inline-flex items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-medium text-orange-700 hover:bg-orange-100 transition">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        Améliorer avec l'IA
+                    </button>
+                </div>
+                {{ form_widget(form.description, {'attr': {'rows': 4, 'class': 'mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2.5 text-sm text-slate-800 shadow-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none', 'id': 'annonce_description'}}) }}
+                <p class="text-xs text-slate-400">Tapez une phrase courte (ex: "j'ai besoin de sang pour un enfant") puis cliquez sur "Améliorer avec l'IA" pour générer une description professionnelle.</p>
                 {{ form_errors(form.description) }}
             </div>
 
             <div class="space-y-1.5">
                 {{ form_label(form.datePublication, 'Date de publication', {'label_attr': {'class': 'block text-sm font-medium text-slate-700'}}) }}
-                {{ form_widget(form.datePublication, {'attr': {'class': 'mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2.5 text-sm text-slate-800 shadow-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none'}}) }}
+                {{ form_widget(form.datePublication, {
+                    'attr': {
+                        'class': 'mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2.5 text-sm text-slate-800 shadow-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none',
+                        'min': 'now'|date('Y-m-d')
+                    }
+                }) }}
                 {{ form_errors(form.datePublication) }}
             </div>
 
@@ -51,3 +63,43 @@
 
     {{ form_rest(form) }}
 {{ form_end(form) }}
+
+<script>
+(function() {
+    const btn = document.getElementById('ai-enhance-btn');
+    const textarea = document.getElementById('annonce_description');
+    if (!btn || !textarea) return;
+
+    btn.addEventListener('click', async () => {
+        const text = (textarea.value || '').trim();
+        if (!text) {
+            alert('Veuillez d\'abord taper une courte description de votre besoin.');
+            return;
+        }
+
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Génération...';
+
+        try {
+            const res = await fetch('{{ path('api_ai_enhance_description') }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ text })
+            });
+            const data = await res.json();
+
+            if (res.ok && data.description) {
+                textarea.value = data.description;
+            } else {
+                alert(data.error || 'Une erreur est survenue. Vérifiez qu\'Ollama tourne (ollama run llama3.2) ou ajoutez GROQ_API_KEY dans .env.');
+            }
+        } catch (e) {
+            alert('Impossible de contacter le service. Assurez-vous qu\'Ollama est lancé ou que GROQ_API_KEY est configuré.');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    });
+})();
+</script>

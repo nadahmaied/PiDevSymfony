@@ -15,17 +15,10 @@ class AnnonceType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('titreAnnonce', null, [
-                'required' => false,
-            ])
-            ->add('description', null, [
-                'required' => false,
-            ])
-            ->add('datePublication', null, [
-                'required' => false,
-            ])
+            ->add('titreAnnonce')
+            ->add('description')
+            ->add('datePublication')
             ->add('urgence', ChoiceType::class, [
-                'required' => false,
                 'choices' => [
                     'Faible' => 'faible',
                     'Moyenne' => 'moyenne',
@@ -33,7 +26,6 @@ class AnnonceType extends AbstractType
                 ],
             ])
             ->add('etatAnnonce', ChoiceType::class, [
-                'required' => false,
                 'choices' => [
                     'Active' => 'active',
                     'Clôturée' => 'clôturée',

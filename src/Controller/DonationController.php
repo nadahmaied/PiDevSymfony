@@ -49,7 +49,7 @@ final class DonationController extends AbstractController
     public function newForAnnonce(Request $request, EntityManagerInterface $entityManager, Annonce $annonce): Response
     {
         $donation = new Donation();
-        $donation->setAnnonce($annonce);
+        $annonce->addDonation($donation);
         $form = $this->createForm(DonationType::class, $donation);
         $form->handleRequest($request);
 
