@@ -1,0 +1,124 @@
+{# Contenu uniquement pour injection dans la modale (pas de layout) #}
+
+<style>
+    .form-error-msg {
+        color: #dc2626;
+        font-size: 0.78rem;
+        font-weight: 600;
+        margin-top: 0.25rem;
+        display: block;
+    }
+    .field-error input,
+    .field-error select,
+    .field-error textarea {
+        border-color: #dc2626 !important;
+    }
+</style>
+
+<div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-bold text-slate-800">📅 Ajouter un rendez-vous</h2>
+    <button type="button" onclick="closeRdvModal()" class="text-slate-400 hover:text-red-500 text-xl font-bold">✕</button>
+</div>
+
+{{ form_start(form, {
+    action: path('AjouterRdv'),
+    method: 'POST',
+    attr: {
+        novalidate: 'novalidate',
+        class: 'space-y-4'
+    }
+}) }}
+
+    {# Médecin #}
+    <div class="{{ form.medecin.vars.errors|length > 0 ? 'field-error' : '' }}">
+        {{ form_label(form.medecin, 'Médecin', { label_attr: { class: 'block text-sm font-semibold text-slate-600 mb-1' } }) }}
+        {{ form_widget(form.medecin, { attr: { class: 'w-full rounded-xl border border-slate-300 p-3' } }) }}
+        {% for error in form.medecin.vars.errors %}
+            <span class="form-error-msg">⚠ {{ error.message }}</span>
+        {% endfor %}
+    </div>
+
+    {# Motif #}
+    <div class="{{ form.motif.vars.errors|length > 0 ? 'field-error' : '' }}">
+        {{ form_label(form.motif, 'Motif', { label_attr: { class: 'block text-sm font-semibold text-slate-600 mb-1' } }) }}
+        {{ form_widget(form.motif, { attr: { class: 'w-full rounded-xl border border-slate-300 p-3' } }) }}
+        {% for error in form.motif.vars.errors %}
+            <span class="form-error-msg">⚠ {{ error.message }}</span>
+        {% endfor %}
+    </div>
+
+    {# Date + Heure #}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <div class="{{ form.date.vars.errors|length > 0 ? 'field-error' : '' }}">
+            {{ form_label(form.date, 'Date', { label_attr: { class: 'block text-sm font-semibold text-slate-600 mb-1' } }) }}
+            {{ form_widget(form.date, { attr: { class: 'w-full rounded-xl border border-slate-300 p-3' } }) }}
+            {% for error in form.date.vars.errors %}
+                <span class="form-error-msg">⚠ {{ error.message }}</span>
+            {% endfor %}
+        </div>
+
+        <div class="{{ form.hdebut.vars.errors|length > 0 ? 'field-error' : '' }}">
+            {{ form_label(form.hdebut, 'Heure (09:00 - 17:00)', { label_attr: { class: 'block text-sm font-semibold text-slate-600 mb-1' } }) }}
+            {{ form_widget(form.hdebut, { attr: { class: 'w-full rounded-xl border border-slate-300 p-3' } }) }}
+            {% for error in form.hdebut.vars.errors %}
+                <span class="form-error-msg">⚠ {{ error.message }}</span>
+            {% endfor %}
+        </div>
+
+    </div>
+
+    {# Message #}
+    <div class="{{ form.message.vars.errors|length > 0 ? 'field-error' : '' }}">
+        {{ form_label(form.message, 'Message (optionnel — doit commencer par une majuscule)', { label_attr: { class: 'block text-sm font-semibold text-slate-600 mb-1' } }) }}
+        {{ form_widget(form.message, { attr: { class: 'w-full rounded-xl border border-slate-300 p-3', rows: 3, placeholder: 'Entrer votre message ...' } }) }}
+        {% for error in form.message.vars.errors %}
+            <span class="form-error-msg">⚠ {{ error.message }}</span>
+        {% endfor %}
+    </div>
+
+    <div class="flex justify-end gap-3 pt-4">
+        <button type="button" onclick="closeRdvModal()"
+            class="px-5 py-2 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-100">
+            Annuler
+        </button>
+        <button type="submit"
+            class="px-6 py-2 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 shadow">
+            Confirmer
+        </button>
+    </div>
+
+{{ form_end(form) }}
+
+<script>
+// Re-attacher le submit handler après rechargement du formulaire avec erreurs
+(function() {
+    const form = document.querySelector('#rdvModalContent form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            fetch('{{ path('AjouterRdv') }}', {
+                method: 'POST',
+                body: new FormData(form),
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => {
+                const contentType = res.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return res.json().then(data => ({ type: 'json', data }));
+                }
+                return res.text().then(data => ({ type: 'html', data }));
+            })
+            .then(result => {
+                if (result.type === 'json' && result.data.success) {
+                    closeRdvModal();
+                    window.location.reload();
+                } else if (result.type === 'html') {
+                    document.getElementById('rdvModalContent').innerHTML = result.data;
+                }
+            })
+            .catch(err => console.error(err));
+        });
+    }
+})();
+</script>

@@ -1,0 +1,121 @@
+<style>
+    .form-error-msg {
+        color: #dc2626;
+        font-size: 0.78rem;
+        font-weight: 600;
+        margin-top: 0.25rem;
+        display: block;
+    }
+    .field-error input,
+    .field-error select,
+    .field-error textarea {
+        border-color: #dc2626 !important;
+    }
+</style>
+
+<div class="space-y-5">
+    <div class="flex items-center gap-3 mb-6">
+        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+            <i class="fa-solid fa-pen text-blue-600 text-xl"></i>
+        </div>
+        <div>
+            <h3 class="text-xl font-bold text-slate-800">Modifier le rendez-vous</h3>
+            <p class="text-sm text-slate-500">Modifiez les informations de votre rendez-vous</p>
+        </div>
+    </div>
+
+    {{ form_start(form, {
+    action: path('editForm', {'id': rdv.id}),
+    method: 'POST',
+    attr: {
+        novalidate: 'novalidate',
+        class: 'space-y-4',
+        id: 'editRdvForm'
+    }
+}) }}
+
+    {# Médecin - lecture seule #}
+    <div>
+        <label class="block text-sm font-bold text-slate-700 mb-2">Médecin</label>
+        <input type="hidden" name="{{ form.medecin.vars.full_name }}" value="{{ rdv.medecin ?? form.medecin.vars.value }}">
+        {{ form_widget(form.medecin, {
+            attr: {
+                class: 'w-full px-4 py-3 border border-slate-300 rounded-xl bg-slate-100 cursor-not-allowed opacity-60',
+                disabled: 'disabled'
+            }
+        }) }}
+    </div>
+
+    {# Motif - lecture seule #}
+    <div>
+        <label class="block text-sm font-bold text-slate-700 mb-2">Motif</label>
+        <input type="hidden" name="{{ form.motif.vars.full_name }}" value="{{ rdv.motif ?? form.motif.vars.value ?? '' }}">
+        {{ form_widget(form.motif, {
+            attr: {
+                class: 'w-full px-4 py-3 border border-slate-300 rounded-xl bg-slate-100 cursor-not-allowed opacity-60',
+                disabled: 'disabled'
+            }
+        }) }}
+    </div>
+
+    {# Date + Heure - modifiables avec validation #}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <div class="{{ form.date.vars.errors|length > 0 ? 'field-error' : '' }}">
+            <label class="block text-sm font-bold text-slate-700 mb-2">Date</label>
+            {{ form_widget(form.date, {
+                attr: {
+                    class: 'w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition',
+                    placeholder: 'jj/mm/aaaa'
+                }
+            }) }}
+            {% for error in form.date.vars.errors %}
+                <span class="form-error-msg">⚠ {{ error.message }}</span>
+            {% endfor %}
+        </div>
+
+        <div class="{{ form.hdebut.vars.errors|length > 0 ? 'field-error' : '' }}">
+            <label class="block text-sm font-bold text-slate-700 mb-2">Heure (09:00 - 17:00)</label>
+            {{ form_widget(form.hdebut, {
+                attr: {
+                    class: 'w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition',
+                    placeholder: '--:-- --'
+                }
+            }) }}
+            {% for error in form.hdebut.vars.errors %}
+                <span class="form-error-msg">⚠ {{ error.message }}</span>
+            {% endfor %}
+        </div>
+
+    </div>
+
+    {# Message - modifiable #}
+    <div class="{{ form.message.vars.errors|length > 0 ? 'field-error' : '' }}">
+        <label class="block text-sm font-bold text-slate-700 mb-2">
+            Message (optionnel — doit commencer par une majuscule)
+        </label>
+        {{ form_widget(form.message, {
+            attr: {
+                class: 'w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition resize-none',
+                placeholder: 'Entrez votre message ...',
+                rows: '4'
+            }
+        }) }}
+        {% for error in form.message.vars.errors %}
+            <span class="form-error-msg">⚠ {{ error.message }}</span>
+        {% endfor %}
+    </div>
+
+    <div class="flex gap-3 pt-4">
+        <button type="button" onclick="closeRdvModal()"
+            class="flex-1 px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">
+            Annuler
+        </button>
+        <button type="submit"
+            class="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition shadow-lg">
+            Enregistrer
+        </button>
+    </div>
+
+    {{ form_end(form) }}
+</div>

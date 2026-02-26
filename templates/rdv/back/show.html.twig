@@ -1,0 +1,109 @@
+{% extends 'baseBack.html.twig' %}
+
+{% block body %}
+<div class="flex-1 overflow-y-auto p-8">
+<div class="flex justify-start mb-6">
+    <a href="{{ path('showAllRdvBack') }}"
+       class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-3 rounded-xl shadow transition">
+        <i class="fa-solid fa-list"></i>
+        Consulter les rendez-vous
+    </a>
+</div>
+
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
+                        <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-xl"><i class="fa-solid fa-calendar-day"></i></div>
+                        <div><p class="text-gray-500 text-xs font-bold uppercase">Aujourd'hui</p><p class="text-xl font-bold text-gray-800">12 RDV</p></div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
+                        <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-lg flex items-center justify-center text-xl"><i class="fa-solid fa-clock"></i></div>
+                        <div><p class="text-gray-500 text-xs font-bold uppercase">En attente</p><p class="text-xl font-bold text-gray-800">5 Demandes</p></div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
+                        <div class="w-12 h-12 bg-green-50 text-green-600 rounded-lg flex items-center justify-center text-xl"><i class="fa-solid fa-user-check"></i></div>
+                        <div><p class="text-gray-500 text-xs font-bold uppercase">Terminés</p><p class="text-xl font-bold text-gray-800">48 this week</p></div>
+                    </div>
+                </div>
+
+               <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+
+    <div id="calendar">
+    </div>
+
+</div>
+
+            </div>
+            <div id="rdvModal"
+     class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 relative">
+
+        <button onclick="closeModal()"
+                class="absolute top-4 right-4 text-gray-400 hover:text-red-500">
+            ✖
+        </button>
+
+        <h3 id="modalTitle"
+            class="text-xl font-bold mb-4 text-slate-800">
+        </h3>
+
+        <div id="rdvList" class="space-y-2"></div>
+
+    </div>
+</div>
+
+            <script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    var calendarEl = document.getElementById('calendar');
+
+    var rdvData = {{ rdvData|json_encode|raw }};
+
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+
+        initialView: 'dayGridMonth',
+        height: 650,
+
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+
+        dateClick: function(info) {
+
+            const selectedDate = info.dateStr;
+
+           
+
+        },
+
+        datesSet: function () {
+
+            document.querySelectorAll('.fc-daygrid-day').forEach(day => {
+
+                const date = day.getAttribute('data-date');
+
+                if (rdvData[date]) {
+                    day.style.backgroundColor = "#dcfce7";
+                }
+
+            });
+
+        }
+
+    });
+
+    calendar.render();
+});
+
+function closeModal() {
+    document.getElementById('rdvModal')
+        .classList.add('hidden');
+}
+
+
+</script>
+
+            {% endblock %}

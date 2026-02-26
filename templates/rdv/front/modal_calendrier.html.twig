@@ -1,0 +1,852 @@
+{# ============================================================
+   MODAL CALENDRIER DYNAMIQUE MULTI-ÉTAPES + STRIPE PAYMENT
+   ============================================================ #}
+
+{# Stripe.js — chargé avant le script du modal #}
+<script src="https://js.stripe.com/v3/"></script>
+
+<div id="calModal" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-4">
+    <div id="calOverlay" onclick="closeCalModal()" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+
+    <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden"
+         style="animation: calSlideIn 0.35s cubic-bezier(0.34,1.56,0.64,1);">
+
+        {# Header #}
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-5 flex-shrink-0">
+            <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center gap-3">
+                    <button id="calBtnBack" onclick="calPrevStep()" class="hidden w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition">
+                        <i class="fa-solid fa-arrow-left text-sm"></i>
+                    </button>
+                    <div>
+                        <h3 id="calTitle" class="text-white font-bold text-lg leading-tight">Nouveau Rendez-vous</h3>
+                        <p id="calSubtitle" class="text-blue-200 text-xs mt-0.5">Choisissez une date pour commencer</p>
+                    </div>
+                </div>
+                <button onclick="closeCalModal()" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="flex items-center gap-1.5">
+                {% for i in 1..6 %}
+                <div class="cal-dot h-1.5 rounded-full transition-all duration-300 bg-white/30" id="cal-dot-{{ i }}"
+                     style="width: {{ i == 1 ? '24px' : '8px' }};"></div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {# Corps #}
+        <div id="calBody" class="flex-1 overflow-y-auto p-6">
+
+            {# ===== ÉTAPE 1 : CALENDRIER ===== #}
+            <div id="cal-step-1" class="cal-step">
+                <div class="flex items-center justify-between mb-4">
+                    <button onclick="calChangeMonth(-1)" class="w-9 h-9 rounded-xl border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition text-slate-600">
+                        <i class="fa-solid fa-chevron-left text-xs"></i>
+                    </button>
+                    <h4 id="calMonthTitle" class="font-bold text-slate-800 text-base"></h4>
+                    <button onclick="calChangeMonth(1)" class="w-9 h-9 rounded-xl border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition text-slate-600">
+                        <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
+                </div>
+                <div class="grid grid-cols-7 gap-1 mb-2">
+                    {% for jour in ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'] %}
+                    <div class="text-center text-xs font-semibold py-2
+                        {% if jour == 'Dim' %}text-red-400{% elseif jour == 'Sam' %}text-orange-400{% else %}text-slate-400{% endif %}">
+                        {{ jour }}
+                    </div>
+                    {% endfor %}
+                </div>
+                <div id="calGrid" class="grid grid-cols-7 gap-1"></div>
+                <div id="calDimancheMsg" class="hidden mt-4 p-3 bg-slate-50 border border-slate-100 rounded-xl text-center">
+                    <i class="fa-solid fa-moon text-slate-400 text-xl mb-1 block"></i>
+                    <p class="text-slate-600 text-sm font-semibold">Dimanche — disponibilités limitées</p>
+                    <p class="text-slate-400 text-xs">Certains médecins peuvent avoir des créneaux exceptionnels</p>
+                </div>
+                <div id="calSamediMsg" class="hidden mt-4 p-3 bg-orange-50 border border-orange-100 rounded-xl text-center">
+                    <i class="fa-solid fa-sun text-orange-400 text-xl mb-1 block"></i>
+                    <p class="text-orange-600 text-sm font-semibold">Samedi — horaires réduits</p>
+                    <p class="text-orange-400 text-xs">Consultations de 09h00 à 13h00</p>
+                </div>
+            </div>
+
+            {# ===== ÉTAPE 2 : SPÉCIALITÉS ===== #}
+            <div id="cal-step-2" class="cal-step hidden">
+                <p class="text-slate-500 text-sm mb-4">Quelle spécialité recherchez-vous ?</p>
+                <div id="calSpecialites" class="grid grid-cols-2 gap-3">
+                    <div class="col-span-2 text-center py-6 text-slate-400">
+                        <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 block text-blue-500"></i>Chargement...
+                    </div>
+                </div>
+            </div>
+
+            {# ===== ÉTAPE 3 : MÉDECINS ===== #}
+            <div id="cal-step-3" class="cal-step hidden">
+                <p class="text-slate-500 text-sm mb-4">Choisissez votre médecin</p>
+                <div id="calMedecins" class="space-y-3">
+                    <div class="text-center py-6 text-slate-400">
+                        <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 block text-blue-500"></i>Chargement...
+                    </div>
+                </div>
+            </div>
+
+            {# ===== ÉTAPE 4 : CRÉNEAUX HORAIRES ===== #}
+            <div id="cal-step-4" class="cal-step hidden">
+                <div id="calCreneauxHeader" class="mb-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
+                    <p class="text-blue-700 text-sm font-semibold" id="calCreneauxInfo">Créneaux disponibles</p>
+                </div>
+                <div class="flex items-center gap-4 mb-3 text-xs text-slate-500">
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded border-2 border-slate-300 bg-white inline-block"></span> Libre</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-slate-100 border border-slate-200 inline-block"></span> Bloqué</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-blue-600 inline-block"></span> Sélectionné</span>
+                </div>
+                <div id="calCreneaux" class="grid grid-cols-4 gap-2">
+                    <div class="col-span-4 text-center py-6 text-slate-400">
+                        <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 block text-blue-500"></i>Chargement...
+                    </div>
+                </div>
+            </div>
+
+            {# ===== ÉTAPE 5 : FORMULAIRE ===== #}
+            <div id="cal-step-5" class="cal-step hidden">
+                <div id="calRecap" class="mb-5 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-100">
+                    <p class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2">Récapitulatif</p>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <div class="flex items-center gap-2 text-slate-600"><i class="fa-regular fa-calendar text-blue-500 w-4"></i><span id="recapDate">—</span></div>
+                        <div class="flex items-center gap-2 text-slate-600"><i class="fa-regular fa-clock text-blue-500 w-4"></i><span id="recapHeure">—</span></div>
+                        <div class="flex items-center gap-2 text-slate-600"><i class="fa-solid fa-user-doctor text-blue-500 w-4"></i><span id="recapMedecin">—</span></div>
+                        <div class="flex items-center gap-2 text-slate-600"><i class="fa-solid fa-stethoscope text-blue-500 w-4"></i><span id="recapSpecialite">—</span></div>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">
+                            <i class="fa-solid fa-notes-medical text-blue-500 mr-1"></i> Motif de consultation *
+                        </label>
+                        <select id="calMotif" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition bg-white">
+                            <option value="">— Choisir un motif —</option>
+                            <option value="Consultation générale">Consultation générale</option>
+                            <option value="Suivi médical">Suivi médical</option>
+                            <option value="Urgence">Urgence</option>
+                            <option value="Bilan de santé">Bilan de santé</option>
+                            <option value="Renouvellement ordonnance">Renouvellement ordonnance</option>
+                            <option value="Avis spécialisé">Avis spécialisé</option>
+                            <option value="Autre">Autre</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">
+                            <i class="fa-solid fa-comment text-blue-500 mr-1"></i> Message / Remarques
+                        </label>
+                        <textarea id="calMessage" rows="3"
+                            placeholder="Décrivez brièvement vos symptômes ou questions..."
+                            class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition resize-none"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            <i class="fa-solid fa-video text-blue-500 mr-1"></i> Type de consultation
+                        </label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-xl cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                                <input type="radio" name="calType" value="présentiel" checked class="accent-blue-600">
+                                <div><p class="text-sm font-semibold text-slate-700">🏥 Présentiel</p><p class="text-xs text-slate-400">Au cabinet</p></div>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-xl cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                                <input type="radio" name="calType" value="en_ligne" class="accent-blue-600">
+                                <div><p class="text-sm font-semibold text-slate-700">💻 En ligne</p><p class="text-xs text-slate-400">Téléconsultation</p></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# ===== ÉTAPE 6 : PAIEMENT ===== #}
+            <div id="cal-step-6" class="cal-step hidden">
+
+                {# Options de paiement #}
+                <div id="calPaiementOptions" class="space-y-3 mb-4">
+                    <p class="text-slate-500 text-sm mb-3">Comment souhaitez-vous régler la consultation ?</p>
+
+                    <label class="flex items-center gap-4 p-4 border-2 border-slate-200 rounded-2xl cursor-pointer hover:border-blue-400 transition has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50"
+                           onclick="calOnPaiementChange('sur_place')">
+                        <input type="radio" name="calPaiement" value="sur_place" checked class="accent-blue-600 w-4 h-4">
+                        <div class="flex-1">
+                            <p class="font-semibold text-slate-800">💵 Paiement sur place</p>
+                            <p class="text-xs text-slate-500">Espèces ou carte au cabinet</p>
+                        </div>
+                        <span class="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded-full">En attente</span>
+                    </label>
+
+                    <label class="flex items-center gap-4 p-4 border-2 border-slate-200 rounded-2xl cursor-pointer hover:border-blue-400 transition has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50"
+                           onclick="calOnPaiementChange('assurance')">
+                        <input type="radio" name="calPaiement" value="assurance" class="accent-blue-600 w-4 h-4">
+                        <div class="flex-1">
+                            <p class="font-semibold text-slate-800">🏥 Assurance maladie</p>
+                            <p class="text-xs text-slate-500">CNAM / Mutuelle — présenter au cabinet</p>
+                        </div>
+                        <span class="text-xs font-bold text-blue-600 bg-blue-100 px-2 py-1 rounded-full">Remb.</span>
+                    </label>
+
+                    <label class="flex items-center gap-4 p-4 border-2 border-slate-200 rounded-2xl cursor-pointer hover:border-purple-400 transition has-[:checked]:border-purple-500 has-[:checked]:bg-purple-50"
+                           onclick="calOnPaiementChange('carte_en_ligne')">
+                        <input type="radio" name="calPaiement" value="carte_en_ligne" class="accent-purple-600 w-4 h-4">
+                        <div class="flex-1">
+                            <p class="font-semibold text-slate-800">💳 Carte bancaire en ligne</p>
+                            <p class="text-xs text-slate-500">Paiement sécurisé Stripe — RDV confirmé immédiatement</p>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/60px-Visa_Inc._logo.svg.png" alt="Visa" class="h-4 opacity-70">
+                            <span class="text-xs font-bold text-purple-700 bg-purple-100 px-2 py-1 rounded-full">70 DT</span>
+                        </div>
+                    </label>
+                </div>
+
+                {# ── Stripe Payment Element (visible si "carte_en_ligne" sélectionné) ── #}
+                <div id="stripeContainer" class="hidden">
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="flex-1 h-px bg-slate-200"></div>
+                        <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider px-2">Paiement sécurisé</span>
+                        <div class="flex-1 h-px bg-slate-200"></div>
+                    </div>
+
+                    {# Container du Payment Element Stripe #}
+                    <div id="stripe-payment-element"
+                         class="p-3 border border-slate-200 rounded-2xl bg-white min-h-[100px]">
+                        <div class="flex items-center justify-center py-6 text-slate-400">
+                            <i class="fa-solid fa-spinner fa-spin text-lg mr-2 text-purple-500"></i>
+                            Chargement du formulaire Stripe...
+                        </div>
+                    </div>
+
+                    {# Erreur Stripe #}
+                    <div id="stripe-error-msg" class="hidden mt-2 p-3 bg-red-50 border border-red-200 rounded-xl">
+                        <p class="text-red-600 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <span id="stripe-error-text"></span>
+                        </p>
+                    </div>
+
+                    {# Carte de test #}
+                    <div class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                        <p class="text-amber-700 text-xs font-bold mb-1">
+                            <i class="fa-solid fa-flask mr-1"></i> Carte de test Stripe :
+                        </p>
+                        <p class="text-amber-600 text-xs font-mono tracking-wider">4242 4242 4242 4242 &nbsp;·&nbsp; 12/26 &nbsp;·&nbsp; 123</p>
+                    </div>
+
+                    {# Badges sécurité #}
+                    <div class="flex items-center justify-center gap-3 mt-2 text-xs text-slate-400">
+                        <span><i class="fa-solid fa-lock text-green-500 mr-1"></i>Chiffré SSL</span>
+                        <span>·</span>
+                        <span><i class="fa-brands fa-stripe text-purple-400 mr-1"></i>Powered by Stripe</span>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>{# fin calBody #}
+
+        {# Footer #}
+        <div class="border-t border-slate-100 p-4 flex-shrink-0 flex justify-between items-center gap-3">
+            <div id="calStepInfo" class="text-xs text-slate-400 font-medium">Étape 1 / 6</div>
+            <button id="calBtnNext" onclick="calNextStep()"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-xl transition shadow-lg disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                disabled>
+                <span id="calBtnNextText">Suivant</span>
+                <i id="calBtnNextIcon" class="fa-solid fa-arrow-right text-sm"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes calSlideIn {
+    from { transform: translateY(30px) scale(0.96); opacity: 0; }
+    to   { transform: translateY(0)    scale(1);    opacity: 1; }
+}
+.cal-step.hidden { display: none; }
+.cal-day {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    border-radius: 0.5rem; font-size: 0.8rem; font-weight: 600;
+    cursor: pointer; transition: all 0.15s; border: 2px solid transparent;
+}
+.cal-day:hover:not(.cal-day-empty):not(.cal-day-past):not(.cal-day-dimanche) {
+    background: #eff6ff; border-color: #bfdbfe; color: #2563eb;
+}
+.cal-day-empty    { cursor: default; color: #cbd5e1; }
+.cal-day-past     { cursor: not-allowed; color: #cbd5e1; text-decoration: line-through; }
+.cal-day-today    { background: #f0f9ff; border-color: #7dd3fc; color: #0369a1; }
+.cal-day-selected { background: #2563eb !important; border-color: #2563eb !important; color: white !important; box-shadow: 0 4px 12px rgba(37,99,235,0.35); }
+.cal-day-dimanche { cursor: pointer; color: #94a3b8; }
+.cal-day-dimanche:hover { background: #f8fafc; border-color: #e2e8f0; }
+.cal-day-samedi   { color: #fb923c; }
+.cal-day-samedi:hover:not(.cal-day-past) { background: #fff7ed; border-color: #fed7aa; color: #ea580c; }
+
+.specialite-card {
+    display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+    border: 2px solid #e2e8f0; border-radius: 16px; cursor: pointer; transition: all 0.2s; background: white;
+}
+.specialite-card:hover    { border-color: #93c5fd; background: #eff6ff; }
+.specialite-card.selected { border-color: #2563eb; background: #eff6ff; }
+
+.medecin-card {
+    display: flex; align-items: center; gap: 12px; padding: 14px;
+    border: 2px solid #e2e8f0; border-radius: 16px; cursor: pointer; transition: all 0.2s;
+}
+.medecin-card:hover      { border-color: #93c5fd; background: #f8fafc; }
+.medecin-card.selected   { border-color: #2563eb; background: #eff6ff; }
+.medecin-card.unavailable { opacity: 0.5; cursor: not-allowed; }
+
+.creneau-btn {
+    padding: 10px 4px; border: 2px solid #e2e8f0; border-radius: 10px;
+    text-align: center; font-size: 0.8rem; font-weight: 700;
+    cursor: pointer; transition: all 0.15s; color: #334155; background: white;
+}
+.creneau-btn:hover:not(.taken):not(.blocked) { border-color: #3b82f6; background: #eff6ff; color: #2563eb; }
+.creneau-btn.selected { border-color: #2563eb; background: #2563eb; color: white; box-shadow: 0 4px 12px rgba(37,99,235,0.3); }
+.creneau-btn.taken    { border-color: #e2e8f0; background: #fef2f2; color: #fca5a5; cursor: not-allowed; text-decoration: line-through; }
+.creneau-btn.blocked  { border-color: #e2e8f0; background: #f8fafc; color: #cbd5e1; cursor: not-allowed; }
+</style>
+
+<script>
+// ====================================================
+// CLÉ STRIPE PUBLIQUE
+// ====================================================
+const STRIPE_PUBLIC_KEY = 'pk_test_51T4hgyFsSom26r2IsGakSPDk8Nv0g1xOuZ5RYjkNMGqQJoRkCWySYTFZgqi7p8dvJubTFJJV88VOHlu7v3c42UTW00LbZjBrf3';
+
+// ====================================================
+// ÉTAT GLOBAL
+// ====================================================
+const calState = {
+    step:           1,
+    currentDate:    new Date(),
+    selectedDate:   null,
+    specialite:     null,
+    medecin:        null,
+    medecinNom:     null,
+    heure:          null,
+    stripeInstance: null,   // Stripe()
+    stripeElements: null,   // stripe.elements()
+    paymentElement: null,   // .create('payment')
+};
+
+const MOIS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
+function calFormatDate(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
+
+// ====================================================
+// OUVRIR / FERMER
+// ====================================================
+function openCalModal() {
+    Object.assign(calState, {
+        step: 1, selectedDate: null, specialite: null, medecin: null,
+        heure: null, stripeInstance: null, stripeElements: null, paymentElement: null,
+    });
+    document.getElementById('calModal').classList.remove('hidden');
+    calRenderCalendar();
+    calUpdateUI();
+}
+
+function closeCalModal() {
+    document.getElementById('calModal').classList.add('hidden');
+}
+
+// ====================================================
+// NAVIGATION
+// ====================================================
+function calNextStep() {
+    const step = calState.step;
+
+    if (step === 5) {
+        // Étape 5 → 6 : aller au paiement sans créer le RDV
+        calState.step = 6;
+        calUpdateUI();
+        return;
+    }
+
+    if (step === 6) {
+        // Étape 6 : déclencher le paiement / confirmation
+        calPayer();
+        return;
+    }
+
+    if (step > 6) {
+        closeCalModal();
+        window.location.reload();
+        return;
+    }
+
+    calState.step++;
+    calUpdateUI();
+    if (calState.step === 2) calLoadSpecialites();
+    if (calState.step === 3) calLoadMedecins();
+    if (calState.step === 4) calLoadCreneaux();
+    if (calState.step === 5) calFillRecap();
+}
+
+function calPrevStep() {
+    if (calState.step > 1) { calState.step--; calUpdateUI(); }
+}
+
+// ====================================================
+// UI
+// ====================================================
+function calUpdateUI() {
+    const step = calState.step;
+    document.querySelectorAll('.cal-step').forEach((el, i) => {
+        el.classList.toggle('hidden', i + 1 !== step);
+    });
+
+    for (let i = 1; i <= 6; i++) {
+        const dot = document.getElementById('cal-dot-' + i);
+        if (i < step)        { dot.style.background = 'rgba(255,255,255,0.9)'; dot.style.width = '8px'; }
+        else if (i === step) { dot.style.background = 'white';                  dot.style.width = '24px'; }
+        else                 { dot.style.background = 'rgba(255,255,255,0.3)';  dot.style.width = '8px'; }
+    }
+
+    document.getElementById('calBtnBack').classList.toggle('hidden', step === 1);
+    document.getElementById('calStepInfo').textContent = `Étape ${step} / 6`;
+
+    const btnText = document.getElementById('calBtnNextText');
+    const btnIcon = document.getElementById('calBtnNextIcon');
+
+    if (step === 5) {
+        btnText.textContent = 'Continuer vers le paiement';
+        btnIcon.className   = 'fa-solid fa-arrow-right text-sm';
+    } else if (step === 6) {
+        const mode = document.querySelector('input[name="calPaiement"]:checked')?.value || 'sur_place';
+        calSetBtnPaiement(mode, btnText, btnIcon);
+    } else {
+        btnText.textContent = 'Suivant';
+        btnIcon.className   = 'fa-solid fa-arrow-right text-sm';
+    }
+
+    const btn     = document.getElementById('calBtnNext');
+    const enabled = {1: !!calState.selectedDate, 2: !!calState.specialite, 3: !!calState.medecin, 4: !!calState.heure, 5: true, 6: true}[step];
+    btn.disabled  = !enabled;
+
+    const titles = {
+        1: { title: 'Choisir une date',       sub: 'Sélectionnez le jour de votre consultation' },
+        2: { title: 'Choisir la spécialité',  sub: 'Quelle spécialité médicale vous intéresse ?' },
+        3: { title: 'Choisir un médecin',     sub: 'Votre médecin pour ce rendez-vous' },
+        4: { title: 'Choisir un créneau',     sub: 'Créneaux disponibles pour la date choisie' },
+        5: { title: 'Informations',           sub: 'Complétez les informations du rendez-vous' },
+        6: { title: 'Mode de paiement',       sub: 'Choisissez comment régler la consultation' },
+    };
+    const t = titles[step] || titles[6];
+    document.getElementById('calTitle').textContent    = t.title;
+    document.getElementById('calSubtitle').textContent = t.sub;
+}
+
+function calSetBtnPaiement(mode, btnText, btnIcon) {
+    btnText = btnText || document.getElementById('calBtnNextText');
+    btnIcon = btnIcon || document.getElementById('calBtnNextIcon');
+
+    if (mode === 'carte_en_ligne') {
+        btnText.textContent = 'Payer 70 DT avec Stripe';
+        btnIcon.className   = 'fa-brands fa-stripe-s text-sm';
+    } else {
+        btnText.textContent = 'Confirmer le RDV';
+        btnIcon.className   = 'fa-solid fa-check text-sm';
+    }
+}
+
+// ====================================================
+// CHANGEMENT MODE PAIEMENT
+// ====================================================
+function calOnPaiementChange(mode) {
+    setTimeout(() => {
+        const stripeContainer = document.getElementById('stripeContainer');
+
+        if (mode === 'carte_en_ligne') {
+            stripeContainer.classList.remove('hidden');
+            if (!calState.stripeElements) calInitStripe();
+        } else {
+            stripeContainer.classList.add('hidden');
+        }
+
+        calSetBtnPaiement(mode);
+    }, 50);
+}
+
+// ====================================================
+// STRIPE — Initialiser le Payment Element
+// ====================================================
+async function calInitStripe() {
+    try {
+        const resp = await fetch('/api/calendrier/payment-intent', { method: 'POST' });
+        const data = await resp.json();
+
+        if (data.error) { calShowStripeError(data.error); return; }
+
+        calState.stripeInstance = Stripe(STRIPE_PUBLIC_KEY);
+        calState.stripeElements = calState.stripeInstance.elements({
+            clientSecret: data.clientSecret,
+            appearance: {
+                theme: 'stripe',
+                variables: {
+                    colorPrimary:     '#7c3aed',
+                    colorBackground:  '#ffffff',
+                    colorText:        '#334155',
+                    borderRadius:     '12px',
+                },
+            },
+        });
+
+        calState.paymentElement = calState.stripeElements.create('payment');
+        calState.paymentElement.mount('#stripe-payment-element');
+
+    } catch (e) {
+        calShowStripeError('Impossible de charger Stripe. Vérifiez votre connexion.');
+    }
+}
+
+function calShowStripeError(msg) {
+    const el = document.getElementById('stripe-error-msg');
+    document.getElementById('stripe-error-text').textContent = msg;
+    el.classList.remove('hidden');
+}
+
+function calHideStripeError() {
+    document.getElementById('stripe-error-msg').classList.add('hidden');
+}
+
+// ====================================================
+// PAYER — bouton étape 6
+// ====================================================
+async function calPayer() {
+    const mode = document.querySelector('input[name="calPaiement"]:checked')?.value || 'sur_place';
+
+    if (mode === 'carte_en_ligne') {
+        await calPayerStripe();
+    } else {
+        await calCreerRdv(null, mode);
+    }
+}
+
+// ====================================================
+// STRIPE — Confirmer le paiement
+// ====================================================
+async function calPayerStripe() {
+    if (!calState.stripeInstance || !calState.stripeElements) {
+        calShowStripeError('Le formulaire Stripe n\'est pas prêt. Patientez quelques secondes.');
+        return;
+    }
+
+    calHideStripeError();
+
+    const btn = document.getElementById('calBtnNext');
+    btn.disabled = true;
+    document.getElementById('calBtnNextText').textContent = 'Traitement en cours...';
+    document.getElementById('calBtnNextIcon').className   = 'fa-solid fa-spinner fa-spin text-sm';
+
+    try {
+        const { error, paymentIntent } = await calState.stripeInstance.confirmPayment({
+            elements:       calState.stripeElements,
+            confirmParams:  { return_url: window.location.href },
+            redirect:       'if_required',
+        });
+
+        if (error) {
+            calShowStripeError(error.message || 'Paiement refusé. Vérifiez vos informations.');
+            btn.disabled = false;
+            calSetBtnPaiement('carte_en_ligne');
+            return;
+        }
+
+        if (paymentIntent && paymentIntent.status === 'succeeded') {
+            await calCreerRdv(paymentIntent.id, 'carte_en_ligne');
+        } else {
+            calShowStripeError('Statut paiement inattendu : ' + (paymentIntent?.status || '?'));
+            btn.disabled = false;
+            calSetBtnPaiement('carte_en_ligne');
+        }
+
+    } catch (e) {
+        calShowStripeError('Erreur inattendue. Réessayez.');
+        btn.disabled = false;
+        calSetBtnPaiement('carte_en_ligne');
+    }
+}
+
+// ====================================================
+// CRÉER LE RDV
+// ====================================================
+async function calCreerRdv(stripePaymentId, modePaiement) {
+    const btn = document.getElementById('calBtnNext');
+    btn.disabled = true;
+    document.getElementById('calBtnNextText').textContent = 'Création du RDV...';
+    document.getElementById('calBtnNextIcon').className   = 'fa-solid fa-spinner fa-spin text-sm';
+
+    const motif   = document.getElementById('calMotif').value  || 'Consultation';
+    const message = document.getElementById('calMessage').value;
+
+    try {
+        const resp = await fetch('/api/calendrier/reserver', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                medecin_id:        calState.medecin,
+                date:              calFormatDate(calState.selectedDate),
+                heure:             calState.heure,
+                motif,
+                message,
+                paiement:          modePaiement || 'sur_place',
+                stripe_payment_id: stripePaymentId || null,
+            }),
+        });
+
+        const data = await resp.json();
+
+        if (data.success) {
+            const rdvId     = data.rdv_id;
+            const isPaye    = modePaiement === 'carte_en_ligne' && stripePaymentId;
+            const statutBadge = isPaye
+                ? '<span class="inline-flex items-center gap-1 text-xs font-bold text-green-700 bg-green-100 px-3 py-1 rounded-full">✅ Confirmé — paiement reçu</span>'
+                : '<span class="inline-flex items-center gap-1 text-xs font-bold text-orange-600 bg-orange-100 px-3 py-1 rounded-full">⏳ En attente de confirmation</span>';
+
+            const recuBtn = isPaye
+                ? `<a href="/api/calendrier/recu/${rdvId}?payment_id=${encodeURIComponent(stripePaymentId)}" target="_blank"
+                      style="display:inline-flex;align-items:center;gap:8px;background:#dc2626;color:white;padding:10px 20px;border-radius:10px;font-size:0.82rem;font-weight:700;text-decoration:none;margin-top:4px;">
+                      <i class="fa-solid fa-file-pdf"></i> Télécharger le reçu PDF
+                   </a>`
+                : '';
+
+            document.getElementById('cal-step-6').innerHTML = `
+                <div class="text-center py-4">
+                    <div class="w-20 h-20 ${isPaye ? 'bg-green-100' : 'bg-blue-100'} rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa-solid ${isPaye ? 'fa-circle-check text-green-500' : 'fa-calendar-check text-blue-500'} text-4xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">${isPaye ? 'Rendez-vous confirmé !' : 'Rendez-vous enregistré !'}</h3>
+                    <div class="mb-4">${statutBadge}</div>
+                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-left space-y-2 mb-4">
+                        <div class="flex items-center gap-3 text-sm">
+                            <i class="fa-solid fa-user-doctor text-blue-500 w-5"></i>
+                            <span class="font-semibold text-slate-700">${calState.medecinNom}</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-sm">
+                            <i class="fa-regular fa-calendar text-blue-500 w-5"></i>
+                            <span class="text-slate-700">${calState.selectedDate.toLocaleDateString('fr-FR', {weekday:'long',day:'numeric',month:'long'})}</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-sm">
+                            <i class="fa-regular fa-clock text-blue-500 w-5"></i>
+                            <span class="text-slate-700">${calState.heure}</span>
+                        </div>
+                        ${isPaye ? `<div class="flex items-center gap-3 text-sm">
+                            <i class="fa-brands fa-stripe text-purple-500 w-5"></i>
+                            <span class="text-slate-400 text-xs font-mono">${stripePaymentId}</span>
+                        </div>` : ''}
+                    </div>
+                    ${recuBtn}
+                    <p class="text-xs text-slate-400 mt-4" id="refreshCountdown">La page va se rafraîchir dans <span id="countdownNum">60</span>s...</p>
+                </div>`;
+
+            document.getElementById('calBtnNextText').textContent = 'Fermer';
+            document.getElementById('calBtnNextIcon').className   = 'fa-solid fa-xmark text-sm';
+            btn.disabled = false;
+            btn.onclick  = () => { closeCalModal(); window.location.reload(); };
+
+            // Countdown 60s
+            let secondes = 60;
+            const countdownEl = () => document.getElementById('countdownNum');
+            const timer = setInterval(() => {
+                secondes--;
+                if (countdownEl()) countdownEl().textContent = secondes;
+                if (secondes <= 0) {
+                    clearInterval(timer);
+                    closeCalModal();
+                    window.location.reload();
+                }
+            }, 1000);
+
+        } else {
+            alert('Erreur : ' + (data.error || 'Impossible de créer le RDV'));
+            btn.disabled = false;
+            calSetBtnPaiement(modePaiement);
+        }
+
+    } catch (e) {
+        alert('Erreur réseau. Veuillez réessayer.');
+        btn.disabled = false;
+    }
+}
+
+// ====================================================
+// ÉTAPE 1 — CALENDRIER
+// ====================================================
+function calRenderCalendar() {
+    const year  = calState.currentDate.getFullYear();
+    const month = calState.currentDate.getMonth();
+    const today = new Date(); today.setHours(0,0,0,0);
+
+    document.getElementById('calMonthTitle').textContent = `${MOIS_FR[month]} ${year}`;
+
+    let startDow = new Date(year, month, 1).getDay();
+    startDow = startDow === 0 ? 6 : startDow - 1;
+
+    const lastDay = new Date(year, month + 1, 0).getDate();
+    const grid    = document.getElementById('calGrid');
+    grid.innerHTML = '';
+
+    for (let i = 0; i < startDow; i++) {
+        const e = document.createElement('div');
+        e.className = 'cal-day cal-day-empty';
+        grid.appendChild(e);
+    }
+
+    for (let d = 1; d <= lastDay; d++) {
+        const date = new Date(year, month, d);
+        const dow  = date.getDay();
+        const past = date < today;
+
+        const btn = document.createElement('div');
+        btn.textContent = d;
+        btn.className   = 'cal-day';
+
+        if (past)               btn.classList.add('cal-day-past');
+        else if (dow === 0)     btn.classList.add('cal-day-dimanche');
+        else if (dow === 6)     btn.classList.add('cal-day-samedi');
+        else if (date.getTime() === today.getTime()) btn.classList.add('cal-day-today');
+
+        if (calState.selectedDate && calState.selectedDate.getTime() === date.getTime()) {
+            btn.classList.add('cal-day-selected');
+        }
+
+        if (!past) btn.addEventListener('click', () => calSelectDate(date, dow));
+        grid.appendChild(btn);
+    }
+
+    document.getElementById('calDimancheMsg').classList.add('hidden');
+    document.getElementById('calSamediMsg').classList.add('hidden');
+}
+
+function calSelectDate(date, dow) {
+    calState.selectedDate = date;
+    document.getElementById('calSamediMsg').classList.toggle('hidden', dow !== 6);
+    document.getElementById('calDimancheMsg').classList.toggle('hidden', dow !== 0);
+    calRenderCalendar();
+    document.getElementById('calBtnNext').disabled = false;
+}
+
+function calChangeMonth(delta) {
+    calState.currentDate = new Date(calState.currentDate.getFullYear(), calState.currentDate.getMonth() + delta, 1);
+    calRenderCalendar();
+}
+
+// ====================================================
+// ÉTAPE 2 — SPÉCIALITÉS
+// ====================================================
+async function calLoadSpecialites() {
+    const c = document.getElementById('calSpecialites');
+    c.innerHTML = '<div class="col-span-2 text-center py-6"><i class="fa-solid fa-spinner fa-spin text-2xl text-blue-500"></i></div>';
+    try {
+        const data = await (await fetch('/api/calendrier/specialites')).json();
+        if (!data.length) { c.innerHTML = '<div class="col-span-2 text-center text-slate-400 py-6">Aucune spécialité</div>'; return; }
+        c.innerHTML = data.map(sp => `
+            <div class="specialite-card ${calState.specialite === sp.nom ? 'selected' : ''}" onclick="calSelectSpecialite('${sp.nom}', this)">
+                <span class="text-2xl">${sp.icon}</span>
+                <div><p class="font-semibold text-slate-800 text-sm">${sp.nom}</p></div>
+            </div>`).join('');
+    } catch(e) { c.innerHTML = '<div class="col-span-2 text-center text-red-400 py-6">Erreur</div>'; }
+}
+
+function calSelectSpecialite(nom, el) {
+    calState.specialite = nom;
+    document.querySelectorAll('.specialite-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('calBtnNext').disabled = false;
+}
+
+// ====================================================
+// ÉTAPE 3 — MÉDECINS
+// ====================================================
+async function calLoadMedecins() {
+    const c = document.getElementById('calMedecins');
+    c.innerHTML = '<div class="text-center py-6"><i class="fa-solid fa-spinner fa-spin text-2xl text-blue-500"></i></div>';
+    try {
+        const data = await (await fetch(`/api/calendrier/medecins?specialite=${encodeURIComponent(calState.specialite)}`)).json();
+        if (!data.length) { c.innerHTML = '<div class="text-center text-slate-400 py-6">Aucun médecin</div>'; return; }
+        c.innerHTML = data.map(m => `
+            <div class="medecin-card ${!m.disponible ? 'unavailable' : ''} ${calState.medecin === m.id ? 'selected' : ''}"
+                 onclick="${m.disponible ? `calSelectMedecin(${m.id}, 'Dr. ${m.prenom} ${m.nom}', this)` : ''}">
+                <div class="w-11 h-11 rounded-full bg-blue-100 text-blue-700 font-bold text-sm flex items-center justify-center flex-shrink-0">${m.initiales}</div>
+                <div class="flex-1">
+                    <p class="font-bold text-slate-800 text-sm">Dr. ${m.prenom} ${m.nom}</p>
+                    <p class="text-xs text-slate-500">${m.specialite} · ${m.type}${m.dynamique ? ' <span class="text-blue-500 font-bold">• Dispo temps réel</span>' : ''}</p>
+                </div>
+                <span class="text-xs font-bold px-2 py-1 rounded-full ${m.disponible ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}">
+                    ${m.disponible ? '🟢 Dispo' : '🔴 Complet'}
+                </span>
+            </div>`).join('');
+    } catch(e) { c.innerHTML = '<div class="text-center text-red-400 py-6">Erreur</div>'; }
+}
+
+function calSelectMedecin(id, nom, el) {
+    calState.medecin    = id;
+    calState.medecinNom = nom;
+    document.querySelectorAll('.medecin-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('calBtnNext').disabled = false;
+}
+
+// ====================================================
+// ÉTAPE 4 — CRÉNEAUX
+// ====================================================
+async function calLoadCreneaux() {
+    const c = document.getElementById('calCreneaux');
+    c.innerHTML = '<div class="col-span-4 text-center py-6"><i class="fa-solid fa-spinner fa-spin text-2xl text-blue-500"></i></div>';
+
+    try {
+        const resp = await fetch(`/api/calendrier/creneaux?medecin_id=${calState.medecin}&date=${calFormatDate(calState.selectedDate)}`);
+        const data = await resp.json();
+
+        const info = document.getElementById('calCreneauxInfo');
+        if (data.samedi)       info.innerHTML = '<i class="fa-solid fa-sun text-orange-400 mr-1"></i> Samedi — 09h00 à 13h00';
+        else if (data.message) info.innerHTML = `<i class="fa-solid fa-info-circle mr-1"></i> ${data.message}`;
+        else                   info.innerHTML = `<i class="fa-regular fa-calendar text-blue-500 mr-1"></i> ${calState.selectedDate.toLocaleDateString('fr-FR', {weekday:'long',day:'numeric',month:'long'})} — ${calState.medecinNom}`;
+
+        if (!data.creneaux || !data.creneaux.length) {
+            c.innerHTML = `<div class="col-span-4 text-center py-8">
+                <i class="fa-solid fa-calendar-xmark text-4xl text-slate-300 mb-3 block"></i>
+                <p class="font-semibold text-slate-500">Aucun créneau disponible</p>
+                <p class="text-xs text-slate-400 mt-1">Essayez une autre date</p></div>`;
+            return;
+        }
+
+        c.innerHTML = data.creneaux.map(cr => {
+            const cls     = !cr.disponible ? (cr.pris ? 'taken' : 'blocked') : '';
+            const onclick = cr.disponible  ? `calSelectCreneau('${cr.heure}', this)` : '';
+            const title   = !cr.disponible ? (cr.pris ? 'Déjà réservé' : 'Non disponible') : '';
+            return `<button class="creneau-btn ${cls} ${calState.heure === cr.heure ? 'selected' : ''}"
+                        onclick="${onclick}" ${title ? `title="${title}"` : ''}>
+                    ${cr.heure}
+                    ${!cr.disponible ? `<br><span style="font-size:0.6rem">${cr.pris ? 'Pris' : '—'}</span>` : ''}
+                </button>`;
+        }).join('');
+
+    } catch(e) { c.innerHTML = '<div class="col-span-4 text-center text-red-400 py-6">Erreur de chargement</div>'; }
+}
+
+function calSelectCreneau(heure, el) {
+    calState.heure = heure;
+    document.querySelectorAll('.creneau-btn').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('calBtnNext').disabled = false;
+}
+
+// ====================================================
+// ÉTAPE 5 — RÉCAP
+// ====================================================
+function calFillRecap() {
+    const date = calState.selectedDate;
+    document.getElementById('recapDate').textContent       = date.toLocaleDateString('fr-FR', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    document.getElementById('recapHeure').textContent      = calState.heure;
+    document.getElementById('recapMedecin').textContent    = calState.medecinNom;
+    document.getElementById('recapSpecialite').textContent = calState.specialite;
+}
+</script>

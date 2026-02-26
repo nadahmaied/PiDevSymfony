@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: DejaVu Sans, Arial, sans-serif; color:#1e293b; background:white; font-size:12px; }
+
+        /* ===== HEADER ===== */
+        .header { background-color: #1d4ed8; color: white; padding: 0; margin-bottom: 28px; }
+        .header-top { padding: 22px 40px 18px; border-bottom: 1px solid rgba(255,255,255,0.15); }
+        .header-logo-row { display: table; width: 100%; }
+        .header-logo-cell { display: table-cell; vertical-align: middle; }
+        .header-date-cell { display: table-cell; vertical-align: middle; text-align: right; font-size: 10px; opacity: 0.85; line-height: 1.6; }
+        .logo-container { display: table; }
+        .logo-icon { display: table-cell; vertical-align: middle; padding-right: 10px; }
+        .logo-text { display: table-cell; vertical-align: middle; }
+        .logo-name { font-size: 22px; font-weight: 800; color: white; letter-spacing: -0.5px; line-height: 1; }
+        .logo-name span { color: #93c5fd; }
+        .logo-tagline { font-size: 10px; color: rgba(255,255,255,0.65); margin-top: 3px; }
+        .header-bottom { padding: 16px 40px 20px; }
+        .header-title { font-size: 17px; font-weight: 700; color: white; margin-bottom: 4px; }
+        .header-subtitle { font-size: 11px; color: rgba(255,255,255,0.7); }
+
+        /* ===== STATS ===== */
+        .stats-table { width: calc(100% - 80px); margin: 0 40px 28px; border-collapse: separate; border-spacing: 10px 0; }
+        .stat-cell { width: 25%; padding: 14px 10px; text-align: center; border-radius: 10px; border: 1px solid #e2e8f0; background: #f8fafc; }
+        .stat-num { font-size: 26px; font-weight: 800; line-height: 1; }
+        .stat-lbl { font-size: 9px; color: #64748b; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+        /* ===== SECTION TITLE ===== */
+        .section-title { margin: 0 40px 10px; font-size: 10px; font-weight: 700; color: #1d4ed8; text-transform: uppercase; letter-spacing: 0.08em; padding-bottom: 6px; border-bottom: 2px solid #dbeafe; }
+
+        /* ===== TABLE ===== */
+        table.rdv-table { width: calc(100% - 80px); margin: 0 40px; border-collapse: collapse; }
+        table.rdv-table thead tr { background-color: #1d4ed8; color: white; }
+        table.rdv-table thead th { padding: 10px 12px; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+        table.rdv-table tbody tr { border-bottom: 1px solid #f1f5f9; }
+        table.rdv-table tbody tr:nth-child(even) { background-color: #f8fafc; }
+        table.rdv-table tbody td { padding: 10px 12px; font-size: 11px; color: #334155; vertical-align: middle; }
+        table.rdv-table tbody td strong { color: #1e293b; }
+
+        /* ===== BADGES ===== */
+        .badge { padding: 3px 10px; border-radius: 9999px; font-size: 10px; font-weight: 700; display: inline-block; }
+        .badge-confirme { background: #dcfce7; color: #15803d; }
+        .badge-annule   { background: #fee2e2; color: #b91c1c; }
+        .badge-expire   { background: #f1f5f9; color: #64748b; }
+
+        /* ===== NOTE ===== */
+        .note { margin: 24px 40px 0; padding: 12px 16px; background: #f0f9ff; border-left: 4px solid #0ea5e9; border-radius: 0 8px 8px 0; font-size: 10px; color: #0369a1; line-height: 1.5; }
+
+        /* ===== FOOTER ===== */
+        .footer { margin-top: 32px; padding: 14px 40px; border-top: 1px solid #e2e8f0; font-size: 9.5px; color: #94a3b8; }
+        .footer-table { width: 100%; border-collapse: collapse; }
+        .footer-left  { text-align: left; }
+        .footer-mid   { text-align: center; }
+        .footer-right { text-align: right; }
+        .header-accent { height: 4px; background: linear-gradient(to right, #60a5fa, #818cf8); }
+    </style>
+</head>
+<body>
+
+    {# ===== HEADER ===== #}
+    <div class="header">
+        <div class="header-top">
+            <div class="header-logo-row">
+                <div class="header-logo-cell">
+                    <div class="logo-container">
+                        <div class="logo-icon">
+                            <svg width="38" height="38" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="19" cy="19" r="19" fill="rgba(255,255,255,0.15)"/>
+                                <path d="M19 28 C19 28 9 21 9 14.5 C9 11.4 11.4 9 14.5 9 C16.4 9 18.1 10 19 11.5 C19.9 10 21.6 9 23.5 9 C26.6 9 29 11.4 29 14.5 C29 21 19 28 19 28Z" fill="white" opacity="0.9"/>
+                                <polyline points="12,18 15,18 16.5,14 18,22 19.5,16 21,18 26,18" fill="none" stroke="#1d4ed8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <div class="logo-text">
+                            <div class="logo-name">Vital<span>Tech</span></div>
+                            <div class="logo-tagline">Plateforme de Gestion Médicale</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-date-cell">
+                    Généré le : {{ date }}<br>
+                    Réf : BILAN-{{ "now"|date('YmdHi') }}<br>
+                    Document confidentiel
+                </div>
+            </div>
+        </div>
+        <div class="header-bottom">
+            <div class="header-title">Bilan de Suivi Médical</div>
+            <div class="header-subtitle">Récapitulatif complet de vos rendez-vous passés</div>
+        </div>
+        <div class="header-accent"></div>
+    </div>
+
+    {# ===== STATS ===== #}
+    <table class="stats-table">
+        <tr>
+            <td class="stat-cell" style="border-color:#bfdbfe;">
+                <div class="stat-num" style="color:#1d4ed8;">{{ rdvs|length }}</div>
+                <div class="stat-lbl">Total RDV</div>
+            </td>
+            <td class="stat-cell" style="border-color:#bbf7d0;">
+                <div class="stat-num" style="color:#15803d;">{{ rdvs|filter(r => r.statut == 'Confirmé')|length }}</div>
+                <div class="stat-lbl">Confirmés</div>
+            </td>
+            <td class="stat-cell" style="border-color:#fecaca;">
+                <div class="stat-num" style="color:#b91c1c;">{{ rdvs|filter(r => r.statut == 'Annulé')|length }}</div>
+                <div class="stat-lbl">Annulés</div>
+            </td>
+            <td class="stat-cell" style="border-color:#cbd5e1;">
+                <div class="stat-num" style="color:#64748b;">{{ rdvs|filter(r => r.statut not in ['Confirmé', 'Annulé'])|length }}</div>
+                <div class="stat-lbl">Expirés</div>
+            </td>
+        </tr>
+    </table>
+
+    {# ===== TABLEAU (sans colonne #) ===== #}
+    <div class="section-title">Detail des rendez-vous</div>
+    <table class="rdv-table">
+        <thead>
+            <tr>
+                <th style="width:16%;">Date</th>
+                <th style="width:26%;">Medecin</th>
+                <th style="width:18%;">Heure</th>
+                <th style="width:25%;">Motif</th>
+                <th style="width:15%;">Statut</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for rdv in rdvs %}
+        <tr>
+            <td><strong>{{ rdv.date|date('d/m/Y') }}</strong></td>
+            <td><strong>{{ rdv.medecin }}</strong></td>
+            <td>{{ rdv.hdebut|date('H:i') }} - {{ rdv.hfin|date('H:i') }}</td>
+            <td>{{ rdv.motif ?? 'Consultation' }}</td>
+            <td>
+                {% if rdv.statut == 'Confirmé' %}
+                    <span class="badge badge-confirme">Confirmé</span>
+                {% elseif rdv.statut == 'Annulé' %}
+                    <span class="badge badge-annule">Annulé</span>
+                {% else %}
+                    <span class="badge badge-expire">Expiré</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    {# ===== NOTE ===== #}
+    <div class="note">
+        Ce document est genere automatiquement par le systeme VitalTech. Il constitue un recapitulatif informatif de vos rendez-vous medicaux et ne remplace pas un document medical officiel.
+    </div>
+
+    {# ===== FOOTER ===== #}
+    <div class="footer">
+        <table class="footer-table">
+            <tr>
+                <td class="footer-left">VitalTech — Gestion Medicale &copy; {{ "now"|date('Y') }}</td>
+                <td class="footer-mid">Usage personnel uniquement</td>
+                <td class="footer-right">Ref : BILAN-{{ "now"|date('YmdHi') }}</td>
+            </tr>
+        </table>
+    </div>
+
+</body>
+</html>

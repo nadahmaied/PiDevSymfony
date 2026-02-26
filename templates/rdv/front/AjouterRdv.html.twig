@@ -1,0 +1,133 @@
+{% extends 'baseFront.html.twig' %}
+{% block body %}
+<div class="fixed inset-0 z-50 hidden items-center justify-center">
+
+    <div onclick="closeRdvModal()"
+         class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity">
+    </div>
+
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 p-8 animate-scaleIn">
+
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-slate-800">
+                📅 Ajouter un rendez-vous
+            </h2>
+            <button onclick="closeRdvModal()"
+                    class="text-slate-400 hover:text-red-500 text-xl font-bold">
+                ✕
+            </button>
+        </div>
+
+        {{ form_start(form, {
+            attr: {
+                novalidate: 'novalidate',
+                class: 'space-y-5'
+            }
+        }) }}
+
+        {# ===== Médecin ===== #}
+        <div>
+            <label class="block text-sm font-semibold text-slate-600 mb-1">
+                Médecin
+            </label>
+            {{ form_widget(form.medecin, {
+                attr: {
+                    class: 'w-full rounded-xl border border-slate-300 p-3 focus:ring-2 focus:ring-blue-500'
+                }
+            }) }}
+            {{ form_errors(form.medecin) }}
+        </div>
+
+        {# ===== Motif ===== #}
+        <div>
+            <label class="block text-sm font-semibold text-slate-600 mb-1">
+                Motif
+            </label>
+            {{ form_widget(form.motif, {
+                attr: {
+                    class: 'w-full rounded-xl border border-slate-300 p-3'
+                }
+            }) }}
+            {{ form_errors(form.motif) }}
+        </div>
+
+        {# ===== Date + Heure ===== #}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <div>
+                <label class="block text-sm font-semibold text-slate-600 mb-1">
+                    Date
+                </label>
+                {{ form_widget(form.date, {
+                    attr: {
+                        class: 'w-full rounded-xl border border-slate-300 p-3'
+                    }
+                }) }}
+                {{ form_errors(form.date) }}
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-slate-600 mb-1">
+                    Heure
+                </label>
+
+                {{ form_widget(form.hdebut, {
+                    attr: {
+                        class: 'hidden',
+                        id: 'heureHidden'
+                    }
+                }) }}
+
+                <div class="grid grid-cols-3 gap-2">
+                    <button type="button" class="time-btn" onclick="setHeure('09:00')">09:00</button>
+                    <button type="button" class="time-btn" onclick="setHeure('10:00')">10:00</button>
+                    <button type="button" class="time-btn" onclick="setHeure('11:00')">11:00</button>
+                    <button type="button" class="time-btn" onclick="setHeure('14:00')">14:00</button>
+                    <button type="button" class="time-btn" onclick="setHeure('15:00')">15:00</button>
+                    <button type="button" class="time-btn" onclick="setHeure('16:00')">16:00</button>
+                </div>
+
+                {{ form_errors(form.hdebut) }}
+            </div>
+
+        </div>
+
+        {# ===== Message ===== #}
+        <div>
+            <label class="block text-sm font-semibold text-slate-600 mb-1">
+                Message
+            </label>
+            {{ form_widget(form.message, {
+                attr: {
+                    class: 'w-full rounded-xl border border-slate-300 p-3',
+                    rows: 3,
+                    placeholder: 'Entrer votre message ...'
+                }
+            }) }}
+            {{ form_errors(form.message) }}
+        </div>
+
+        <div class="flex justify-end gap-3 pt-4">
+            <button type="button"
+                    onclick="closeRdvModal()"
+                    class="px-5 py-2 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-100">
+                Annuler
+            </button>
+
+            <button type="submit"
+                    class="px-6 py-2 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 shadow">
+                Confirmer
+            </button>
+        </div>
+
+        {{ form_end(form) }}
+
+    </div>
+</div>
+
+<script>
+function setHeure(time) {
+    document.getElementById('heureHidden').value = time;
+}
+</script>
+ {% endblock %} 

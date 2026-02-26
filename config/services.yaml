@@ -64,6 +64,12 @@ services:
             $apiKey: '%volunteer_ai_api_key%'
             $apiUrl: '%volunteer_ai_api_url%'
             $model: '%volunteer_ai_model%'
+            
+    App\Service\SmsService:
+        arguments:
+            $twilioSid:   '%env(TWILIO_SID)%'
+            $twilioToken: '%env(TWILIO_TOKEN)%'
+            $twilioFrom:  '%env(TWILIO_FROM)%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
