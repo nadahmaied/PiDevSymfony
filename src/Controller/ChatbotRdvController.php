@@ -8,7 +8,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-final class ChatbotController extends AbstractController
+final class ChatbotRdvController extends AbstractController
 {
     private const SYSTEM_PROMPT = 'Tu es un assistant medical virtuel pour VitalTech, une plateforme de gestion de rendez-vous medicaux en Tunisie. '
         . 'Tu aides les patients a identifier la specialite medicale adaptee a leurs symptomes et les orientes vers la prise de RDV. '
