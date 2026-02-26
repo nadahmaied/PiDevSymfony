@@ -36,6 +36,9 @@
                 <a href="{{ path('app_donation_index') }}" class="flex items-center gap-3 px-4 py-3 {% if app.request.get('_route') starts with 'app_donation' %}text-orange-600 bg-orange-50 border border-orange-100{% else %}text-slate-500 hover:bg-slate-50 hover:text-orange-600{% endif %} rounded-xl font-medium transition shadow-sm">
                     <i class="fa-solid fa-hand-holding-heart w-5"></i> Dons & Annonces
                 </a>
+                <a href="{{ path('app_annonce_index') }}" class="flex items-center gap-3 px-4 py-3 ml-2 pl-6 text-sm {% if app.request.get('_route') starts with 'app_annonce' %}text-orange-600 bg-orange-50 border border-orange-100{% else %}text-slate-500 hover:bg-slate-50 hover:text-orange-600{% endif %} rounded-xl font-medium transition border-l-2 border-orange-200">
+                    <i class="fa-solid fa-bullhorn w-4"></i> Afficher toutes les annonces
+                </a>
             </nav>
             <div class="p-4 border-t border-slate-100">
                 <button class="flex items-center gap-3 px-4 py-2 w-full text-red-500 hover:bg-red-50 rounded-lg transition text-sm font-medium">
