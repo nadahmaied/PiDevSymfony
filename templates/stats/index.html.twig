@@ -1,0 +1,531 @@
+{% extends is_granted('ROLE_ADMIN') and app.request.get('_route') == 'app_admin_stats' ? 'admin_base.html.twig' : 'baseFront.html.twig' %}
+
+{% block title %}
+    {% if is_granted('ROLE_ADMIN') and app.request.get('_route') == 'app_admin_stats' %}
+        Medical Analytics
+    {% else %}
+        <h1 class="text-2xl font-black text-gray-800 tracking-tight">Mes Statistiques Médicales 📊</h1>
+    {% endif %}
+{% endblock %}
+{% block page_header %}{% if patient %}Statistiques – {{ patient.prenom }} {{ patient.nom }}{% else %}Medical Analytics{% endif %}{% endblock %}
+{% block page_subtitle %}Tableau de bord analytique personnel{% endblock %}
+
+{% block body %}
+<style>
+    .chart-3d-wrap {
+        perspective: 1200px;
+    }
+    .chart-3d {
+        transform: perspective(900px) rotateX(4deg);
+        transform-origin: center bottom;
+        transition: transform 0.4s cubic-bezier(.22,1,.36,1);
+    }
+    .chart-3d:hover {
+        transform: perspective(900px) rotateX(0deg) scale(1.01);
+    }
+    .stat-card {
+        background: linear-gradient(135deg, var(--from), var(--to));
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .stat-card:hover {
+        transform: translateY(-6px) scale(1.02);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    }
+    @keyframes countUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    .card-value { animation: countUp 0.6s ease forwards; }
+    .glass-card {
+        background: rgba(255,255,255,0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.6);
+    }
+    .glow-blue  { box-shadow: 0 0 40px rgba(99,102,241,0.18); }
+    .glow-green { box-shadow: 0 0 40px rgba(16,185,129,0.18); }
+    .glow-amber { box-shadow: 0 0 40px rgba(245,158,11,0.18); }
+    .glow-rose  { box-shadow: 0 0 40px rgba(239,68,68,0.18); }
+    .gradient-border {
+        border: 2px solid transparent;
+        background-clip: padding-box;
+        position: relative;
+    }
+    .gradient-border::before {
+        content: '';
+        position: absolute;
+        inset: -2px;
+        border-radius: inherit;
+        background: linear-gradient(135deg, #6366f1, #10b981, #f59e0b);
+        z-index: -1;
+    }
+</style>
+
+<div class="px-8 py-8 space-y-10">
+
+    {# ─── ADMIN: patient selector ─── #}
+    {% if is_granted('ROLE_ADMIN') and patients|length > 0 %}
+    <div class="glass-card rounded-[2rem] p-5 shadow-lg">
+        <form method="get" action="{{ path('app_admin_stats') }}" class="flex flex-wrap items-center gap-4">
+            <span class="w-10 h-10 bg-teal-100 rounded-xl flex items-center justify-center text-teal-600 shrink-0">
+                <i class="fa-solid fa-user-doctor"></i>
+            </span>
+            <label for="patient" class="text-sm font-black text-slate-600 uppercase tracking-widest">Patient :</label>
+            <select name="patient" id="patient" onchange="this.form.submit()"
+                class="flex-1 min-w-[260px] rounded-2xl border-2 border-slate-200 px-5 py-3 font-bold text-slate-700 focus:ring-2 focus:ring-teal-500 bg-white transition-all">
+                <option value="">-- Sélectionner un patient --</option>
+                {% for p in patients %}
+                    <option value="{{ p.id }}" {{ patient and patient.id == p.id ? 'selected' : '' }}>
+                        {{ p.prenom }} {{ p.nom }} · {{ p.email }}
+                    </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+    {% endif %}
+
+    {# ─── No patient selected (admin) ─── #}
+    {% if patient is null and is_granted('ROLE_ADMIN') %}
+    <div class="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-slate-800 to-slate-900 p-16 text-center shadow-2xl">
+        <div class="absolute inset-0 opacity-10">
+            <div class="absolute top-8 left-8 w-32 h-32 rounded-full bg-teal-400 blur-3xl"></div>
+            <div class="absolute bottom-8 right-8 w-40 h-40 rounded-full bg-indigo-400 blur-3xl"></div>
+        </div>
+        <div class="relative z-10">
+            <div class="w-24 h-24 bg-white/10 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+                <i class="fa-solid fa-chart-pie text-4xl text-white"></i>
+            </div>
+            <p class="font-black text-white text-2xl mb-2">Sélectionnez un patient</p>
+            <p class="text-slate-400 font-medium">Choisissez un patient ci-dessus pour visualiser ses statistiques médicales.</p>
+        </div>
+    </div>
+
+    {% else %}
+
+    {# ─── HERO ─── #}
+    <div class="relative overflow-hidden rounded-[2.5rem] p-10 text-white shadow-2xl"
+         style="background: linear-gradient(135deg, #312e81, #4f46e5, #7c3aed, #9333ea);">
+        <div class="absolute inset-0">
+            <div class="absolute top-0 right-0 w-96 h-96 rounded-full bg-white/5 -mr-48 -mt-48 blur-3xl"></div>
+            <div class="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-white/5 -ml-32 -mb-32 blur-2xl"></div>
+        </div>
+        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+            <div class="space-y-4">
+                <span class="inline-flex items-center gap-2 px-4 py-2 bg-white/15 backdrop-blur rounded-full text-xs font-black uppercase tracking-widest">
+                    <i class="fa-solid fa-chart-mixed"></i> Analytics Médical
+                </span>
+                <h2 class="text-3xl md:text-4xl font-black leading-tight">
+                    {% if patient %}{{ patient.prenom }} {{ patient.nom }}{% else %}Vos Statistiques{% endif %}
+                </h2>
+                <p class="text-purple-200 max-w-lg font-medium">
+                    Visualisez vos prescriptions, médicaments et fréquences de prise en temps réel.
+                </p>
+            </div>
+            {# Fiche vitals badges #}
+            {% if fiche %}
+            <div class="grid grid-cols-2 gap-3 shrink-0">
+                <div class="px-5 py-3 bg-white/10 backdrop-blur rounded-2xl text-center">
+                    <p class="text-[10px] font-black uppercase tracking-widest text-purple-200">Tension</p>
+                    <p class="text-xl font-black">{{ fiche.tension }}</p>
+                </div>
+                <div class="px-5 py-3 bg-white/10 backdrop-blur rounded-2xl text-center">
+                    <p class="text-[10px] font-black uppercase tracking-widest text-purple-200">Glycémie</p>
+                    <p class="text-xl font-black">{{ fiche.glycemie }} g/L</p>
+                </div>
+                <div class="px-5 py-3 bg-white/10 backdrop-blur rounded-2xl text-center">
+                    <p class="text-[10px] font-black uppercase tracking-widest text-purple-200">Poids</p>
+                    <p class="text-xl font-black">{{ fiche.poids }} kg</p>
+                </div>
+                <div class="px-5 py-3 bg-white/10 backdrop-blur rounded-2xl text-center">
+                    <p class="text-[10px] font-black uppercase tracking-widest text-purple-200">Gr. Sanguin</p>
+                    <p class="text-xl font-black">{{ fiche.grpSanguin }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ─── KPI CARDS ─── #}
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+        {# Card 1: Total ordonnances #}
+        <div class="stat-card rounded-[2rem] p-7 text-white relative overflow-hidden"
+             style="--from:#4f46e5;--to:#7c3aed;">
+            <i class="fa-solid fa-prescription absolute -right-3 -bottom-3 text-7xl text-white/10"></i>
+            <p class="text-[10px] font-black uppercase tracking-widest text-indigo-200 mb-2">Ordonnances</p>
+            <p class="card-value text-4xl font-black">{{ ordonnancesPerMonth|reduce((carry, v) => carry + v.count, 0) }}</p>
+            <p class="text-xs text-indigo-200/70 mt-3 font-bold">Sur 6 mois</p>
+        </div>
+        {# Card 2: Total médicaments #}
+        <div class="stat-card rounded-[2rem] p-7 text-white relative overflow-hidden"
+             style="--from:#059669;--to:#10b981;">
+            <i class="fa-solid fa-pills absolute -right-3 -bottom-3 text-7xl text-white/10"></i>
+            <p class="text-[10px] font-black uppercase tracking-widest text-emerald-200 mb-2">Médicaments</p>
+            <p class="card-value text-4xl font-black">{{ topMedicaments|length }}</p>
+            <p class="text-xs text-emerald-200/70 mt-3 font-bold">Types distincts</p>
+        </div>
+        {# Card 3: BMI if fiche #}
+        {% if fiche and fiche.taille > 0 %}
+        {% set bmi = (fiche.poids / ((fiche.taille / 100) * (fiche.taille / 100)))|round(1) %}
+        <div class="stat-card rounded-[2rem] p-7 text-white relative overflow-hidden"
+             style="--from:#d97706;--to:#f59e0b;">
+            <i class="fa-solid fa-weight-scale absolute -right-3 -bottom-3 text-7xl text-white/10"></i>
+            <p class="text-[10px] font-black uppercase tracking-widest text-amber-200 mb-2">IMC</p>
+            <p class="card-value text-4xl font-black">{{ bmi }}</p>
+            <p class="text-xs text-amber-200/70 mt-3 font-bold">
+                {% if bmi < 18.5 %}Insuffisance pondérale{% elseif bmi < 25 %}Poids normal{% elseif bmi < 30 %}Surpoids{% else %}Obésité{% endif %}
+            </p>
+        </div>
+        {% else %}
+        <div class="stat-card rounded-[2rem] p-7 text-white relative overflow-hidden"
+             style="--from:#be185d;--to:#ec4899;">
+            <i class="fa-solid fa-heart-pulse absolute -right-3 -bottom-3 text-7xl text-white/10"></i>
+            <p class="text-[10px] font-black uppercase tracking-widest text-pink-200 mb-2">Avant repas</p>
+            <p class="card-value text-4xl font-black">{{ avantRepas.avant }}</p>
+            <p class="text-xs text-pink-200/70 mt-3 font-bold">Prises avant repas</p>
+        </div>
+        {% endif %}
+        {# Card 4: Diagnostic #}
+        {% if fiche %}
+        <div class="stat-card rounded-[2rem] p-7 text-white relative overflow-hidden"
+             style="--from:#0e7490;--to:#06b6d4;">
+            <i class="fa-solid fa-stethoscope absolute -right-3 -bottom-3 text-7xl text-white/10"></i>
+            <p class="text-[10px] font-black uppercase tracking-widest text-cyan-200 mb-2">Diagnostic</p>
+            <p class="card-value text-lg font-black leading-tight">{{ fiche.libelleMaladie }}</p>
+            <p class="text-xs text-cyan-200/70 mt-3 font-bold">Gravité : {{ fiche.gravite }}</p>
+        </div>
+        {% else %}
+        <div class="stat-card rounded-[2rem] p-7 text-white relative overflow-hidden"
+             style="--from:#0e7490;--to:#06b6d4;">
+            <i class="fa-solid fa-clock absolute -right-3 -bottom-3 text-7xl text-white/10"></i>
+            <p class="text-[10px] font-black uppercase tracking-widest text-cyan-200 mb-2">Moments de prise</p>
+            <p class="card-value text-4xl font-black">{{ momentPrise|reduce((c, v) => c + v, 0) }}</p>
+            <p class="text-xs text-cyan-200/70 mt-3 font-bold">Lignes d'ordonnance</p>
+        </div>
+        {% endif %}
+    </div>
+
+    {# ─── CHARTS ROW 1 ─── #}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {# Chart 1: Polar Area – momentPrise #}
+        <div class="glass-card rounded-[2.5rem] p-8 shadow-2xl glow-blue chart-3d-wrap">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-white text-xl"
+                     style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">
+                    <i class="fa-solid fa-clock"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-black text-gray-800">Moments de prise</h3>
+                    <p class="text-xs text-slate-400 font-bold">Distribution par période</p>
+                </div>
+            </div>
+            <div class="chart-3d flex justify-center" style="min-height:280px;">
+                <canvas id="chartMoment" style="max-height:280px;max-width:320px;"></canvas>
+            </div>
+        </div>
+
+        {# Chart 2: Doughnut – avant/après repas #}
+        <div class="glass-card rounded-[2.5rem] p-8 shadow-2xl glow-green chart-3d-wrap">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-white text-xl"
+                     style="background:linear-gradient(135deg,#10b981,#059669)">
+                    <i class="fa-solid fa-utensils"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-black text-gray-800">Repas &amp; Médicaments</h3>
+                    <p class="text-xs text-slate-400 font-bold">Avant / Après repas</p>
+                </div>
+            </div>
+            <div class="chart-3d flex justify-center" style="min-height:280px;">
+                <canvas id="chartRepas" style="max-height:280px;max-width:320px;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    {# ─── CHARTS ROW 2 ─── #}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {# Chart 3: Horizontal Bar – top médicaments #}
+        <div class="glass-card rounded-[2.5rem] p-8 shadow-2xl glow-amber chart-3d-wrap">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-white text-xl"
+                     style="background:linear-gradient(135deg,#f59e0b,#d97706)">
+                    <i class="fa-solid fa-pills"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-black text-gray-800">Top médicaments prescrits</h3>
+                    <p class="text-xs text-slate-400 font-bold">Fréquence de prescription</p>
+                </div>
+            </div>
+            <div class="chart-3d" style="min-height:280px;">
+                <canvas id="chartMeds"></canvas>
+            </div>
+        </div>
+
+        {# Chart 4: Bar – fréquence par jour #}
+        <div class="glass-card rounded-[2.5rem] p-8 shadow-2xl glow-rose chart-3d-wrap">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-white text-xl"
+                     style="background:linear-gradient(135deg,#ec4899,#be185d)">
+                    <i class="fa-solid fa-repeat"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-black text-gray-800">Fréquence de prise</h3>
+                    <p class="text-xs text-slate-400 font-bold">Nombre de prises par jour</p>
+                </div>
+            </div>
+            <div class="chart-3d" style="min-height:280px;">
+                <canvas id="chartFreq"></canvas>
+            </div>
+        </div>
+    </div>
+
+    {# ─── CHART ROW 3: ordonnances timeline ─── #}
+    <div class="glass-card rounded-[2.5rem] p-8 shadow-2xl chart-3d-wrap"
+         style="background:linear-gradient(135deg,rgba(99,102,241,0.06),rgba(139,92,246,0.06));">
+        <div class="flex items-center gap-3 mb-6">
+            <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-white text-xl"
+                 style="background:linear-gradient(135deg,#6366f1,#4f46e5)">
+                <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <div>
+                <h3 class="text-lg font-black text-gray-800">Ordonnances par mois</h3>
+                <p class="text-xs text-slate-400 font-bold">Évolution sur 6 mois</p>
+            </div>
+        </div>
+        <div class="chart-3d" style="min-height:260px;">
+            <canvas id="chartTimeline"></canvas>
+        </div>
+    </div>
+
+    {# ─── Fiche info strip ─── #}
+    {% if fiche %}
+    <div class="glass-card rounded-[2.5rem] p-8 shadow-xl">
+        <h3 class="text-lg font-black text-gray-800 mb-6 flex items-center gap-3">
+            <i class="fa-solid fa-notes-medical text-indigo-500"></i>
+            Données Cliniques
+        </h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {% for item in [
+                {label:'Tension', val: fiche.tension, icon:'fa-heart', color:'text-red-500', bg:'bg-red-50'},
+                {label:'Glycémie', val: fiche.glycemie~' g/L', icon:'fa-droplet', color:'text-blue-500', bg:'bg-blue-50'},
+                {label:'Poids', val: fiche.poids~' kg', icon:'fa-weight-scale', color:'text-amber-500', bg:'bg-amber-50'},
+                {label:'Taille', val: fiche.taille~' cm', icon:'fa-ruler-vertical', color:'text-emerald-500', bg:'bg-emerald-50'}
+            ] %}
+            <div class="p-5 {{ item.bg }} rounded-3xl border border-white/80">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{{ item.label }}</p>
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid {{ item.icon }} {{ item.color }}"></i>
+                    <span class="text-xl font-black text-slate-700">{{ item.val }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% if fiche.allergie or fiche.maladieChronique %}
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% if fiche.allergie %}
+            <div class="flex items-start gap-3 p-4 bg-rose-50 rounded-2xl border border-rose-100">
+                <i class="fa-solid fa-triangle-exclamation text-rose-500 mt-0.5"></i>
+                <div><p class="text-[10px] font-black text-rose-400 uppercase tracking-widest">Allergie</p>
+                <p class="text-sm font-bold text-rose-700">{{ fiche.allergie }}</p></div>
+            </div>
+            {% endif %}
+            {% if fiche.maladieChronique %}
+            <div class="flex items-start gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                <i class="fa-solid fa-clock-rotate-left text-amber-500 mt-0.5"></i>
+                <div><p class="text-[10px] font-black text-amber-400 uppercase tracking-widest">Maladie chronique</p>
+                <p class="text-sm font-bold text-amber-700">{{ fiche.maladieChronique }}</p></div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% endif %}{# end patient is null #}
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const palette = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4','#84cc16'];
+
+    function gradientFill(ctx, colorA, colorB) {
+        const g = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+        g.addColorStop(0, colorA);
+        g.addColorStop(1, colorB);
+        return g;
+    }
+
+    function noData(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.parentElement.innerHTML =
+            '<div class="flex flex-col items-center justify-center h-48 opacity-40">' +
+            '<i class="fa-solid fa-chart-pie text-4xl text-slate-300 mb-3"></i>' +
+            '<p class="font-bold text-slate-400 text-sm">Aucune donnée disponible</p></div>';
+    }
+
+    {# ── 1. Polar Area: momentPrise ── #}
+    const momentData = {{ momentPrise|json_encode|raw }};
+    const momentLabels = Object.keys(momentData);
+    const momentValues = Object.values(momentData);
+    if (momentLabels.length > 0) {
+        new Chart(document.getElementById('chartMoment'), {
+            type: 'polarArea',
+            data: {
+                labels: momentLabels,
+                datasets: [{
+                    data: momentValues,
+                    backgroundColor: palette.map(c => c + 'cc'),
+                    borderColor: palette,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16, font: { weight: 'bold', size: 12 } } }
+                },
+                scales: {
+                    r: { ticks: { display: false }, grid: { color: 'rgba(0,0,0,0.06)' } }
+                }
+            }
+        });
+    } else { noData('chartMoment'); }
+
+    {# ── 2. Doughnut: avant/après repas ── #}
+    const repasData = {{ avantRepas|json_encode|raw }};
+    const totalRepas = repasData.avant + repasData.apres;
+    if (totalRepas > 0) {
+        new Chart(document.getElementById('chartRepas'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Avant repas', 'Après repas'],
+                datasets: [{
+                    data: [repasData.avant, repasData.apres],
+                    backgroundColor: ['#10b981cc', '#6366f1cc'],
+                    borderColor: ['#10b981', '#6366f1'],
+                    borderWidth: 3,
+                    hoverOffset: 12
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                cutout: '65%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: { weight: 'bold', size: 13 } } }
+                }
+            }
+        });
+    } else { noData('chartRepas'); }
+
+    {# ── 3. Horizontal Bar: top médicaments ── #}
+    const medsData = {{ topMedicaments|json_encode|raw }};
+    if (medsData.length > 0) {
+        const medsCanvas = document.getElementById('chartMeds');
+        new Chart(medsCanvas, {
+            type: 'bar',
+            data: {
+                labels: medsData.map(m => m.name),
+                datasets: [{
+                    label: 'Prescriptions',
+                    data: medsData.map(m => m.count),
+                    backgroundColor: medsData.map((_, i) => palette[i % palette.length] + 'cc'),
+                    borderColor: medsData.map((_, i) => palette[i % palette.length]),
+                    borderWidth: 2,
+                    borderRadius: 10,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { stepSize: 1 } },
+                    y: { grid: { display: false }, ticks: { font: { weight: 'bold' } } }
+                }
+            }
+        });
+    } else { noData('chartMeds'); }
+
+    {# ── 4. Bar: fréquence par jour ── #}
+    const freqData = {{ frequenceParJour|json_encode|raw }};
+    const freqLabels = Object.keys(freqData);
+    const freqValues = Object.values(freqData);
+    if (freqLabels.length > 0) {
+        const freqCanvas = document.getElementById('chartFreq');
+        const freqCtx = freqCanvas.getContext('2d');
+        new Chart(freqCanvas, {
+            type: 'bar',
+            data: {
+                labels: freqLabels,
+                datasets: [{
+                    label: 'Nb de lignes',
+                    data: freqValues,
+                    backgroundColor: gradientFill(freqCtx, '#ec489988', '#be185d66'),
+                    borderColor: '#ec4899',
+                    borderWidth: 2,
+                    borderRadius: 12,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { stepSize: 1 } },
+                    x: { grid: { display: false }, ticks: { font: { weight: 'bold' } } }
+                }
+            }
+        });
+    } else { noData('chartFreq'); }
+
+    {# ── 5. Line: ordonnances par mois ── #}
+    const timelineData = {{ ordonnancesPerMonth|json_encode|raw }};
+    if (timelineData.length > 0) {
+        const tlCanvas = document.getElementById('chartTimeline');
+        const tlCtx = tlCanvas.getContext('2d');
+        const tlGrad = tlCtx.createLinearGradient(0, 0, 0, 260);
+        tlGrad.addColorStop(0, 'rgba(99,102,241,0.4)');
+        tlGrad.addColorStop(1, 'rgba(99,102,241,0.02)');
+        new Chart(tlCanvas, {
+            type: 'line',
+            data: {
+                labels: timelineData.map(t => t.month),
+                datasets: [{
+                    label: 'Ordonnances',
+                    data: timelineData.map(t => t.count),
+                    borderColor: '#6366f1',
+                    backgroundColor: tlGrad,
+                    fill: true,
+                    tension: 0.45,
+                    borderWidth: 3,
+                    pointRadius: 6,
+                    pointBackgroundColor: '#6366f1',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { stepSize: 1, font: { weight: 'bold' } } },
+                    x: { grid: { display: false }, ticks: { font: { weight: 'bold' } } }
+                }
+            }
+        });
+    } else { noData('chartTimeline'); }
+});
+</script>
+{% endblock %}

@@ -16,6 +16,31 @@ class UserRepository extends ServiceEntityRepository
         parent::__construct($registry, User::class);
     }
 
+    /**
+     * Returns users who have at least one fiche or ordonnance (patients with medical records).
+     *
+     * @return User[]
+     */
+    public function findPatientsWithFiches(): array
+    {
+        $conn = $this->getEntityManager()->getConnection();
+        $ids = $conn->executeQuery("
+            SELECT DISTINCT id_u_id FROM fiche
+            UNION
+            SELECT DISTINCT id_u_id FROM ordonnance
+        ")->fetchFirstColumn();
+        if ($ids === []) {
+            return [];
+        }
+        return $this->createQueryBuilder('u')
+            ->where('u.id IN (:ids)')
+            ->setParameter('ids', $ids)
+            ->orderBy('u.nom', 'ASC')
+            ->addOrderBy('u.prenom', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
 //    /**
 //     * @return User[] Returns an array of User objects
 //     */

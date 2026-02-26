@@ -1,0 +1,137 @@
+{% extends 'admin_base.html.twig' %}
+
+{% block title %}Fiche Médicale : {{ fiche.idU.email }}{% endblock %}
+
+{% block body %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-10">
+        <div>
+            <h1 class="text-4xl font-black text-slate-800 tracking-tight flex items-center gap-4">
+                <i class="fa-solid fa-folder-open text-indigo-600"></i>
+                Dossier Médical
+            </h1>
+            <p class="text-slate-500 font-medium italic tracking-tight mt-1">{{ fiche.date ? fiche.date|date('d F Y') : 'Date inconnue' }}</p>
+        </div>
+        <div class="flex items-center gap-4">
+            <a href="{{ path('app_fiche_index') }}" class="bg-slate-100 text-slate-600 px-6 py-3 rounded-2xl font-bold hover:bg-slate-200 transition-all flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i>
+                Liste
+            </a>
+            <a href="{{ path('app_admin_stats', {patient: fiche.idU.id}) }}" class="bg-teal-600 text-white px-6 py-3 rounded-2xl font-bold hover:bg-teal-700 shadow-xl shadow-teal-100 transition-all flex items-center gap-2">
+                <i class="fa-solid fa-chart-pie"></i>
+                Statistiques
+            </a>
+            <a href="{{ path('app_fiche_edit', {'id': fiche.id}) }}" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all flex items-center gap-2">
+                <i class="fa-solid fa-edit"></i>
+                Modifier
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- LEFT COLUMN: Patient Info & Vitals (4/12) -->
+        <div class="lg:col-span-4 space-y-8">
+            <div class="bg-white rounded-[3rem] shadow-xl shadow-slate-200/50 p-8 border border-slate-100">
+                <h2 class="text-2xl font-black text-slate-800 mb-8 flex items-center gap-3">
+                    <i class="fa-solid fa-heart-pulse text-red-500"></i>
+                    Constantes
+                </h2>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-5 bg-slate-50 rounded-3xl border border-slate-100 transition-transform">
+                        <span class="text-slate-400 font-black text-[0.6rem] uppercase tracking-widest block mb-2">Poids</span>
+                        <span class="text-xl font-black text-slate-700">{{ fiche.poids }} <small class="text-xs text-slate-400">kg</small></span>
+                    </div>
+                    <div class="p-5 bg-slate-50 rounded-3xl border border-slate-100 transition-transform">
+                        <span class="text-slate-400 font-black text-[0.6rem] uppercase tracking-widest block mb-2">Taille</span>
+                        <span class="text-xl font-black text-slate-700">{{ fiche.taille }} <small class="text-xs text-slate-400">cm</small></span>
+                    </div>
+                    <div class="p-5 bg-red-50/50 rounded-3xl border border-red-100 transition-transform">
+                        <span class="text-red-400 font-black text-[0.6rem] uppercase tracking-widest block mb-2">Groupe</span>
+                        <span class="text-xl font-black text-red-600">{{ fiche.grpSanguin }}</span>
+                    </div>
+                    <div class="p-5 bg-slate-50 rounded-3xl border border-slate-100 transition-transform">
+                        <span class="text-slate-400 font-black text-[0.6rem] uppercase tracking-widest block mb-2">Tension</span>
+                        <span class="text-xl font-black text-slate-700">{{ fiche.tension }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI ORDONNANCES (tech style) -->
+            <div class="bg-indigo-900 rounded-[3rem] p-8 text-white shadow-2xl relative overflow-hidden group">
+                <h3 class="text-xl font-black mb-6 flex items-center gap-3 relative z-10">
+                    <i class="fa-solid fa-robot text-indigo-400"></i>
+                    Ordonnances IA
+                </h3>
+                <div class="space-y-4 relative z-10">
+                    {% for ord in aiOrdonnances %}
+                        <a href="{{ path('app_ordonnance_show', {'id': ord.id}) }}" class="block p-4 bg-white/10 rounded-2xl border border-indigo-400/30 hover:bg-white/20 transition-all border-l-4 border-l-indigo-400">
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="font-bold text-sm">{{ ord.dateOrdonnance|date('d/m/Y') }}</span>
+                                <span class="px-2 py-0.5 bg-indigo-500/50 rounded text-[10px] font-bold">IA</span>
+                            </div>
+                            <p class="text-xs text-indigo-200 line-clamp-1 italic">{{ ord.frequence }}</p>
+                        </a>
+                    {% else %}
+                        <p class="text-indigo-300 text-sm italic">Aucune ordonnance générée par l'IA.</p>
+                    {% endfor %}
+                </div>
+                <i class="fa-solid fa-microchip absolute -right-4 -bottom-4 text-white/5 text-8xl group-hover:scale-110 transition-transform"></i>
+            </div>
+            
+            <!-- DOCTOR ORDONNANCES (clinical style) -->
+            <div class="bg-amber-50 rounded-[3rem] p-8 border-2 border-amber-200 shadow-xl shadow-amber-100/50">
+                <h3 class="text-xl font-black text-amber-800 mb-6 flex items-center gap-3">
+                    <i class="fa-solid fa-stethoscope text-amber-600"></i>
+                    Ordonnances Docteur
+                </h3>
+                <div class="space-y-4">
+                    {% for ord in docOrdonnances %}
+                        <a href="{{ path('app_ordonnance_show', {'id': ord.id}) }}" class="block p-4 bg-white rounded-xl border-l-4 border-l-amber-500 border border-amber-100 hover:border-amber-300 hover:shadow-md transition-all">
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="font-bold text-amber-800 text-sm">{{ ord.dateOrdonnance|date('d/m/Y') }}</span>
+                                <span class="px-2 py-0.5 bg-amber-200 text-amber-800 rounded text-[10px] font-bold">Médecin</span>
+                            </div>
+                            <p class="text-xs text-amber-700 line-clamp-1">{{ ord.frequence }}</p>
+                        </a>
+                    {% else %}
+                        <p class="text-amber-600 text-sm italic">Aucune ordonnance directe.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Diagnostic & AI Suggestion (8/12) -->
+        <div class="lg:col-span-8 space-y-8">
+            <div class="bg-white rounded-[3rem] shadow-xl shadow-slate-200/50 p-10 border border-slate-100">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-2xl font-black text-slate-800 flex items-center gap-3">
+                        <i class="fa-solid fa-stethoscope text-indigo-500"></i>
+                        Diagnostic Principal
+                    </h2>
+                    <span class="px-5 py-2 rounded-2xl text-xs font-black uppercase tracking-widest
+                        {% if fiche.gravite == 'Élevée' %}bg-red-100 text-red-600
+                        {% elseif fiche.gravite == 'Moyenne' or fiche.gravite == 'Élevée' %}bg-amber-100 text-amber-600
+                        {% else %}bg-emerald-100 text-emerald-600{% endif %}">
+                        {{ fiche.gravite }}
+                    </span>
+                </div>
+                
+                <h3 class="text-3xl font-black text-slate-700 mb-6 italic">"{{ fiche.libelleMaladie }}"</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 border-t border-slate-50">
+                    <div>
+                        <h4 class="text-[0.65rem] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Symptômes</h4>
+                        <p class="text-slate-600 font-bold bg-slate-50 p-6 rounded-3xl border border-slate-100">{{ fiche.symptomes }}</p>
+                    </div>
+                    <div>
+                        <h4 class="text-[0.65rem] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Recommandation</h4>
+                        <p class="text-slate-600 font-bold bg-indigo-50/30 p-6 rounded-3xl border border-indigo-50 italic">{{ fiche.recommandation }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

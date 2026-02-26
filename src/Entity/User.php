@@ -2,6 +2,9 @@
 
 namespace App\Entity;
 
+use App\Entity\Fiche;
+use App\Entity\Ordonnance;
+use App\Entity\Rdv;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -114,10 +117,27 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Reponse::class, mappedBy: 'auteur')]
     private Collection $reponses;
 
+    #[ORM\OneToOne(mappedBy: 'idU', cascade: ['persist', 'remove'])]
+    private ?Fiche $fiche = null;
+
+    /**
+     * @var Collection<int, Ordonnance>
+     */
+    #[ORM\OneToMany(targetEntity: Ordonnance::class, mappedBy: 'idU')]
+    private Collection $ordonnances;
+
+    /**
+     * @var Collection<int, Rdv>
+     */
+    #[ORM\OneToMany(targetEntity: Rdv::class, mappedBy: 'patient')]
+    private Collection $rdvs;
+
     public function __construct()
     {
         $this->questions = new ArrayCollection();
         $this->reponses = new ArrayCollection();
+        $this->ordonnances = new ArrayCollection();
+        $this->rdvs = new ArrayCollection();
         $this->recommendationWeights = [];
     }
 
@@ -491,5 +511,83 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $parts = array_filter($parts, static fn (string $part): bool => $part !== '');
 
         return array_values(array_unique($parts));
+    }
+
+    public function getFiche(): ?Fiche
+    {
+        return $this->fiche;
+    }
+
+    public function setFiche(?Fiche $fiche): static
+    {
+        if ($fiche === null && $this->fiche !== null) {
+            $this->fiche->setIdU(null);
+        }
+
+        if ($fiche !== null && $fiche->getIdU() !== $this) {
+            $fiche->setIdU($this);
+        }
+
+        $this->fiche = $fiche;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Ordonnance>
+     */
+    public function getOrdonnances(): Collection
+    {
+        return $this->ordonnances;
+    }
+
+    public function addOrdonnance(Ordonnance $ordonnance): static
+    {
+        if (!$this->ordonnances->contains($ordonnance)) {
+            $this->ordonnances->add($ordonnance);
+            $ordonnance->setIdU($this);
+        }
+
+        return $this;
+    }
+
+    public function removeOrdonnance(Ordonnance $ordonnance): static
+    {
+        if ($this->ordonnances->removeElement($ordonnance)) {
+            if ($ordonnance->getIdU() === $this) {
+                $ordonnance->setIdU(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Rdv>
+     */
+    public function getRdvs(): Collection
+    {
+        return $this->rdvs;
+    }
+
+    public function addRdv(Rdv $rdv): static
+    {
+        if (!$this->rdvs->contains($rdv)) {
+            $this->rdvs->add($rdv);
+            $rdv->setPatient($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRdv(Rdv $rdv): static
+    {
+        if ($this->rdvs->removeElement($rdv)) {
+            if ($rdv->getPatient() === $this) {
+                $rdv->setPatient(null);
+            }
+        }
+
+        return $this;
     }
 }

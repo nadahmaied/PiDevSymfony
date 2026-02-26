@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\RdvRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -49,13 +51,20 @@ class Rdv
     )]
     private ?string $message = null;
 
-    #[ORM\ManyToOne]
+    #[ORM\ManyToOne(inversedBy: 'rdvs')]
     private ?User $patient = null;
 
     #[ORM\ManyToOne]
     private ?User $medecinUser = null;
 
-    // ✅ Validation heure au niveau de la classe (après transformation du champ)
+    #[ORM\OneToMany(targetEntity: Ordonnance::class, mappedBy: 'idRdv')]
+    private Collection $ordonnances;
+
+    public function __construct()
+    {
+        $this->ordonnances = new ArrayCollection();
+    }
+
     #[Assert\Callback]
     public function validateHdebut(ExecutionContextInterface $context): void
     {
@@ -63,7 +72,7 @@ class Rdv
 
         $totalMinutes = ((int)$this->hdebut->format('H') * 60) + (int)$this->hdebut->format('i');
 
-        if ($totalMinutes < 540 || $totalMinutes > 1020) { // 09:00=540, 17:00=1020
+        if ($totalMinutes < 540 || $totalMinutes > 1020) {
             $context->buildViolation("L'heure doit être entre 09:00 et 17:00")
                 ->atPath('hdebut')
                 ->addViolation();
@@ -93,27 +102,31 @@ class Rdv
     public function getMessage(): ?string { return $this->message; }
     public function setMessage(?string $message): static { $this->message = $message; return $this; }
 
-    public function getPatient(): ?User
-    {
-        return $this->patient;
-    }
+    public function getPatient(): ?User { return $this->patient; }
+    public function setPatient(?User $patient): static { $this->patient = $patient; return $this; }
 
-    public function setPatient(?User $patient): static
-    {
-        $this->patient = $patient;
+    public function getMedecinUser(): ?User { return $this->medecinUser; }
+    public function setMedecinUser(?User $medecinUser): static { $this->medecinUser = $medecinUser; return $this; }
 
+    /** @return Collection<int, Ordonnance> */
+    public function getOrdonnances(): Collection { return $this->ordonnances; }
+
+    public function addOrdonnance(Ordonnance $ordonnance): static
+    {
+        if (!$this->ordonnances->contains($ordonnance)) {
+            $this->ordonnances->add($ordonnance);
+            $ordonnance->setIdRdv($this);
+        }
         return $this;
     }
 
-    public function getMedecinUser(): ?User
+    public function removeOrdonnance(Ordonnance $ordonnance): static
     {
-        return $this->medecinUser;
-    }
-
-    public function setMedecinUser(?User $medecinUser): static
-    {
-        $this->medecinUser = $medecinUser;
-
+        if ($this->ordonnances->removeElement($ordonnance)) {
+            if ($ordonnance->getIdRdv() === $this) {
+                $ordonnance->setIdRdv(null);
+            }
+        }
         return $this;
     }
 }

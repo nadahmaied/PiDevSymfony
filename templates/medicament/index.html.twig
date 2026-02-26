@@ -1,0 +1,214 @@
+{% extends 'admin_base.html.twig' %}
+
+{% block title %}Gestion des Médicaments{% endblock %}
+
+{% block body %}
+<div class="px-4 py-6">
+    <!-- Header Section -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
+        <div>
+            <h1 class="text-4xl font-black text-slate-800 tracking-tight">Médicaments</h1>
+            <p class="text-slate-500 font-medium">Gérez votre inventaire avec précision et élégance.</p>
+        </div>
+        <a href="{{ path('app_medicament_new') }}" class="group relative inline-flex items-center justify-center px-8 py-3.5 font-bold text-white transition-all duration-200 bg-blue-600 font-pj rounded-2xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 hover:bg-blue-700 shadow-xl shadow-blue-200">
+            <i class="fa-solid fa-plus mr-2 group-hover:rotate-90 transition-transform duration-300"></i>
+            Nouveau Médicament
+        </a>
+    </div>
+
+    <!-- Stats Preview (Optional, for flavor) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div class="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-3xl text-white shadow-xl shadow-blue-100 relative overflow-hidden group">
+            <div class="relative z-10">
+                <p class="text-blue-100 text-sm font-bold uppercase tracking-wider mb-1">Total</p>
+                <h3 class="text-3xl font-black">{{ medicaments|length }} Items</h3>
+            </div>
+            <i class="fa-solid fa-pills absolute -right-4 -bottom-4 text-8xl text-white/10 group-hover:scale-110 transition-transform duration-500"></i>
+        </div>
+        <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 flex items-center gap-4 hover:border-blue-200 transition-colors">
+            <div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center">
+                <i class="fa-solid fa-calendar-xmark text-amber-500"></i>
+            </div>
+            <div>
+                <p class="text-slate-400 text-xs font-bold uppercase">Proche Expiration</p>
+                <h3 class="text-xl font-bold text-slate-700">Vérification...</h3>
+            </div>
+        </div>
+        <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 flex items-center gap-4 hover:border-blue-200 transition-colors">
+            <div class="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center">
+                <i class="fa-solid fa-layer-group text-green-500"></i>
+            </div>
+            <div>
+                <p class="text-slate-400 text-xs font-bold uppercase">Catégories</p>
+                <h3 class="text-xl font-bold text-slate-700">Multiples</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters & Search -->
+    <div class="bg-white/80 backdrop-blur-md p-6 rounded-[2.5rem] border border-white shadow-2xl shadow-slate-200/60 mb-8">
+        <form method="get" id="search-form" class="flex flex-col lg:flex-row items-center gap-6">
+            <div class="relative w-full lg:flex-1 group">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors"></i>
+                <input type="text" name="search" value="{{ search }}" 
+                    class="w-full pl-12 pr-4 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all duration-300 font-medium placeholder:text-slate-400"
+                    placeholder="Rechercher un médicament, une catégorie..." id="search-input">
+            </div>
+            
+            <div class="flex items-center gap-4 w-full lg:w-auto">
+                <div class="relative flex-1 lg:w-48">
+                    <select name="sortBy" onchange="this.form.submit()" 
+                        class="w-full pl-4 pr-10 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500/20 appearance-none font-bold text-slate-700">
+                        <option value="nomMedicament" {% if sortBy == 'nomMedicament' %}selected{% endif %}>Trier par Nom</option>
+                        <option value="categorie" {% if sortBy == 'categorie' %}selected{% endif %}>Par Catégorie</option>
+                        <option value="dateExpiration" {% if sortBy == 'dateExpiration' %}selected{% endif %}>Par Expiration</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                </div>
+
+                <div class="relative flex-1 lg:w-36">
+                    <select name="sortOrder" onchange="this.form.submit()"
+                        class="w-full pl-4 pr-10 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500/20 appearance-none font-bold text-slate-700">
+                        <option value="ASC" {% if sortOrder == 'ASC' %}selected{% endif %}>Croissant</option>
+                        <option value="DESC" {% if sortOrder == 'DESC' %}selected{% endif %}>Décroissant</option>
+                    </select>
+                    <i class="fa-solid fa-sort absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Dynamic Table Card -->
+    <div class="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-2xl shadow-slate-200/50">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-separate border-spacing-0">
+                <thead>
+                    <tr class="bg-slate-50/50">
+                        <th class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Info Médicament</th>
+                        <th class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Classification</th>
+                        <th class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Dosage & Forme</th>
+                        <th class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Expiration</th>
+                        <th class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    {% for medicament in medicaments %}
+                        <tr class="group hover:bg-blue-50/30 transition-all duration-300">
+                            <td class="px-8 py-6 border-b border-slate-50">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 bg-blue-100/50 rounded-2xl flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform duration-300">
+                                        <i class="fa-solid fa-capsules text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-black text-slate-700 text-lg italic">"{{ medicament.nomMedicament }}"</div>
+                                        <div class="text-xs font-bold text-slate-400">ID: #{{ medicament.id }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-8 py-6 border-b border-slate-50">
+                                <span class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 text-xs font-black group-hover:bg-white transition-colors">
+                                    {{ medicament.categorie }}
+                                </span>
+                            </td>
+                            <td class="px-8 py-6 border-b border-slate-50">
+                                <div class="flex flex-col">
+                                    <span class="text-slate-600 font-bold">{{ medicament.dosage }}</span>
+                                    <span class="text-xs text-slate-400 font-medium">{{ medicament.forme }}</span>
+                                </div>
+                            </td>
+                            <td class="px-8 py-6 border-b border-slate-50">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-regular fa-calendar-check {% if medicament.dateExpiration and medicament.dateExpiration < date('+1 month') %}text-red-500{% else %}text-green-500{% endif %}"></i>
+                                    <span class="font-bold text-slate-600">
+                                        {{ medicament.dateExpiration ? medicament.dateExpiration|date('d M Y') : 'N/A' }}
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-8 py-6 border-b border-slate-50 text-right">
+                                <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-4 group-hover:translate-x-0">
+                                    <a href="{{ path('app_medicament_show', {'id': medicament.id}) }}" 
+                                        class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all shadow-lg shadow-blue-100">
+                                        <i class="fa-solid fa-eye text-sm"></i>
+                                    </a>
+                                    <a href="{{ path('app_medicament_edit', {'id': medicament.id}) }}" 
+                                        class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center hover:bg-amber-600 hover:text-white transition-all shadow-lg shadow-amber-100">
+                                        <i class="fa-solid fa-pen-to-square text-sm"></i>
+                                    </a>
+                                    <div class="inline-block">
+                                        {{ include('medicament/_delete_form.html.twig') }}
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="px-8 py-20 text-center">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+                                        <i class="fa-solid fa-inbox text-3xl text-slate-200"></i>
+                                    </div>
+                                    <p class="text-slate-400 font-bold">Aucun médicament trouvé</p>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search-input');
+    const searchForm = document.getElementById('search-form');
+    let timeout = null;
+
+    searchInput.addEventListener('input', function() {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            // Smoothly reload results
+            // In a real masterpiece we'd use fetch() to update only #table-body
+            // For now, auto-submit keeps it dynamic enough
+            searchForm.submit();
+        }, 500);
+    });
+
+    // Cursor focus on search if / is pressed
+    document.addEventListener('keydown', (e) => {
+        if (e.key === '/' && document.activeElement !== searchInput) {
+            e.preventDefault();
+            searchInput.focus();
+        }
+    });
+});
+</script>
+
+<style>
+    /* Custom Scrollbar for the table */
+    .overflow-x-auto::-webkit-scrollbar {
+        height: 6px;
+    }
+    .overflow-x-auto::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .overflow-x-auto::-webkit-scrollbar-thumb {
+        background: #e2e8f0;
+        border-radius: 10px;
+    }
+    
+    /* Animation for table rows */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    #table-body tr {
+        animation: fadeIn 0.4s ease-out forwards;
+    }
+    
+    {% for i in range(1, 20) %}
+    #table-body tr:nth-child({{ i }}) { animation-delay: {{ i * 0.05 }}s; }
+    {% endfor %}
+</style>
+{% endblock %}
