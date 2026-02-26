@@ -15,17 +15,10 @@ class DonationType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('typeDon', null, [
-                'required' => false,
-            ])
-            ->add('quantite', null, [
-                'required' => false,
-            ])
-            ->add('dateDonation', null, [
-                'required' => false,
-            ])
+            ->add('typeDon')
+            ->add('quantite')
+            ->add('dateDonation')
             ->add('statut', ChoiceType::class, [
-                'required' => false,
                 'choices' => [
                     'En attente' => 'en attente',
                     'Accepté' => 'accepté',
