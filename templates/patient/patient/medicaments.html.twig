@@ -1,0 +1,94 @@
+{% extends 'baseFront.html.twig' %}
+
+{% block title %}
+<h1 class="text-2xl font-black text-gray-800 tracking-tight">Bibliothèque de Médicaments 💊</h1>
+{% endblock %}
+
+{% block body %}
+<div class="px-8 py-8 space-y-8">
+    <!-- Search Header -->
+    <div class="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-xl shadow-gray-200/50">
+        <form method="get" class="flex flex-col md:flex-row gap-6">
+            <div class="relative flex-1 group">
+                <i class="fa-solid fa-magnifying-glass absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors"></i>
+                <input type="text" name="search" value="{{ search }}" 
+                    class="w-full pl-14 pr-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:bg-white transition-all duration-300 font-bold placeholder:text-gray-400"
+                    placeholder="Quel médicament recherchez-vous ?">
+            </div>
+            <button type="submit" class="px-10 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black shadow-xl shadow-blue-200 transition-all flex items-center justify-center gap-2 group">
+                <i class="fa-solid fa-filter group-hover:rotate-180 transition-transform duration-500"></i>
+                Filtrer
+            </button>
+        </form>
+    </div>
+
+    <!-- Grid View -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        {% for medicament in medicaments %}
+            <div class="bg-white rounded-[2.5rem] border border-gray-100 shadow-lg hover:shadow-2xl transition-all duration-500 group relative overflow-hidden hover:-translate-y-2">
+                <!-- Top Badge -->
+                <div class="absolute top-6 left-6 z-10">
+                    <span class="px-4 py-1.5 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-100">
+                        {{ medicament.categorie }}
+                    </span>
+                </div>
+                
+                <!-- Icon/Graphic Area -->
+                <div class="h-48 bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center relative group-hover:from-blue-600 group-hover:to-indigo-700 transition-all duration-500">
+                    <i class="fa-solid fa-capsules text-6xl text-blue-200 group-hover:text-white/20 group-hover:scale-125 transition-all duration-700"></i>
+                    <div class="absolute inset-0 bg-blue-600/0 group-hover:bg-blue-600/10 transition-colors"></div>
+                </div>
+
+                <!-- Content -->
+                <div class="p-8 space-y-4">
+                    <div>
+                        <h4 class="text-xl font-black text-gray-800 group-hover:text-blue-600 transition-colors line-clamp-1 italic">"{{ medicament.nomMedicament }}"</h4>
+                        <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">{{ medicament.forme }}</p>
+                    </div>
+
+                    <div class="pt-4 border-t border-gray-50 flex items-center justify-between">
+                        <div>
+                            <p class="text-[10px] text-gray-400 font-black uppercase mb-0.5">Dosage</p>
+                            <p class="font-black text-gray-700">{{ medicament.dosage }}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] text-gray-400 font-black uppercase mb-0.5">Expiration</p>
+                            <p class="font-bold text-gray-700 italic">{{ medicament.dateExpiration ? medicament.dateExpiration|date('M Y') : 'N/A' }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hover Overlay for "See Details" or similar (2D effect) -->
+                <div class="absolute inset-0 bg-blue-600/90 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col items-center justify-center p-8 text-white text-center translate-y-full group-hover:translate-y-0">
+                    <i class="fa-solid fa-circle-info text-4xl mb-4 animate-bounce"></i>
+                    <h5 class="text-lg font-black mb-2">{{ medicament.nomMedicament }}</h5>
+                    <p class="text-sm text-blue-100 font-medium mb-6">
+                        Consultez toujours votre médecin avant de prendre ce traitement. Respectez la posologie indiquée sur votre ordonnance.
+                    </p>
+                    <div class="w-full h-1 bg-white/20 rounded-full overflow-hidden">
+                        <div class="w-1/2 h-full bg-white animate-pulse"></div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="col-span-full py-20 text-center">
+                <div class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-200 text-4xl">
+                    <i class="fa-solid fa-box-open"></i>
+                </div>
+                <h3 class="text-xl font-black text-gray-400">Aucun médicament ne correspond à votre recherche.</h3>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    @keyframes pulse-glow {
+        0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
+        70% { box-shadow: 0 0 0 15px rgba(37, 99, 235, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+    }
+    .group:hover {
+        animation: pulse-glow 2s infinite;
+    }
+</style>
+{% endblock %}

@@ -3,9 +3,14 @@
 namespace App\Controller;
 
 use App\Repository\FicheRepository;
+use App\Repository\LigneOrdonnanceRepository;
 use App\Repository\MedicamentRepository;
 use App\Repository\OrdonnanceRepository;
+use App\Repository\UserRepository;
+use App\Service\MedicalAiService;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -19,8 +24,8 @@ class PatientController extends AbstractController
     public function dashboard(FicheRepository $ficheRepo, OrdonnanceRepository $ordRepo): Response
     {
         $user = $this->getUser();
-        $latestFiche = $ficheRepo->findOneBy(['idU' => $user], ['date' => 'DESC']);
-        $recentOrdonnances = $ordRepo->findBy(['idU' => $user], ['id' => 'DESC'], 3);
+        $latestFiche = $ficheRepo->findOneBy(['idU' => $user]);
+        $recentOrdonnances = $ordRepo->findByPatient($user, 3);
 
         return $this->render('patient/dashboard.html.twig', [
             'latestFiche' => $latestFiche,
@@ -40,44 +45,119 @@ class PatientController extends AbstractController
         ]);
     }
 
+    #[Route('/stats', name: 'patient_stats')]
+    public function stats(
+        FicheRepository $ficheRepository,
+        LigneOrdonnanceRepository $ligneRepo,
+        OrdonnanceRepository $ordonnanceRepository,
+        UserRepository $userRepository
+    ): Response {
+        $patient = $this->getUser();
+        return $this->render('stats/index.html.twig', [
+            'patient' => $patient,
+            'patients' => [$patient],
+            'fiche' => $ficheRepository->findLatestByPatient($patient),
+            'momentPrise' => $ligneRepo->countByMomentPrise($patient),
+            'topMedicaments' => $ligneRepo->getTopMedicaments($patient, 6),
+            'avantRepas' => $ligneRepo->countByAvantRepas($patient),
+            'ordonnancesPerMonth' => $ordonnanceRepository->countByMonthForPatient($patient, 6),
+            'frequenceParJour' => $ligneRepo->getFrequenceParJourDistribution($patient),
+        ]);
+    }
+
     #[Route('/dossier', name: 'patient_dossier')]
     public function dossier(FicheRepository $ficheRepo, OrdonnanceRepository $ordRepo): Response
     {
         $user = $this->getUser();
-        $fiches = $ficheRepo->findBy(['idU' => $user], ['date' => 'DESC']);
-        $ordonnances = $ordRepo->findBy(['idU' => $user], ['id' => 'DESC']);
+        $fiche = $ficheRepo->findOneBy(['idU' => $user]);
+        $patientOrdonnances = $ordRepo->findByPatient($user);
+        $aiOrdonnances = [];
+        $docOrdonnances = [];
+        foreach ($patientOrdonnances as $ord) {
+            if (stripos((string) $ord->getPosologie(), 'IA') !== false || stripos((string) $ord->getPosologie(), 'auto') !== false) {
+                $aiOrdonnances[] = $ord;
+            } else {
+                $docOrdonnances[] = $ord;
+            }
+        }
 
         return $this->render('patient/dossier.html.twig', [
-            'fiches' => $fiches,
-            'ordonnances' => $ordonnances,
+            'fiches' => $fiche ? [$fiche] : [],
+            'fiche' => $fiche,
+            'ordonnances' => $patientOrdonnances,
+            'aiOrdonnances' => $aiOrdonnances,
+            'docOrdonnances' => $docOrdonnances,
         ]);
     }
 
     #[Route('/fiche/{id}', name: 'patient_fiche_show')]
-    public function showFiche($id, FicheRepository $ficheRepo): Response
+    public function showFiche($id, FicheRepository $ficheRepo, OrdonnanceRepository $ordonnanceRepository, MedicalAiService $medicalAiService): Response
     {
         $fiche = $ficheRepo->find($id);
-        
+
         if (!$fiche || $fiche->getIdU() !== $this->getUser()) {
             throw $this->createAccessDeniedException();
         }
 
+        $patientOrdonnances = $ordonnanceRepository->findByPatient($fiche->getIdU());
+        $aiOrdonnances = [];
+        $docOrdonnances = [];
+        foreach ($patientOrdonnances as $ord) {
+            if (stripos((string) $ord->getPosologie(), 'IA') !== false || stripos((string) $ord->getPosologie(), 'auto') !== false) {
+                $aiOrdonnances[] = $ord;
+            } else {
+                $docOrdonnances[] = $ord;
+            }
+        }
+
+        $aiSuggestions = $medicalAiService->generateSuggestions($fiche);
+
         return $this->render('patient/show_fiche.html.twig', [
             'fiche' => $fiche,
+            'aiSuggestions' => $aiSuggestions,
+            'aiOrdonnances' => $aiOrdonnances,
+            'docOrdonnances' => $docOrdonnances,
         ]);
     }
 
     #[Route('/ordonnance/{id}', name: 'patient_ordonnance_show')]
-    public function showOrdonnance($id, OrdonnanceRepository $ordRepo): Response
+    public function showOrdonnance($id, OrdonnanceRepository $ordRepo, EntityManagerInterface $em, string $siteBaseUrl): Response
     {
         $ordonnance = $ordRepo->find($id);
-        
-        if (!$ordonnance || $ordonnance->getIdU() !== $this->getUser()) {
+
+        if (!$ordonnance || $ordonnance->getIdRdv()?->getPatient() !== $this->getUser()) {
             throw $this->createAccessDeniedException();
         }
 
+        if ($ordonnance->getScanToken() === null) {
+            $ordonnance->setScanToken(bin2hex(random_bytes(32)));
+            $em->flush();
+        }
+
+        $qrDataUri = $this->generateOrdonnanceQrDataUri($ordonnance, $siteBaseUrl);
+
         return $this->render('patient/show_ordonnance.html.twig', [
             'ordonnance' => $ordonnance,
+            'qrDataUri' => $qrDataUri,
         ]);
+    }
+
+    private function generateOrdonnanceQrDataUri($ordonnance, string $siteBaseUrl): string
+    {
+        $scanUrl = rtrim($siteBaseUrl, '/') . $this->generateUrl(
+            'app_ordonnance_scan',
+            ['token' => $ordonnance->getScanToken()],
+            \Symfony\Component\Routing\Generator\UrlGeneratorInterface::ABSOLUTE_PATH
+        );
+
+        $builder = new \Endroid\QrCode\Builder\Builder(
+            writer: new \Endroid\QrCode\Writer\SvgWriter(),
+            data: $scanUrl,
+            size: 200,
+            margin: 8
+        );
+        $result = $builder->build();
+
+        return $result->getDataUri();
     }
 }

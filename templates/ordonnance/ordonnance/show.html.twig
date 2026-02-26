@@ -1,0 +1,124 @@
+{% extends 'admin_base.html.twig' %}
+{% set poso = ordonnance.posologie|default('') %}
+{% set isAiOrdonnance = 'IA' in poso or 'auto' in poso|lower %}
+
+{% block title %}Ordonnance #{{ ordonnance.id }}{% endblock %}
+
+{% block body %}
+<div class="max-w-5xl mx-auto px-4 py-8">
+    <div class="flex items-center justify-between mb-10">
+        <div>
+            <h1 class="text-4xl font-black text-slate-800 tracking-tight">Ordonnance détaillée</h1>
+            <p class="text-slate-500 font-medium">Visualisation complète de la prescription.</p>
+        </div>
+        <div class="flex items-center gap-4">
+            <span class="px-4 py-2 rounded-xl text-xs font-black uppercase {{ isAiOrdonnance ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-700' }}">
+                {{ isAiOrdonnance ? 'Suggestion IA' : 'Ordonnance Médecin' }}
+            </span>
+            <a href="{{ path('app_ordonnance_index') }}" class="bg-slate-100 text-slate-600 px-6 py-3 rounded-2xl font-bold hover:bg-slate-200 transition-all flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i>
+                Liste
+            </a>
+            <a href="{{ path('app_ordonnance_edit', {'id': ordonnance.id}) }}" class="{{ isAiOrdonnance ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100' : 'bg-amber-600 hover:bg-amber-700 shadow-amber-100' }} text-white px-6 py-3 rounded-2xl font-bold shadow-xl transition-all flex items-center gap-2">
+                <i class="fa-solid fa-edit"></i>
+                Modifier
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2 space-y-8">
+            <div class="rounded-[3rem] shadow-xl p-10 border-2 {{ isAiOrdonnance ? 'bg-indigo-50/30 border-indigo-200 shadow-indigo-100/50' : 'bg-amber-50/30 border-amber-200 shadow-amber-100/50' }}">
+                <h2 class="text-2xl font-black text-slate-800 mb-8 flex items-center gap-3">
+                    <i class="fa-solid fa-notes-medical {{ isAiOrdonnance ? 'text-indigo-500' : 'text-amber-600' }}"></i>
+                    Traitement Prescrit
+                </h2>
+                <div class="space-y-6">
+                    <div>
+                        <p class="text-slate-400 text-xs font-black uppercase tracking-widest mb-2">Posologie</p>
+                        <div class="p-6 rounded-2xl font-bold text-slate-700 leading-relaxed {{ isAiOrdonnance ? 'bg-indigo-50 border border-indigo-100' : 'bg-amber-50 border border-amber-100' }}">
+                            {{ ordonnance.posologie }}
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="p-6 rounded-2xl {{ isAiOrdonnance ? 'bg-indigo-100 border-indigo-200' : 'bg-amber-100 border-amber-200' }} border">
+                            <p class="{{ isAiOrdonnance ? 'text-indigo-600' : 'text-amber-700' }} text-[10px] font-black uppercase tracking-widest mb-1">Durée</p>
+                            <p class="text-2xl font-black {{ isAiOrdonnance ? 'text-indigo-700' : 'text-amber-800' }}">{{ ordonnance.dureeTraitement }} Jours</p>
+                        </div>
+                        <div class="p-6 rounded-2xl border {{ isAiOrdonnance ? 'bg-purple-50 border-purple-100' : 'bg-amber-50 border-amber-100' }}">
+                            <p class="{{ isAiOrdonnance ? 'text-purple-600' : 'text-amber-700' }} text-[10px] font-black uppercase tracking-widest mb-1">Fréquence</p>
+                            <p class="text-lg font-black {{ isAiOrdonnance ? 'text-purple-700' : 'text-amber-800' }}">{{ ordonnance.frequence }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-[3rem] shadow-xl p-10 border {{ isAiOrdonnance ? 'border-indigo-100 shadow-indigo-100/50' : 'border-amber-100 shadow-amber-100/50' }}">
+                <h2 class="text-2xl font-black text-slate-800 mb-8 flex items-center justify-between">
+                    <span class="flex items-center gap-3">
+                        <i class="fa-solid fa-pills {{ isAiOrdonnance ? 'text-indigo-500' : 'text-amber-600' }}"></i>
+                        Médicaments Inclus
+                    </span>
+                    <span class="px-4 py-1 rounded-full text-sm font-black {{ isAiOrdonnance ? 'bg-indigo-100 text-indigo-600' : 'bg-amber-100 text-amber-700' }}">{{ ordonnance.medicaments|length }} Items</span>
+                </h2>
+                <div class="space-y-4">
+                    {% for medicament in ordonnance.medicaments %}
+                        <div class="flex items-center justify-between p-5 rounded-2xl border transition-colors group {{ isAiOrdonnance ? 'bg-indigo-50/50 border-indigo-100 hover:border-indigo-200' : 'bg-amber-50/50 border-amber-100 hover:border-amber-200' }}">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-xl flex items-center justify-center {{ isAiOrdonnance ? 'bg-indigo-100 text-indigo-600' : 'bg-amber-100 text-amber-600' }} group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-capsules"></i>
+                                </div>
+                                <div>
+                                    <p class="font-black text-slate-700">{{ medicament.nomMedicament }}</p>
+                                    <p class="text-xs text-slate-400 font-bold">{{ medicament.dosage }} • {{ medicament.forme }}</p>
+                                </div>
+                            </div>
+                            <a href="{{ path('app_medicament_show', {'id': medicament.id}) }}" class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-300 hover:shadow-md transition-all {{ isAiOrdonnance ? 'hover:text-indigo-500 hover:bg-indigo-50' : 'hover:text-amber-500 hover:bg-amber-50' }}">
+                                <i class="fa-solid fa-external-link text-xs"></i>
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-10">
+                            <i class="fa-solid fa-circle-info text-3xl text-slate-200 mb-4"></i>
+                            <p class="text-slate-400 font-bold">Aucun médicament spécifié</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-8">
+            <div class="rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden {{ isAiOrdonnance ? 'bg-gradient-to-br from-indigo-600 to-purple-700 shadow-indigo-100' : 'bg-gradient-to-br from-amber-600 to-amber-800 shadow-amber-100' }}">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+                <h3 class="text-[10px] font-black uppercase tracking-widest mb-6 relative z-10 {{ isAiOrdonnance ? 'text-indigo-200' : 'text-amber-200' }}">{{ isAiOrdonnance ? 'Suggestion IA' : 'Médecin Prescripteur' }}</h3>
+                <div class="flex items-center gap-4 relative z-10 mb-6">
+                    <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
+                        <i class="fa-solid {{ isAiOrdonnance ? 'fa-microchip' : 'fa-user-doctor' }} text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="font-black text-lg">{{ ordonnance.idU.email|split('@')|first|capitalize }}</p>
+                        <p class="text-xs font-medium {{ isAiOrdonnance ? 'text-indigo-200' : 'text-amber-200' }}">{{ ordonnance.idU.email }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-[2.5rem] shadow-xl p-8 border border-slate-100 text-center">
+                <p class="text-slate-400 text-xs font-black uppercase tracking-widest mb-4">Rendez-vous Associé</p>
+                <div class="p-4 rounded-2xl font-black mb-6 border {{ isAiOrdonnance ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-amber-50 text-amber-600 border-amber-100' }}">
+                    ID RDV: #{{ ordonnance.idRdv.id }}
+                </div>
+            </div>
+
+            {% if qrDataUri is defined and qrDataUri %}
+            <div class="bg-white rounded-[2.5rem] shadow-xl p-8 border border-slate-100 text-center">
+                <p class="text-slate-400 text-xs font-black uppercase tracking-widest mb-4">Digital Prescription Scan</p>
+                <p class="text-slate-500 text-sm font-medium mb-4">Scannez avec votre téléphone pour accéder à la prescription</p>
+                <div class="inline-flex p-4 bg-white rounded-2xl border-2 border-slate-100 shadow-inner">
+                    <img src="{{ qrDataUri }}" alt="QR Code prescription" class="w-48 h-48" width="192" height="192">
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

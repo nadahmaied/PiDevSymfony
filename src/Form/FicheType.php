@@ -63,6 +63,10 @@ class FicheType extends AbstractType
                 'label' => 'Recommandations',
                 'required' => false
             ])
+            ->add('symptomes', TextareaType::class, [
+                'label' => 'Symptômes',
+                'required' => false
+            ])
             ->add('idU', EntityType::class, [
                 'class' => User::class,
                 'choice_label' => 'email',

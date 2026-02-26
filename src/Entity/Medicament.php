@@ -38,12 +38,12 @@ class Medicament
     #[Assert\NotNull(message: 'La date d\'expiration est obligatoire.')]
     private ?\DateTimeInterface $dateExpiration = null;
 
-    #[ORM\ManyToMany(targetEntity: Ordonnance::class, mappedBy: 'medicaments')]
-    private Collection $ordonnances;
+    #[ORM\OneToMany(targetEntity: LigneOrdonnance::class, mappedBy: 'medicament')]
+    private Collection $lignesOrdonnance;
 
     public function __construct()
     {
-        $this->ordonnances = new ArrayCollection();
+        $this->lignesOrdonnance = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -112,27 +112,29 @@ class Medicament
     }
 
     /**
-     * @return Collection<int, Ordonnance>
+     * @return Collection<int, LigneOrdonnance>
      */
-    public function getOrdonnances(): Collection
+    public function getLignesOrdonnance(): Collection
     {
-        return $this->ordonnances;
+        return $this->lignesOrdonnance;
     }
 
-    public function addOrdonnance(Ordonnance $ordonnance): static
+    public function addLignesOrdonnance(LigneOrdonnance $ligneOrdonnance): static
     {
-        if (!$this->ordonnances->contains($ordonnance)) {
-            $this->ordonnances->add($ordonnance);
-            $ordonnance->addMedicament($this);
+        if (!$this->lignesOrdonnance->contains($ligneOrdonnance)) {
+            $this->lignesOrdonnance->add($ligneOrdonnance);
+            $ligneOrdonnance->setMedicament($this);
         }
 
         return $this;
     }
 
-    public function removeOrdonnance(Ordonnance $ordonnance): static
+    public function removeLignesOrdonnance(LigneOrdonnance $ligneOrdonnance): static
     {
-        if ($this->ordonnances->removeElement($ordonnance)) {
-            $ordonnance->removeMedicament($this);
+        if ($this->lignesOrdonnance->removeElement($ligneOrdonnance)) {
+            if ($ligneOrdonnance->getMedicament() === $this) {
+                $ligneOrdonnance->setMedicament(null);
+            }
         }
 
         return $this;

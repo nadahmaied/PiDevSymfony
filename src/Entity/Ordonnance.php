@@ -2,12 +2,12 @@
 
 namespace App\Entity;
 
-use App\Entity\Fiche;
 use App\Entity\Medicament;
 use App\Entity\User;
 use App\Repository\OrdonnanceRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -32,23 +32,27 @@ class Ordonnance
     #[Assert\Positive(message: 'La durée doit être un nombre positif.')]
     private ?int $dureeTraitement = null;
 
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    private ?\DateTimeInterface $dateOrdonnance = null;
+
     #[ORM\ManyToOne(inversedBy: 'ordonnances')]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $idU = null;
 
     #[ORM\ManyToOne(inversedBy: 'ordonnances')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Fiche $id_fiche = null;
+    private ?Rdv $idRdv = null;
 
-    #[ORM\ManyToMany(targetEntity: Medicament::class, inversedBy: 'ordonnances')]
-    #[ORM\JoinTable(name: 'ord_med')]
-    #[ORM\JoinColumn(name: "id_ord", referencedColumnName: "id")]
-    #[ORM\InverseJoinColumn(name: "id_medicament", referencedColumnName: "id")]
-    private Collection $medicaments;
+    #[ORM\OneToMany(targetEntity: LigneOrdonnance::class, mappedBy: 'ordonnance', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    private Collection $lignesOrdonnance;
+
+    #[ORM\Column(length: 64, unique: true, nullable: true)]
+    private ?string $scanToken = null;
 
     public function __construct()
     {
-        $this->medicaments = new ArrayCollection();
+        $this->lignesOrdonnance = new ArrayCollection();
+        $this->dateOrdonnance = new \DateTime();
     }
 
     public function getId(): ?int
@@ -92,6 +96,18 @@ class Ordonnance
         return $this;
     }
 
+    public function getDateOrdonnance(): ?\DateTimeInterface
+    {
+        return $this->dateOrdonnance;
+    }
+
+    public function setDateOrdonnance(?\DateTimeInterface $dateOrdonnance): static
+    {
+        $this->dateOrdonnance = $dateOrdonnance;
+
+        return $this;
+    }
+
     public function getIdU(): ?User
     {
         return $this->idU;
@@ -104,14 +120,43 @@ class Ordonnance
         return $this;
     }
 
-    public function getIdFiche(): ?Fiche
+    public function getIdRdv(): ?Rdv
     {
-        return $this->id_fiche;
+        return $this->idRdv;
     }
 
-    public function setIdFiche(?Fiche $id_fiche): static
+    public function setIdRdv(?Rdv $idRdv): static
     {
-        $this->id_fiche = $id_fiche;
+        $this->idRdv = $idRdv;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, LigneOrdonnance>
+     */
+    public function getLignesOrdonnance(): Collection
+    {
+        return $this->lignesOrdonnance;
+    }
+
+    public function addLignesOrdonnance(LigneOrdonnance $ligneOrdonnance): static
+    {
+        if (!$this->lignesOrdonnance->contains($ligneOrdonnance)) {
+            $this->lignesOrdonnance->add($ligneOrdonnance);
+            $ligneOrdonnance->setOrdonnance($this);
+        }
+
+        return $this;
+    }
+
+    public function removeLignesOrdonnance(LigneOrdonnance $ligneOrdonnance): static
+    {
+        if ($this->lignesOrdonnance->removeElement($ligneOrdonnance)) {
+            if ($ligneOrdonnance->getOrdonnance() === $this) {
+                $ligneOrdonnance->setOrdonnance(null);
+            }
+        }
 
         return $this;
     }
@@ -121,21 +166,57 @@ class Ordonnance
      */
     public function getMedicaments(): Collection
     {
-        return $this->medicaments;
+        $medicaments = new ArrayCollection();
+
+        foreach ($this->lignesOrdonnance as $ligneOrdonnance) {
+            $medicament = $ligneOrdonnance->getMedicament();
+            if ($medicament !== null && !$medicaments->contains($medicament)) {
+                $medicaments->add($medicament);
+            }
+        }
+
+        return $medicaments;
     }
 
     public function addMedicament(Medicament $medicament): static
     {
-        if (!$this->medicaments->contains($medicament)) {
-            $this->medicaments->add($medicament);
+        foreach ($this->lignesOrdonnance as $ligneOrdonnance) {
+            if ($ligneOrdonnance->getMedicament() === $medicament) {
+                return $this;
+            }
         }
+
+        $ligneOrdonnance = new LigneOrdonnance();
+        $ligneOrdonnance->setMedicament($medicament);
+        $ligneOrdonnance->setNbJours($this->dureeTraitement ?? 1);
+        $ligneOrdonnance->setFrequenceParJour(1);
+        $ligneOrdonnance->setMomentPrise('Matin');
+        $ligneOrdonnance->setAvantRepas(false);
+        $ligneOrdonnance->setPeriode($this->frequence ?? 'Quotidien');
+        $this->addLignesOrdonnance($ligneOrdonnance);
 
         return $this;
     }
 
     public function removeMedicament(Medicament $medicament): static
     {
-        $this->medicaments->removeElement($medicament);
+        foreach ($this->lignesOrdonnance as $ligneOrdonnance) {
+            if ($ligneOrdonnance->getMedicament() === $medicament) {
+                $this->removeLignesOrdonnance($ligneOrdonnance);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getScanToken(): ?string
+    {
+        return $this->scanToken;
+    }
+
+    public function setScanToken(?string $scanToken): static
+    {
+        $this->scanToken = $scanToken;
 
         return $this;
     }

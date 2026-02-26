@@ -2,11 +2,8 @@
 
 namespace App\Entity;
 
-use App\Entity\Ordonnance;
 use App\Entity\User;
 use App\Repository\FicheRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -63,16 +60,15 @@ class Fiche
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $recommandation = null;
 
-    #[ORM\ManyToOne(inversedBy: 'fiches')]
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $symptomes = null;
+
+    #[ORM\OneToOne(inversedBy: 'fiche')]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $idU = null;
 
-    #[ORM\OneToMany(targetEntity: Ordonnance::class, mappedBy: 'id_fiche', cascade: ['remove'])]
-    private Collection $ordonnances;
-
     public function __construct()
     {
-        $this->ordonnances = new ArrayCollection();
         $this->date = new \DateTime();
     }
 
@@ -213,6 +209,18 @@ class Fiche
         return $this;
     }
 
+    public function getSymptomes(): ?string
+    {
+        return $this->symptomes;
+    }
+
+    public function setSymptomes(?string $symptomes): static
+    {
+        $this->symptomes = $symptomes;
+
+        return $this;
+    }
+
     public function getIdU(): ?User
     {
         return $this->idU;
@@ -221,36 +229,6 @@ class Fiche
     public function setIdU(?User $idU): static
     {
         $this->idU = $idU;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Ordonnance>
-     */
-    public function getOrdonnances(): Collection
-    {
-        return $this->ordonnances;
-    }
-
-    public function addOrdonnance(Ordonnance $ordonnance): static
-    {
-        if (!$this->ordonnances->contains($ordonnance)) {
-            $this->ordonnances->add($ordonnance);
-            $ordonnance->setIdFiche($this);
-        }
-
-        return $this;
-    }
-
-    public function removeOrdonnance(Ordonnance $ordonnance): static
-    {
-        if ($this->ordonnances->removeElement($ordonnance)) {
-            // set the owning side to null (unless already changed)
-            if ($ordonnance->getIdFiche() === $this) {
-                $ordonnance->setIdFiche(null);
-            }
-        }
 
         return $this;
     }

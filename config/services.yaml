@@ -7,6 +7,10 @@ parameters:
     gemini_api_key: '%env(GEMINI_API_KEY)%'
     groq_api_key: '%env(GROQ_API_KEY)%'
     mission_images_directory: '%kernel.project_dir%/public/uploads/missions'
+    openai_model_default: 'gpt-4o'
+    grok_model_default: 'grok-2-1212'
+    ollama_model_default: 'llama3.2'
+    site_base_url: '%env(SITE_BASE_URL)%'
     ml_model_path: '%kernel.project_dir%/var/ml/recommendation_model.json'
     forum_ai_api_key: '%env(FORUM_AI_API_KEY)%'
     forum_ai_api_url: '%env(FORUM_AI_API_URL)%'
@@ -64,6 +68,37 @@ services:
             $apiKey: '%volunteer_ai_api_key%'
             $apiUrl: '%volunteer_ai_api_url%'
             $model: '%volunteer_ai_model%'
+
+    App\Controller\OrdonnanceController:
+        bind:
+            $siteBaseUrl: '%site_base_url%'
+
+    App\Controller\PatientController:
+        bind:
+            $siteBaseUrl: '%site_base_url%'
+
+    App\Service\PrescriptionMailerService:
+        arguments:
+            $siteBaseUrl: '%site_base_url%'
+
+    App\Service\ChatbotService:
+        arguments:
+            $openAiApiKey: '%env(default::OPENAI_API_KEY)%'
+            $openAiModel: '%env(default:openai_model_default:OPENAI_MODEL)%'
+            $groqApiKey: '%env(default::GROQ_API_KEY)%'
+            $grokApiKey: '%env(default::GROK_API_KEY)%'
+            $geminiApiKey: '%env(default::GEMINI_API_KEY)%'
+            $ollamaUrl: '%env(default::OLLAMA_URL)%'
+            $ollamaModel: '%env(default:ollama_model_default:OLLAMA_MODEL)%'
+
+    App\Service\MedicalAiService:
+        arguments:
+            $cache: '@cache.app'
+            $openAiApiKey: '%env(default::OPENAI_API_KEY)%'
+            $openAiModel: '%env(default:openai_model_default:OPENAI_MODEL)%'
+            $grokApiKey: '%env(default::GROK_API_KEY)%'
+            $grokModel: '%env(default:grok_model_default:GROK_MODEL)%'
+            $geminiApiKey: '%env(default::GEMINI_API_KEY)%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
