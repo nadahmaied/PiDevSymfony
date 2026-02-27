@@ -1,6 +1,5 @@
 {{ form_start(form, {'attr': {'class': 'space-y-6', 'novalidate': 'novalidate'}}) }}
 
-    {# Affichage des erreurs globales #}
     {{ form_errors(form) }}
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -25,13 +24,35 @@
 
     <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
         <h3 class="text-sm font-medium text-gray-700 mb-3">Missions sponsorisées :</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {{ form_widget(form.missions, {'attr': {'class': 'space-y-2'}}) }}
-            <div class="text-red-500 text-sm mt-2">
-        {{ form_errors(form.missions) }}
-    </div>
+
+        <div class="mb-3">
+            <input
+                id="js-mission-search"
+                type="text"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                placeholder="Rechercher une mission (titre, lieu, description)..."
+            >
         </div>
+
+        <div class="flex items-center justify-between mb-2 text-xs text-gray-600">
+            <span id="js-selected-count">0 mission sélectionnée</span>
+            <span id="js-mission-loading" class="hidden">Chargement...</span>
+        </div>
+
+        <div id="js-mission-results" class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1"></div>
+
+        <div class="mt-3">
+            <button id="js-mission-load-more" type="button" class="hidden w-full md:w-auto px-4 py-2 text-sm rounded-lg border border-blue-200 text-blue-700 hover:bg-blue-50 transition">
+                Charger plus
+            </button>
+        </div>
+
+        <div class="text-red-500 text-sm mt-2">{{ form_errors(form.missions) }}</div>
         <p class="text-xs text-gray-500 mt-2">Cochez les missions financées par ce sponsor.</p>
+
+        <div class="hidden">
+            {{ form_widget(form.missions, {'id': 'js-sponsor-missions-select'}) }}
+        </div>
     </div>
 
     <div class="flex justify-end pt-4">
@@ -41,3 +62,131 @@
     </div>
 
 {{ form_end(form) }}
+
+<script>
+(() => {
+    const selectEl = document.getElementById('js-sponsor-missions-select')
+        || document.getElementById('sponsor_missions');
+    const searchEl = document.getElementById('js-mission-search');
+    const resultsEl = document.getElementById('js-mission-results');
+    const loadMoreEl = document.getElementById('js-mission-load-more');
+    const loadingEl = document.getElementById('js-mission-loading');
+    const countEl = document.getElementById('js-selected-count');
+
+    if (!selectEl || !searchEl || !resultsEl || !loadMoreEl || !loadingEl || !countEl) {
+        return;
+    }
+
+    const endpoint = '{{ path('app_sponsor_missions_search') }}';
+    const selectedIds = new Set(Array.from(selectEl.options).filter(o => o.selected).map(o => o.value));
+
+    let page = 1;
+    let hasMore = false;
+    let currentQuery = '';
+    let loading = false;
+
+    const updateSelectedCount = () => {
+        const count = selectedIds.size;
+        countEl.textContent = count <= 1 ? `${count} mission sélectionnée` : `${count} missions sélectionnées`;
+    };
+
+    const syncSelect = () => {
+        Array.from(selectEl.options).forEach(option => {
+            option.selected = selectedIds.has(option.value);
+        });
+        updateSelectedCount();
+    };
+
+    const renderItems = (items, append = false) => {
+        if (!append) {
+            resultsEl.innerHTML = '';
+        }
+
+        if (!append && items.length === 0) {
+            resultsEl.innerHTML = '<p class="text-sm text-gray-500">Aucune mission trouvée.</p>';
+            return;
+        }
+
+        items.forEach(item => {
+            const id = String(item.id);
+            const checked = selectedIds.has(id) ? 'checked' : '';
+            const card = document.createElement('label');
+            card.className = 'flex gap-2 p-2 rounded border border-gray-200 bg-white hover:bg-gray-50 cursor-pointer';
+            card.innerHTML = `
+                <input type="checkbox" class="mt-1" value="${id}" ${checked}>
+                <span class="text-sm text-gray-700 leading-5">
+                    <strong>${item.title}</strong><br>
+                    <span class="text-gray-500">${item.location} - ${item.status}</span>
+                </span>
+            `;
+
+            const checkbox = card.querySelector('input');
+            checkbox.addEventListener('change', () => {
+                if (checkbox.checked) {
+                    selectedIds.add(id);
+                } else {
+                    selectedIds.delete(id);
+                }
+                syncSelect();
+            });
+
+            resultsEl.appendChild(card);
+        });
+    };
+
+    const loadMissions = async (reset = false) => {
+        if (loading) {
+            return;
+        }
+
+        loading = true;
+        loadingEl.classList.remove('hidden');
+
+        if (reset) {
+            page = 1;
+        }
+
+        try {
+            const url = `${endpoint}?q=${encodeURIComponent(currentQuery)}&page=${page}&limit=10`;
+            const response = await fetch(url);
+            const data = await response.json();
+
+            renderItems(Array.isArray(data.items) ? data.items : [], !reset && page > 1);
+            hasMore = !!data.hasMore;
+            loadMoreEl.classList.toggle('hidden', !hasMore);
+
+            if (hasMore) {
+                page += 1;
+            }
+        } catch (e) {
+            if (!reset && resultsEl.innerHTML !== '') {
+                // keep old list
+            } else {
+                resultsEl.innerHTML = '<p class="text-sm text-red-500">Erreur de chargement des missions.</p>';
+            }
+            loadMoreEl.classList.add('hidden');
+        } finally {
+            loading = false;
+            loadingEl.classList.add('hidden');
+        }
+    };
+
+    let debounceTimer = null;
+    searchEl.addEventListener('input', () => {
+        currentQuery = searchEl.value.trim();
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            loadMissions(true);
+        }, 250);
+    });
+
+    loadMoreEl.addEventListener('click', () => {
+        if (hasMore) {
+            loadMissions(false);
+        }
+    });
+
+    syncSelect();
+    loadMissions(true);
+})();
+</script>

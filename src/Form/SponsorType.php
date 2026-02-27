@@ -6,12 +6,12 @@ use App\Entity\MissionVolunteer;
 use App\Entity\Sponsor;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\FileType; // Import Important
-use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
+use Symfony\Component\Form\Extension\Core\Type\FileType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Validator\Constraints\File; // Import Important
+use Symfony\Component\Validator\Constraints\File;
 
 class SponsorType extends AbstractType
 {
@@ -24,10 +24,9 @@ class SponsorType extends AbstractType
             ->add('contactEmail', EmailType::class, [
                 'label' => 'Email de contact'
             ])
-            // Champ Fichier pour le Logo
             ->add('logo', FileType::class, [
                 'label' => 'Logo de l\'entreprise (Image)',
-                'mapped' => false, // Important : pas lié directement à la base
+                'mapped' => false,
                 'required' => false,
                 'constraints' => [
                     new File([
@@ -43,12 +42,11 @@ class SponsorType extends AbstractType
             ])
             ->add('missions', EntityType::class, [
                 'class' => MissionVolunteer::class,
-                'choice_label' => 'titre', // On affiche le titre de la mission
+                'choice_label' => 'titre',
                 'multiple' => true,
-                'expanded' => true, // mettez 'false' pour une liste déroulante, 'true' pour des cases à cocher
+                'expanded' => false,
                 'label' => 'Missions sponsorisées'
-            ])
-        ;
+            ]);
     }
 
     public function configureOptions(OptionsResolver $resolver): void

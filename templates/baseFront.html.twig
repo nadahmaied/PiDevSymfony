@@ -62,9 +62,7 @@
             <a href="{{ path('app_assoc_mission_index') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 {{ app.request.get('_route') == 'app_assoc_mission_index' ? 'text-blue-600 bg-blue-50' : 'text-gray-600' }} rounded-xl font-medium">
                 <i class="fa-solid fa-briefcase w-5 text-emerald-400"></i> Gérer mes Missions
             </a>
-            <a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 text-gray-600 rounded-xl font-medium">
-                <i class="fa-solid fa-calendar-check w-5 text-red-400"></i> Événements
-            </a>
+            <a href="{{ path('chatbot') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 {{ app.request.get('_route') == 'chatbot' ? 'text-blue-600 bg-blue-50' : 'text-gray-600' }} rounded-xl font-medium">`r`n                <i class="fa-solid fa-robot w-5 text-indigo-400"></i> Chatbot`r`n            </a>
 
             {% if is_granted('ROLE_ADMIN') %}
                 <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mt-6 mb-2 pl-2">Administration</p>
