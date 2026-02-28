@@ -68,6 +68,12 @@ services:
             $apiKey: '%volunteer_ai_api_key%'
             $apiUrl: '%volunteer_ai_api_url%'
             $model: '%volunteer_ai_model%'
+
+    App\Service\ApplicationsSummaryAiService:
+        arguments:
+            $apiKey: '%volunteer_ai_api_key%'
+            $apiUrl: '%volunteer_ai_api_url%'
+            $model: '%volunteer_ai_model%'
             
     App\Service\SmsService:
         arguments:

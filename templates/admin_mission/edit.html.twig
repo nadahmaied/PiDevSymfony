@@ -12,29 +12,192 @@
             </div>
             <h1 class="text-2xl font-bold text-gray-800">Modifier la mission #{{ mission.id }}</h1>
         </div>
-        
+
         {{ include('admin_mission/_delete_form.html.twig') }}
     </header>
 
     <div class="flex-1 overflow-y-auto p-8 bg-gray-50">
         <div class="max-w-3xl mx-auto">
             <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-                 <div class="h-2 bg-gradient-to-r from-blue-400 to-blue-600"></div>
+                <div class="h-2 bg-gradient-to-r from-blue-400 to-blue-600"></div>
 
                 <div class="p-8">
+                    {% for label, messages in app.flashes %}
+                        {% for message in messages %}
+                            <div class="mb-4 rounded-lg border px-4 py-3 text-sm
+                                {% if label == 'success' %}border-green-200 bg-green-50 text-green-800{% else %}border-blue-200 bg-blue-50 text-blue-800{% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endfor %}
+
                     <div class="mb-6 flex items-center justify-between">
                         <div>
-                            <h2 class="text-lg font-semibold text-gray-700">Détails de la mission</h2>
-                            <p class="text-sm text-gray-500">Modifiez les informations nécessaires ci-dessous.</p>
+                            <h2 class="text-lg font-semibold text-gray-700">Details de la mission</h2>
+                            <p class="text-sm text-gray-500">Modifiez les informations necessaires ci-dessous.</p>
                         </div>
                         <span class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-bold border border-blue-100">
-                            Mode Édition
+                            Mode Edition
                         </span>
                     </div>
 
-                    {{ include('admin_mission/_form.html.twig', {'button_label': 'Mettre à jour'}) }}
+                    <div class="mb-6 rounded-lg border border-blue-100 bg-blue-50 p-4">
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <h3 class="text-sm font-semibold text-blue-900">Resume IA des candidatures</h3>
+                                <p class="text-xs text-blue-700">Analyse automatique des candidats de cette mission.</p>
+                            </div>
+                            <button
+                                id="js-ai-candidatures-btn"
+                                type="button"
+                                data-url="{{ path('app_admin_missions_ai_candidatures_summary', {'id': mission.id}) }}"
+                                class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition"
+                            >
+                                Generer le resume IA
+                            </button>
+                        </div>
+
+                        <div id="js-ai-candidatures-output" class="mt-4 hidden rounded-md bg-white p-4 border border-blue-100">
+                            <p class="text-sm font-semibold text-gray-800">Synthese</p>
+                            <p id="js-ai-summary" class="mt-1 text-sm text-gray-700"></p>
+
+                            <p class="mt-4 text-sm font-semibold text-gray-800">Top candidats</p>
+                            <ul id="js-ai-top" class="mt-2 list-disc pl-5 text-sm text-gray-700 space-y-1"></ul>
+
+                            <p class="mt-4 text-sm font-semibold text-gray-800">Risques</p>
+                            <ul id="js-ai-risks" class="mt-2 list-disc pl-5 text-sm text-gray-700 space-y-1"></ul>
+
+                            <p class="mt-4 text-sm font-semibold text-gray-800">Recommendation</p>
+                            <p id="js-ai-recommendation" class="mt-1 text-sm text-gray-700"></p>
+
+                            <p id="js-ai-meta" class="mt-3 text-xs text-gray-500"></p>
+                        </div>
+                    </div>
+
+                    {{ include('admin_mission/_form.html.twig', {'button_label': 'Mettre a jour'}) }}
+
+                    <div class="mt-8 border-t border-gray-200 pt-6">
+                        <h3 class="text-lg font-semibold text-gray-800">Candidatures a valider</h3>
+                        <p class="text-sm text-gray-500 mb-4">L'admin peut accepter ou refuser les candidatures.</p>
+
+                        <div class="space-y-3">
+                            {% for application in mission.volunteers %}
+                                {% set status = application.statut|default('En attente') %}
+                                <div class="rounded-lg border border-gray-200 bg-white p-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                    <div>
+                                        <p class="text-sm font-semibold text-gray-800">
+                                            {{ application.user ? (application.user.prenom ~ ' ' ~ application.user.nom)|trim : 'Utilisateur inconnu' }}
+                                        </p>
+                                        <p class="text-xs text-gray-500">{{ application.user ? application.user.email : '' }}</p>
+                                        <p class="mt-1 text-xs text-gray-500">
+                                            Disponibilites: {{ application.disponibilites is defined and application.disponibilites|length > 0 ? application.disponibilites|join(', ') : 'Non precisees' }}
+                                        </p>
+                                        <p class="mt-1 text-xs text-gray-600">
+                                            Motivation: {{ application.motivation|slice(0, 140) }}{% if application.motivation|length > 140 %}...{% endif %}
+                                        </p>
+                                    </div>
+
+                                    <div class="flex flex-col items-start gap-2 md:items-end">
+                                        <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold
+                                            {% if status|lower == 'acceptee' %}bg-green-100 text-green-700
+                                            {% elseif status|lower == 'refusee' %}bg-red-100 text-red-700
+                                            {% else %}bg-yellow-100 text-yellow-700{% endif %}">
+                                            {{ status }}
+                                        </span>
+
+                                        <div class="flex gap-2">
+                                            <form method="post" action="{{ path('app_admin_missions_application_status', {'missionId': mission.id, 'id': application.id}) }}">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('application_status_' ~ application.id) }}">
+                                                <input type="hidden" name="status" value="acceptee">
+                                                <button type="submit" class="rounded-md bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700 transition">
+                                                    Accepter
+                                                </button>
+                                            </form>
+
+                                            <form method="post" action="{{ path('app_admin_missions_application_status', {'missionId': mission.id, 'id': application.id}) }}">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('application_status_' ~ application.id) }}">
+                                                <input type="hidden" name="status" value="refusee">
+                                                <button type="submit" class="rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 transition">
+                                                    Refuser
+                                                </button>
+                                            </form>
+
+                                            <form method="post" action="{{ path('app_admin_missions_application_status', {'missionId': mission.id, 'id': application.id}) }}">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('application_status_' ~ application.id) }}">
+                                                <input type="hidden" name="status" value="en_attente">
+                                                <button type="submit" class="rounded-md bg-gray-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-gray-700 transition">
+                                                    En attente
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
+                                    Aucune candidature pour cette mission.
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <script>
+        (() => {
+            const btn = document.getElementById('js-ai-candidatures-btn');
+            const panel = document.getElementById('js-ai-candidatures-output');
+            if (!btn || !panel) {
+                return;
+            }
+
+            const summaryEl = document.getElementById('js-ai-summary');
+            const topEl = document.getElementById('js-ai-top');
+            const risksEl = document.getElementById('js-ai-risks');
+            const recommendationEl = document.getElementById('js-ai-recommendation');
+            const metaEl = document.getElementById('js-ai-meta');
+
+            const fillList = (element, items, mapItem) => {
+                element.innerHTML = '';
+                items.forEach((item) => {
+                    const li = document.createElement('li');
+                    li.textContent = mapItem(item);
+                    element.appendChild(li);
+                });
+            };
+
+            btn.addEventListener('click', async () => {
+                const initial = btn.textContent;
+                btn.disabled = true;
+                btn.textContent = 'Generation...';
+
+                try {
+                    const response = await fetch(btn.dataset.url, { method: 'POST' });
+                    const data = await response.json();
+
+                    if (!data.ok) {
+                        throw new Error(data.message || 'Erreur IA');
+                    }
+
+                    summaryEl.textContent = data.summary || '';
+                    recommendationEl.textContent = data.recommendation || '';
+
+                    fillList(topEl, data.topCandidates || [], (candidate) =>
+                        `#${candidate.rank} ${candidate.userName || 'Candidature ' + candidate.volunteerId} (${candidate.userEmail || 'email non disponible'}): ${candidate.reason}`
+                    );
+
+                    fillList(risksEl, data.risks || [], (risk) => risk);
+
+                    metaEl.textContent = `Source: ${data.source} - Candidatures: ${data.applicationsCount}`;
+                    panel.classList.remove('hidden');
+                } catch (e) {
+                    alert('Impossible de generer le resume IA des candidatures.');
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = initial;
+                }
+            });
+        })();
+    </script>
 {% endblock %}

@@ -40,6 +40,11 @@ class FrontVolunteerController extends AbstractController
             throw $this->createAccessDeniedException("Vous ne pouvez pas modifier la candidature d'un autre utilisateur !");
         }
 
+        if (mb_strtolower((string) $volunteer->getStatut()) !== 'en attente') {
+            $this->addFlash('warning', 'Cette candidature ne peut plus etre modifiee.');
+            return $this->redirectToRoute('app_front_volunteer_index');
+        }
+
         $form = $this->createForm(VolunteerType::class, $volunteer);
         $form->handleRequest($request);
 
@@ -66,6 +71,11 @@ class FrontVolunteerController extends AbstractController
 
         if ($volunteer->getUser()?->getId() !== $user->getId()) {
             throw $this->createAccessDeniedException('Interdit !');
+        }
+
+        if (mb_strtolower((string) $volunteer->getStatut()) !== 'en attente') {
+            $this->addFlash('warning', 'Cette candidature ne peut plus etre annulee.');
+            return $this->redirectToRoute('app_front_volunteer_index');
         }
 
         if ($this->isCsrfTokenValid('delete' . $volunteer->getId(), (string) $request->request->get('_token'))) {
