@@ -19,6 +19,15 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class AdminUserController extends AbstractController
 {
+    private function canManageUser(User $target): bool
+    {
+        if ($target->getRole() === 'ROLE_SUPER_ADMIN' && !$this->isGranted('ROLE_SUPER_ADMIN')) {
+            return false;
+        }
+
+        return true;
+    }
+
     #[Route('/admin/users', name: 'admin_user_index')]
     public function index(Request $request, UserRepository $userRepository, PaginatorInterface $paginator): Response
     {
@@ -98,6 +107,11 @@ class AdminUserController extends AbstractController
     {
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
 
+        if (!$this->canManageUser($user)) {
+            $this->addFlash('error', 'Action interdite: seul un Super Admin peut modifier ce compte.');
+            return $this->redirectToRoute('admin_user_index');
+        }
+
         $form = $this->createForm(UserProfileType::class, $user);
         $form->handleRequest($request);
 
@@ -135,6 +149,11 @@ class AdminUserController extends AbstractController
     public function delete(User $user, Request $request, EntityManagerInterface $entityManager): Response
     {
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
+
+        if (!$this->canManageUser($user)) {
+            $this->addFlash('error', 'Action interdite: seul un Super Admin peut supprimer ce compte.');
+            return $this->redirectToRoute('admin_user_index');
+        }
 
         if (!$this->isCsrfTokenValid('delete_user_'.$user->getId(), (string) $request->request->get('_token'))) {
             $this->addFlash('error', 'Token CSRF invalide.');

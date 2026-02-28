@@ -429,6 +429,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             $roles[] = $this->role;
         }
 
+        // ROLE_SUPER_ADMIN inherits ROLE_ADMIN permissions.
+        if (in_array('ROLE_SUPER_ADMIN', $roles, true) && !in_array('ROLE_ADMIN', $roles, true)) {
+            $roles[] = 'ROLE_ADMIN';
+        }
+
         if (!in_array('ROLE_USER', $roles, true)) {
             $roles[] = 'ROLE_USER';
         }

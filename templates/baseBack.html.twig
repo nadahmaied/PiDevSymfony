@@ -28,8 +28,14 @@
                     <i class="fa-solid fa-users w-5"></i> Utilisateurs
                 </a>
 
+                {% if is_granted('ROLE_SUPER_ADMIN') %}
+                    <a href="{{ path('app_super_admin_users') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition {% if app.request.get('_route') starts with 'app_super_admin_' %}bg-indigo-600 text-white shadow-lg shadow-indigo-900/50{% else %}text-slate-400 hover:bg-slate-800 hover:text-white{% endif %}">
+                        <i class="fa-solid fa-user-shield w-5"></i> Super Admin
+                    </a>
+                {% endif %}
+
                 <a href="{{ path('admin_verification_pending') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl transition">
-                    <i class="fa-solid fa-user-check w-5"></i> Vérifications
+                    <i class="fa-solid fa-user-check w-5"></i> VÃ©rifications
                 </a>
                 
                 <a href="{{ path('account_show') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl transition">
@@ -39,7 +45,7 @@
                 <p class="text-xs font-bold text-slate-500 uppercase mt-4 mb-2 pl-3">Gestion</p>
 
                 <a href="{{ path('app_admin_missions_index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition {% if app.request.get('_route') starts with 'app_admin_missions' %}bg-orange-600 text-white shadow-lg shadow-orange-900/50{% else %}text-slate-400 hover:bg-slate-800 hover:text-white{% endif %}">
-                    <i class="fa-solid fa-hand-holding-heart w-5"></i> Bénévolat
+                    <i class="fa-solid fa-hand-holding-heart w-5"></i> BÃ©nÃ©volat
                 </a>
                 <a href="{{ path('showAllRdvBack') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition {% if app.request.get('_route') starts with 'app_admin_missions' %}bg-orange-600 text-white shadow-lg shadow-orange-900/50{% else %}text-slate-400 hover:bg-slate-800 hover:text-white{% endif %}">
                     <i class="fa-solid fa-hand-holding-heart w-5"></i> Rendez-vous 
@@ -61,7 +67,7 @@
                         <i class="fa-solid fa-arrow-left w-5"></i> Retour au frontoffice
                     </a>
                     <a href="{{ path('front_logout') }}" class="flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-slate-800 hover:text-red-300 rounded-xl transition">
-                        <i class="fa-solid fa-right-from-bracket w-5"></i> Déconnexion
+                        <i class="fa-solid fa-right-from-bracket w-5"></i> DÃ©connexion
                     </a>
                 </div>
             </nav>
@@ -74,7 +80,7 @@
             <header class="bg-white border-b py-4 px-8 flex justify-between items-center shadow-sm">
                 <div>
                     <h1 class="text-xl font-bold text-gray-800">{% block page_title %}Planning des Consultations{% endblock %}</h1>
-                    <p class="text-xs text-gray-500 mt-1">{% block page_subtitle %}Gérez les disponibilités et les rendez-vous patients{% endblock %}</p>
+                    <p class="text-xs text-gray-500 mt-1">{% block page_subtitle %}GÃ©rez les disponibilitÃ©s et les rendez-vous patients{% endblock %}</p>
                 </div>
                 
                 {% block header_actions %}{% endblock %}

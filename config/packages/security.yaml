@@ -38,6 +38,8 @@ security:
         - { path: ^/(login|signup), roles: PUBLIC_ACCESS }
         # allow public access to admin auth pages
         - { path: ^/admin/(login|signup), roles: PUBLIC_ACCESS }
+        # super-admin area (must be checked before generic /admin rule)
+        - { path: ^/admin/super-admin, roles: ROLE_SUPER_ADMIN }
         # protect the rest of /admin
         - { path: ^/admin, roles: ROLE_ADMIN }
         # user account area

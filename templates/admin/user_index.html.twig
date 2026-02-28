@@ -97,23 +97,29 @@
                             <td class="px-4 py-2 text-gray-700">{{ user.prenom }}</td>
                             <td class="px-4 py-2 text-gray-700">{{ user.role }}</td>
                             <td class="px-4 py-2 text-gray-700">
-                                <div class="flex items-center gap-2">
-                                    <a href="{{ path('admin_user_edit', { id: user.id }) }}"
-                                       class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-amber-500 hover:bg-amber-600">
-                                        <i class="fa-solid fa-pen mr-1 text-[10px]"></i>
-                                        Modifier
-                                    </a>
-                                    <form method="post"
-                                          action="{{ path('admin_user_delete', { id: user.id }) }}"
-                                          onsubmit="return confirm('Supprimer cet utilisateur ?');">
-                                        <input type="hidden" name="_token" value="{{ csrf_token('delete_user_' ~ user.id) }}">
-                                        <button type="submit"
-                                                class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-rose-500 hover:bg-rose-600">
-                                            <i class="fa-solid fa-trash mr-1 text-[10px]"></i>
-                                            Supprimer
-                                        </button>
-                                    </form>
-                                </div>
+                                {% if user.role == 'ROLE_SUPER_ADMIN' and not is_granted('ROLE_SUPER_ADMIN') %}
+                                    <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-500">
+                                        Protege
+                                    </span>
+                                {% else %}
+                                    <div class="flex items-center gap-2">
+                                        <a href="{{ path('admin_user_edit', { id: user.id }) }}"
+                                           class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-amber-500 hover:bg-amber-600">
+                                            <i class="fa-solid fa-pen mr-1 text-[10px]"></i>
+                                            Modifier
+                                        </a>
+                                        <form method="post"
+                                              action="{{ path('admin_user_delete', { id: user.id }) }}"
+                                              onsubmit="return confirm('Supprimer cet utilisateur ?');">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete_user_' ~ user.id) }}">
+                                            <button type="submit"
+                                                    class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-rose-500 hover:bg-rose-600">
+                                                <i class="fa-solid fa-trash mr-1 text-[10px]"></i>
+                                                Supprimer
+                                            </button>
+                                        </form>
+                                    </div>
+                                {% endif %}
                             </td>
                         </tr>
                     {% else %}
