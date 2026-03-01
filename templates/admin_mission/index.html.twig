@@ -27,18 +27,26 @@
                 Total : <span class="font-bold text-gray-800">{{ pagination.getTotalItemCount }}</span> missions
             </p>
 
-            <form method="get" class="flex gap-2">
+            <form method="get" class="flex gap-2 items-center js-mission-filters-form">
                 <div class="relative">
                     <input type="text" name="q" value="{{ searchTerm }}" placeholder="Rechercher..." 
-                        class="border border-gray-300 rounded-lg pl-10 pr-4 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none w-64 text-sm shadow-sm transition">
+                        class="js-mission-search border border-gray-300 rounded-lg pl-10 pr-4 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none w-64 text-sm shadow-sm transition"
+                        autocomplete="off"
+                    >
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                 </div>
-                
+
+                <select name="candidatures" onchange="this.form.submit()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none shadow-sm">
+                    <option value="all" {{ applicationsFilter == 'all' ? 'selected' : '' }}>Toutes candidatures</option>
+                    <option value="with" {{ applicationsFilter == 'with' ? 'selected' : '' }}>Avec candidatures</option>
+                    <option value="without" {{ applicationsFilter == 'without' ? 'selected' : '' }}>Sans candidatures</option>
+                </select>
+
                 <button type="submit" class="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-black transition shadow-sm">
                     Rechercher
                 </button>
-                
-                {% if searchTerm %}
+
+                {% if searchTerm or applicationsFilter != 'all' %}
                     <a href="{{ path('app_admin_missions_index') }}" class="bg-gray-200 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-300 transition flex items-center" title="Réinitialiser">
                         <i class="fa-solid fa-xmark"></i>
                     </a>
@@ -145,5 +153,27 @@
             {{ knp_pagination_render(pagination) }}
         </div>
     </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (() => {
+            const form = document.querySelector('.js-mission-filters-form');
+            const searchInput = document.querySelector('.js-mission-search');
+
+            if (!form || !searchInput) {
+                return;
+            }
+
+            let debounceTimer = null;
+            searchInput.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    form.submit();
+                }, 500);
+            });
+        })();
+    </script>
 {% endblock %}
 

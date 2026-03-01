@@ -31,9 +31,13 @@ class AdminMissionController extends AbstractController
 {
     // 1. RÃ©cupÃ©rer le terme de recherche depuis l'URL (ex: ?q=medecin)
     $searchTerm = $request->query->get('q');
+    $applicationsFilter = (string) $request->query->get('candidatures', 'all');
+    if (!\in_array($applicationsFilter, ['all', 'with', 'without'], true)) {
+        $applicationsFilter = 'all';
+    }
 
     // 2. CrÃ©er la requÃªte via notre mÃ©thode du Repository
-    $query = $missionRepository->findBySearchQuery($searchTerm);
+    $query = $missionRepository->findBySearchQuery($searchTerm, null, $applicationsFilter);
 
     // 3. Paginer les rÃ©sultats (10 par page)
     $pagination = $paginator->paginate(
@@ -44,7 +48,8 @@ class AdminMissionController extends AbstractController
 
     return $this->render('admin_mission/index.html.twig', [
         'pagination' => $pagination, // On passe "pagination" au lieu de "missions"
-        'searchTerm' => $searchTerm  // Pour garder le mot dans la barre de recherche
+        'searchTerm' => $searchTerm,  // Pour garder le mot dans la barre de recherche
+        'applicationsFilter' => $applicationsFilter,
     ]);
 }
 

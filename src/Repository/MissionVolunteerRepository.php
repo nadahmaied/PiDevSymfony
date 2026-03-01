@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\MissionVolunteer;
+use App\Entity\Volunteer;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\ORM\Query;
@@ -41,23 +42,37 @@ class MissionVolunteerRepository extends ServiceEntityRepository
 //            ->getOneOrNullResult()
 //        ;
 //    }
-public function findBySearchQuery(?string $searchTerm, ?string $statut = null): Query
-{
-    $qb = $this->createQueryBuilder('m')
-        ->orderBy('m.dateDebut', 'DESC'); // Tri par défaut : les plus récentes d'abord
+    public function findBySearchQuery(?string $searchTerm, ?string $statut = null, string $applicationsFilter = 'all'): Query
+    {
+        $qb = $this->createQueryBuilder('m')
+            ->orderBy('m.dateDebut', 'DESC');
 
-    // 1. Recherche par mot-clé (Titre, Ville ou Description)
-    if ($searchTerm) {
-        $qb->andWhere('m.titre LIKE :term OR m.description LIKE :term OR m.lieu LIKE :term')
-           ->setParameter('term', '%' . $searchTerm . '%');
+        if ($searchTerm) {
+            $qb->andWhere('m.titre LIKE :term OR m.description LIKE :term OR m.lieu LIKE :term')
+                ->setParameter('term', '%' . $searchTerm . '%');
+        }
+
+        if ($statut) {
+            $qb->andWhere('m.statut = :statut')
+                ->setParameter('statut', $statut);
+        }
+
+        if ($applicationsFilter === 'with') {
+            $qb->andWhere(
+                $qb->expr()->exists(
+                    'SELECT 1 FROM ' . Volunteer::class . ' v2 WHERE v2.mission = m'
+                )
+            );
+        } elseif ($applicationsFilter === 'without') {
+            $qb->andWhere(
+                $qb->expr()->not(
+                    $qb->expr()->exists(
+                        'SELECT 1 FROM ' . Volunteer::class . ' v2 WHERE v2.mission = m'
+                    )
+                )
+            );
+        }
+
+        return $qb->getQuery();
     }
-
-    // 2. Filtre par statut (pour le Front qui ne veut que les "Ouverte")
-    if ($statut) {
-        $qb->andWhere('m.statut = :statut')
-           ->setParameter('statut', $statut);
-    }
-
-    return $qb->getQuery();
-}
 }

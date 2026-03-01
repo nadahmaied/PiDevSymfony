@@ -5,7 +5,13 @@ namespace App\Controller;
 use App\Repository\FicheRepository;
 use App\Repository\LigneOrdonnanceRepository;
 use App\Repository\MedicamentRepository;
+use App\Repository\MissionVolunteerRepository;
 use App\Repository\OrdonnanceRepository;
+use App\Repository\QuestionRepository;
+use App\Repository\AnnonceRepository;
+use App\Repository\DonationRepository;
+use App\Repository\RdvRepository;
+use App\Repository\VolunteerRepository;
 use App\Repository\UserRepository;
 use App\Service\MedicalAiService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -21,15 +27,64 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class PatientController extends AbstractController
 {
     #[Route('/dashboard', name: 'patient_dashboard')]
-    public function dashboard(FicheRepository $ficheRepo, OrdonnanceRepository $ordRepo): Response
+    public function dashboard(
+        FicheRepository $ficheRepo,
+        OrdonnanceRepository $ordRepo,
+        RdvRepository $rdvRepository,
+        MissionVolunteerRepository $missionRepository,
+        VolunteerRepository $volunteerRepository,
+        QuestionRepository $questionRepository,
+        AnnonceRepository $annonceRepository,
+        DonationRepository $donationRepository
+    ): Response
     {
         $user = $this->getUser();
         $latestFiche = $ficheRepo->findOneBy(['idU' => $user]);
         $recentOrdonnances = $ordRepo->findByPatient($user, 3);
+        $now = new \DateTimeImmutable();
+
+        $nextRdv = $rdvRepository->createQueryBuilder('r')
+            ->andWhere('r.patient = :patient')
+            ->andWhere('(r.date > :today OR (r.date = :today AND r.hdebut >= :nowTime))')
+            ->setParameter('patient', $user)
+            ->setParameter('today', $now->format('Y-m-d'))
+            ->setParameter('nowTime', $now->format('H:i:s'))
+            ->orderBy('r.date', 'ASC')
+            ->addOrderBy('r.hdebut', 'ASC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        $today = (new \DateTimeImmutable('today'))->format('Y-m-d');
+        $ongoingVolunteerMissions = $missionRepository->createQueryBuilder('m')
+            ->join('m.volunteers', 'v')
+            ->andWhere('v.user = :user')
+            ->andWhere('v.statut IN (:acceptedStatuses)')
+            ->andWhere('m.dateDebut <= :today')
+            ->andWhere('m.dateFin >= :today')
+            ->setParameter('user', $user)
+            ->setParameter('acceptedStatuses', ['Acceptee', 'Acceptée'])
+            ->setParameter('today', $today)
+            ->orderBy('m.dateDebut', 'ASC')
+            ->setMaxResults(4)
+            ->getQuery()
+            ->getResult();
+
+        $stats = [
+            'rdvCount' => $rdvRepository->count(['patient' => $user]),
+            'missionsOpen' => $missionRepository->count(['statut' => 'Ouverte']),
+            'myCandidatures' => $volunteerRepository->count(['user' => $user]),
+            'forumTopics' => $questionRepository->count([]),
+            'annonces' => $annonceRepository->count([]),
+            'donations' => $donationRepository->count([]),
+        ];
 
         return $this->render('patient/dashboard.html.twig', [
             'latestFiche' => $latestFiche,
             'recentOrdonnances' => $recentOrdonnances,
+            'nextRdv' => $nextRdv,
+            'ongoingVolunteerMissions' => $ongoingVolunteerMissions,
+            'stats' => $stats,
         ]);
     }
 
