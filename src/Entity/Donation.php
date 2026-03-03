@@ -49,6 +49,13 @@ class Donation
         return $this->id;
     }
 
+    public function setId(int $id): static
+    {
+        $this->id = $id;
+
+        return $this;
+    }
+
     public function getTypeDon(): ?string
     {
         return $this->typeDon;
@@ -108,4 +115,10 @@ class Donation
 
         return $this;
     }
+
 }
+
+
+
+
+

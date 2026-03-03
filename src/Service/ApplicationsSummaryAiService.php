@@ -16,6 +16,7 @@ class ApplicationsSummaryAiService
     ) {
     }
 
+    /** @return array<string, mixed> */
     public function summarize(MissionVolunteer $mission): array
     {
         $applications = $this->buildApplicationScores($mission);
@@ -59,6 +60,10 @@ class ApplicationsSummaryAiService
         ];
     }
 
+    /**
+     * @param array<int, array<string, mixed>> $applications
+     * @return array<string, mixed>|null
+     */
     private function callAi(array $applications, MissionVolunteer $mission): ?array
     {
         $missionData = [
@@ -136,6 +141,10 @@ PROMPT;
         return $decoded;
     }
 
+    /**
+     * @param array<int, array<string, mixed>> $applications
+     * @return array<string, mixed>
+     */
     private function fallbackSummary(array $applications, MissionVolunteer $mission): array
     {
         $top = array_slice($applications, 0, 3);
@@ -239,6 +248,10 @@ PROMPT;
         return $rows;
     }
 
+    /**
+     * @param list<string> $expected
+     * @param list<string> $actual
+     */
     private function overlapScore(array $expected, array $actual): int
     {
         if (count($expected) === 0) {
@@ -293,6 +306,11 @@ PROMPT;
         return 50;
     }
 
+    /**
+     * @param list<mixed> $rawTop
+     * @param array<int, array<string, mixed>> $applications
+     * @return list<array<string, mixed>>
+     */
     private function sanitizeTopCandidates(array $rawTop, array $applications): array
     {
         $validIds = array_map(static fn (array $a): int => (int) $a['volunteerId'], $applications);
@@ -345,6 +363,7 @@ PROMPT;
         return trim($text);
     }
 
+    /** @return list<string> */
     private function sanitizeList(mixed $list): array
     {
         if (!is_array($list)) {
@@ -362,14 +381,14 @@ PROMPT;
         return array_slice(array_values(array_unique($out)), 0, 4);
     }
 
+    /**
+     * @param list<string> $values
+     * @return list<string>
+     */
     private function normalizeTokens(array $values): array
     {
         $items = [];
         foreach ($values as $value) {
-            if (!is_string($value)) {
-                continue;
-            }
-
             $parts = array_map('trim', explode(',', mb_strtolower($value)));
             foreach ($parts as $part) {
                 if ($part !== '') {
@@ -381,6 +400,9 @@ PROMPT;
         return array_values(array_unique($items));
     }
 
+    /**
+     * @param array<int, array<string, mixed>> $applications
+     */
     private function findApplicationValue(array $applications, int $volunteerId, string $key): string
     {
         foreach ($applications as $row) {

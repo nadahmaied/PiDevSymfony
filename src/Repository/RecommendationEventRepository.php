@@ -17,6 +17,7 @@ class RecommendationEventRepository extends ServiceEntityRepository
         parent::__construct($registry, RecommendationEvent::class);
     }
 
+    /** @return list<RecommendationEvent> */
     public function findRecentByUser(User $user, int $limit = 100): array
     {
         return $this->createQueryBuilder('e')
@@ -28,6 +29,7 @@ class RecommendationEventRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /** @return list<RecommendationEvent> */
     public function findForTraining(int $limit = 5000): array
     {
         return $this->createQueryBuilder('e')

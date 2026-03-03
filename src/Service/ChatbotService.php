@@ -70,7 +70,7 @@ Patient data: %s';
         if ((string) $this->groqApiKey !== '') {
             $result = $this->callGroq($messages);
             if ($result !== null) {
-                return $result;
+                return ['success' => true, 'message' => $result['message']];
             }
             $lastError = 'Groq indisponible.';
         }
@@ -78,7 +78,7 @@ Patient data: %s';
         if ((string) $this->openAiApiKey !== '') {
             $result = $this->callOpenAi($messages);
             if ($result !== null) {
-                return $result;
+                return ['success' => true, 'message' => $result['message']];
             }
             $lastError = 'OpenAI indisponible (429 ou erreur).';
         }
@@ -86,7 +86,7 @@ Patient data: %s';
         if ((string) $this->grokApiKey !== '') {
             $result = $this->callGrok($messages);
             if ($result !== null) {
-                return $result;
+                return ['success' => true, 'message' => $result['message']];
             }
             $lastError = 'Grok indisponible.';
         }
@@ -94,7 +94,7 @@ Patient data: %s';
         if ((string) $this->geminiApiKey !== '') {
             $result = $this->callGemini($systemPrompt, $query);
             if ($result !== null) {
-                return $result;
+                return ['success' => true, 'message' => $result['message']];
             }
             $lastError = 'Gemini indisponible.';
         }
@@ -102,7 +102,7 @@ Patient data: %s';
         $ollamaBase = ($this->ollamaUrl !== null && $this->ollamaUrl !== '') ? $this->ollamaUrl : self::OLLAMA_DEFAULT_URL;
         $result = $this->callOllama($ollamaBase, $messages);
         if ($result !== null) {
-            return $result;
+            return ['success' => true, 'message' => $result['message']];
         }
 
         return [
@@ -112,6 +112,10 @@ Patient data: %s';
         ];
     }
 
+    /**
+     * @param list<array{role: string, content: string}> $messages
+     * @return array{success: true, message: string}|null
+     */
     private function callOpenAi(array $messages): ?array
     {
         try {
@@ -140,6 +144,10 @@ Patient data: %s';
         }
     }
 
+    /**
+     * @param list<array{role: string, content: string}> $messages
+     * @return array{success: true, message: string}|null
+     */
     private function callGroq(array $messages): ?array
     {
         try {
@@ -168,6 +176,10 @@ Patient data: %s';
         }
     }
 
+    /**
+     * @param list<array{role: string, content: string}> $messages
+     * @return array{success: true, message: string}|null
+     */
     private function callGrok(array $messages): ?array
     {
         try {
@@ -196,6 +208,7 @@ Patient data: %s';
         }
     }
 
+    /** @return array{success: true, message: string}|null */
     private function callGemini(string $systemPrompt, string $query): ?array
     {
         try {
@@ -225,6 +238,10 @@ Patient data: %s';
         }
     }
 
+    /**
+     * @param list<array{role: string, content: string}> $messages
+     * @return array{success: true, message: string}|null
+     */
     private function callOllama(string $baseUrl, array $messages): ?array
     {
         try {
@@ -256,6 +273,7 @@ Patient data: %s';
         }
     }
 
+    /** @return array{success: true, message: string}|null */
     private function successOrNull(string $text): ?array
     {
         $trimmed = trim($text);

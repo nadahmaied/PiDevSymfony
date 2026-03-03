@@ -7,7 +7,6 @@ use App\Repository\MedicamentRepository;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
-use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class MedicalAiService
@@ -34,11 +33,12 @@ class MedicalAiService
         ?string $grokModel = self::DEFAULT_GROK_MODEL,
         private readonly ?string $geminiApiKey = null
     ) {
-        $this->resolvedOpenAiModel = ($openAiModel && $openAiModel !== '') ? $openAiModel : self::DEFAULT_OPENAI_MODEL;
-        $this->resolvedGrokModel = ($grokModel && $grokModel !== '') ? $grokModel : self::DEFAULT_GROK_MODEL;
+        $this->resolvedOpenAiModel = $openAiModel ?: self::DEFAULT_OPENAI_MODEL;
+        $this->resolvedGrokModel = $grokModel ?: self::DEFAULT_GROK_MODEL;
     }
 
     /** Suggestions for display: uses Gemini first (per spec), then Grok, then fallback. */
+    /** @return array<string, mixed> */
     public function generateSuggestions(Fiche $fiche): array
     {
         $catalog = $this->buildMedicationCatalog();
@@ -63,6 +63,7 @@ class MedicalAiService
     }
 
     /** Suggestions for ordonnance auto-fill: uses OpenAI only. */
+    /** @return array<string, mixed> */
     public function generateSuggestionsForOrdonnance(Fiche $fiche): array
     {
         $catalog = $this->buildMedicationCatalog();
@@ -89,6 +90,10 @@ class MedicalAiService
         return 'medical_ai_fiche_' . md5($data);
     }
 
+    /**
+     * @param list<array<string, mixed>> $catalog
+     * @return array<string, mixed>
+     */
     private function generateSuggestionsUncached(Fiche $fiche, array $catalog, string $disclaimer): array
     {
         $lastFallback = null;
@@ -109,6 +114,10 @@ class MedicalAiService
         return $lastFallback ?? $this->buildFallbackResponse($fiche, $catalog, $disclaimer, 'Aucune cle API IA configuree (Gemini/Grok), fallback local utilise.');
     }
 
+    /**
+     * @param list<array<string, mixed>> $catalog
+     * @return array<string, mixed>
+     */
     private function generateSuggestionsWithGemini(Fiche $fiche, array $catalog, string $disclaimer): array
     {
         try {
@@ -152,6 +161,7 @@ class MedicalAiService
         }
     }
 
+    /** @param list<array<string, mixed>> $catalog */
     private function buildGeminiPrompt(Fiche $fiche, array $catalog): string
     {
         $patientData = [
@@ -170,6 +180,10 @@ class MedicalAiService
             . '{ "suggestions": [ { "medicamentId": int, "nbJours": int, "frequenceParJour": int, "momentPrise": "Matin"|"Soir"|"Nuit"|"Matin et Soir", "avantRepas": bool, "periode": "Quotidien", "reason": string } ] }';
     }
 
+    /**
+     * @param list<array<string, mixed>> $catalog
+     * @return array<string, mixed>
+     */
     private function generateSuggestionsWithGrok(Fiche $fiche, array $catalog, string $disclaimer): array
     {
         try {
@@ -218,11 +232,15 @@ class MedicalAiService
                 'items' => $parsed,
                 'error' => null,
             ];
-        } catch (TransportExceptionInterface|\Throwable $e) {
+        } catch (\Throwable $e) {
             return $this->buildFallbackResponse($fiche, $catalog, $disclaimer, 'Service IA (Grok) indisponible: ' . $e->getMessage());
         }
     }
 
+    /**
+     * @param list<array<string, mixed>> $catalog
+     * @return array<string, mixed>
+     */
     private function generateSuggestionsWithOpenAi(Fiche $fiche, array $catalog, string $disclaimer): array
     {
         try {
@@ -285,11 +303,12 @@ class MedicalAiService
                 }
             }
             throw $lastException;
-        } catch (TransportExceptionInterface|\Throwable $e) {
+        } catch (\Throwable $e) {
             return $this->buildFallbackResponse($fiche, $catalog, $disclaimer, 'Service IA (OpenAI) indisponible: ' . $e->getMessage());
         }
     }
 
+    /** @return list<array<string, mixed>> */
     private function buildMedicationCatalog(): array
     {
         $medicaments = $this->medicamentRepository->findAll();
@@ -308,6 +327,7 @@ class MedicalAiService
         return $catalog;
     }
 
+    /** @param list<array<string, mixed>> $catalog */
     private function buildUserPrompt(Fiche $fiche, array $catalog): string
     {
         $patientData = [
@@ -325,6 +345,7 @@ class MedicalAiService
             . "\n\nReturn STRICT JSON: { \"suggestions\": [ { \"medicamentId\": int, \"nbJours\": int, \"frequenceParJour\": int, \"momentPrise\": string, \"avantRepas\": bool, \"periode\": string, \"reason\": string } ] }";
     }
 
+    /** @param string|list<array<string, mixed>> $content */
     private function normalizeAssistantContent(string|array $content): string
     {
         if (is_string($content)) {
@@ -333,7 +354,7 @@ class MedicalAiService
 
         $chunks = [];
         foreach ($content as $block) {
-            if (is_array($block) && isset($block['text']) && is_string($block['text'])) {
+            if (isset($block['text']) && is_string($block['text'])) {
                 $chunks[] = $block['text'];
             }
         }
@@ -341,6 +362,10 @@ class MedicalAiService
         return implode("\n", $chunks);
     }
 
+    /**
+     * @param list<array<string, mixed>> $catalog
+     * @return list<array<string, mixed>>
+     */
     private function extractSuggestionsFromText(string $text, array $catalog): array
     {
         $clean = trim($text);
@@ -396,6 +421,10 @@ class MedicalAiService
         return array_slice($normalized, 0, 5);
     }
 
+    /**
+     * @param list<array<string, mixed>> $catalog
+     * @return array<string, mixed>
+     */
     private function buildFallbackResponse(Fiche $fiche, array $catalog, string $disclaimer, string $error): array
     {
         $symptomes = strtolower((string) $fiche->getSymptomes());

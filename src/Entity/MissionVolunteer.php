@@ -53,7 +53,7 @@ class MissionVolunteer
     private ?\DateTime $dateFin = null;
 
     #[ORM\Column(length: 50)]
-    private ?string $statut = 'Ouverte'; // Valeur par défaut recommandée
+    private string $statut = 'Ouverte'; // Valeur par défaut recommandée
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $photo = null;
@@ -84,6 +84,7 @@ class MissionVolunteer
 
     // --- RELATION 1 : Liste des candidatures (Bénévoles) ---
     // Corrigé en OneToMany pour correspondre à votre entité Volunteer
+    /** @var Collection<int, Volunteer> */
     #[ORM\OneToMany(mappedBy: 'mission', targetEntity: Volunteer::class, orphanRemoval: true)]
     private Collection $volunteers;
 
@@ -121,6 +122,13 @@ class MissionVolunteer
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function setId(int $id): static
+    {
+        $this->id = $id;
+
+        return $this;
     }
 
     public function getTitre(): ?string
@@ -178,7 +186,7 @@ class MissionVolunteer
         return $this;
     }
 
-    public function getStatut(): ?string
+    public function getStatut(): string
     {
         return $this->statut;
     }
@@ -296,16 +304,19 @@ class MissionVolunteer
         return $this;
     }
 
+    /** @return list<string> */
     public function requiredSkillsAsArray(): array
     {
         return self::csvToArray($this->requiredSkills);
     }
 
+    /** @return list<string> */
     public function thematicTagsAsArray(): array
     {
         return self::csvToArray($this->thematicTags);
     }
 
+    /** @return list<string> */
     public function criticalPeriodsAsArray(): array
     {
         return self::csvToArray($this->criticalPeriods);
@@ -441,6 +452,7 @@ class MissionVolunteer
         return $this;
     }
 
+    /** @return list<string> */
     private static function csvToArray(?string $value): array
     {
         if (!$value) {
@@ -452,4 +464,11 @@ class MissionVolunteer
 
         return array_values(array_unique($parts));
     }
+
+
 }
+
+
+
+
+

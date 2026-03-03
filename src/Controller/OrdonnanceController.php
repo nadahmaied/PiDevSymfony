@@ -31,6 +31,9 @@ class OrdonnanceController extends AbstractController
         $search = $request->query->get('search');
         $sortBy = $request->query->get('sortBy');
         $sortOrder = $request->query->get('sortOrder', 'ASC');
+        $search = is_string($search) && $search !== '' ? $search : null;
+        $sortBy = is_string($sortBy) && $sortBy !== '' ? $sortBy : null;
+        $sortOrder = is_string($sortOrder) && $sortOrder !== '' ? $sortOrder : 'ASC';
 
         return $this->render('ordonnance/index.html.twig', [
             'ordonnances' => $ordonnanceRepository->findBySearchAndSort($search, $sortBy, $sortOrder),
@@ -224,12 +227,11 @@ class OrdonnanceController extends AbstractController
             UrlGeneratorInterface::ABSOLUTE_PATH
         );
 
-        $builder = new Builder(
-            writer: new SvgWriter(),
-            data: $scanUrl,
-            size: 280,
-            margin: 10
-        );
+        $builder = Builder::create()
+            ->writer(new SvgWriter())
+            ->data($scanUrl)
+            ->size(280)
+            ->margin(10);
         $result = $builder->build();
 
         return $result->getDataUri();
@@ -257,7 +259,7 @@ class OrdonnanceController extends AbstractController
     #[Route('/{id}', name: 'app_ordonnance_delete', methods: ['POST'])]
     public function delete(Request $request, Ordonnance $ordonnance, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$ordonnance->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete'.$ordonnance->getId(), (string) $request->request->get('_token'))) {
             $entityManager->remove($ordonnance);
             $entityManager->flush();
             $this->addFlash('success', 'Ordonnance supprimée avec succès !');

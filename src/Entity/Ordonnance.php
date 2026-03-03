@@ -43,6 +43,7 @@ class Ordonnance
     #[ORM\JoinColumn(nullable: false)]
     private ?Rdv $idRdv = null;
 
+    /** @var Collection<int, LigneOrdonnance> */
     #[ORM\OneToMany(targetEntity: LigneOrdonnance::class, mappedBy: 'ordonnance', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $lignesOrdonnance;
 
@@ -58,6 +59,13 @@ class Ordonnance
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function setId(int $id): static
+    {
+        $this->id = $id;
+
+        return $this;
     }
 
     public function getPosologie(): ?string
@@ -167,12 +175,19 @@ class Ordonnance
     public function getMedicaments(): Collection
     {
         $medicaments = new ArrayCollection();
+        $seen = [];
 
         foreach ($this->lignesOrdonnance as $ligneOrdonnance) {
             $medicament = $ligneOrdonnance->getMedicament();
-            if ($medicament !== null && !$medicaments->contains($medicament)) {
-                $medicaments->add($medicament);
+            if ($medicament === null) {
+                continue;
             }
+            $objectId = spl_object_id($medicament);
+            if (isset($seen[$objectId])) {
+                continue;
+            }
+            $seen[$objectId] = true;
+            $medicaments->add($medicament);
         }
 
         return $medicaments;
@@ -220,4 +235,10 @@ class Ordonnance
 
         return $this;
     }
+
 }
+
+
+
+
+

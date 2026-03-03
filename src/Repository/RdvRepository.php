@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Rdv;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -40,6 +41,7 @@ class RdvRepository extends ServiceEntityRepository
 //            ->getOneOrNullResult()
 //        ;
 //    }
+/** @return list<Rdv> */
 public function searchGlobal(string $query): array
 {
     return $this->createQueryBuilder('r')
@@ -53,6 +55,7 @@ public function searchGlobal(string $query): array
         ->getQuery()
         ->getResult();
 }
+/** @return list<Rdv> */
 public function findPasses(): array
 {
     $now = new \DateTime();
@@ -67,6 +70,7 @@ public function findPasses(): array
         ->getResult();
 }
 
+/** @return list<Rdv> */
 public function findByDate(\DateTime $date): array
 {
     return $this->createQueryBuilder('r')
@@ -75,6 +79,7 @@ public function findByDate(\DateTime $date): array
         ->getQuery()
         ->getResult();
 }
+/** @return list<Rdv> */
 public function findByMedecinAndDate(int $medecinId, \DateTime $date): array
 {
     return $this->createQueryBuilder('r')
@@ -88,6 +93,7 @@ public function findByMedecinAndDate(int $medecinId, \DateTime $date): array
 
 // ✅ Ajouter cette méthode dans RdvRepository.php
 
+/** @return list<Rdv> */
 public function findPassesByPatient(User $patient): array
 {
     return $this->createQueryBuilder('r')

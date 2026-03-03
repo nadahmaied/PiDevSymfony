@@ -14,6 +14,7 @@ class ForumAiAssistant
     ) {
     }
 
+    /** @return array{title: string, content: string, tags: list<string>, source: string} */
     public function enhanceQuestion(string $title, string $content): array
     {
         $title = trim($title);
@@ -84,6 +85,7 @@ PROMPT;
         ];
     }
 
+    /** @return array{title: string, content: string, tags: list<string>, source: string} */
     private function fallbackEnhancement(string $title, string $content): array
     {
         $enhancedTitle = ucfirst($this->collapseSpaces($title));
@@ -112,6 +114,7 @@ PROMPT;
             : $this->collapseSpaces($text);
     }
 
+    /** @return list<string> */
     private function sanitizeTags(mixed $tags): array
     {
         if (!is_array($tags)) {
@@ -151,6 +154,7 @@ PROMPT;
         return implode("\n\n", $paragraphs);
     }
 
+    /** @return list<string> */
     private function extractBasicTags(string $text): array
     {
         $text = mb_strtolower($text);

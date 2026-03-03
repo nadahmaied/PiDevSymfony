@@ -94,12 +94,11 @@ class PrescriptionMailerService
     {
         $scanUrl = $this->buildScanUrl($ordonnance);
 
-        $builder = new Builder(
-            writer: new SvgWriter(),
-            data: $scanUrl,
-            size: 200,
-            margin: 8
-        );
+        $builder = Builder::create()
+            ->writer(new SvgWriter())
+            ->data($scanUrl)
+            ->size(200)
+            ->margin(8);
         $result = $builder->build();
 
         return $result->getDataUri();

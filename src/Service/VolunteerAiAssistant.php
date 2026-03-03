@@ -14,6 +14,7 @@ class VolunteerAiAssistant
     ) {
     }
 
+    /** @return array{advice: string, source: string} */
     public function suggestForMission(string $title, string $description, string $location, string $period): array
     {
         $title = trim($title);

@@ -30,6 +30,9 @@ class FicheController extends AbstractController
         $search = $request->query->get('search');
         $sortBy = $request->query->get('sortBy');
         $sortOrder = $request->query->get('sortOrder', 'ASC');
+        $search = is_string($search) && $search !== '' ? $search : null;
+        $sortBy = is_string($sortBy) && $sortBy !== '' ? $sortBy : null;
+        $sortOrder = is_string($sortOrder) && $sortOrder !== '' ? $sortOrder : 'ASC';
 
         return $this->render('fiche/index.html.twig', [
             'fiches' => $ficheRepository->findBySearchAndSort($search, $sortBy, $sortOrder),
@@ -213,7 +216,7 @@ class FicheController extends AbstractController
     #[Route('/{id}', name: 'app_fiche_delete', methods: ['POST'])]
     public function delete(Request $request, Fiche $fiche, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$fiche->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete'.$fiche->getId(), (string) $request->request->get('_token'))) {
             $entityManager->remove($fiche);
             $entityManager->flush();
             $this->addFlash('success', 'Fiche médicale supprimée avec succès !');

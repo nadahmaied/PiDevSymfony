@@ -186,7 +186,7 @@ class AppFixtures extends Fixture
                 $typeDon = $allTypes[array_rand($allTypes)];
             }
 
-            $range = $quantityByType[$typeDon] ?? [1, 5];
+            $range = $quantityByType[$typeDon];
             $quantite = $this->faker->numberBetween($range[0], $range[1]);
 
             $donation->setTypeDon($typeDon);

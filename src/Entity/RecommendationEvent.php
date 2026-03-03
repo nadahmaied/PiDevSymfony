@@ -28,6 +28,7 @@ class RecommendationEvent
     #[ORM\Column]
     private float $signalStrength = 1.0;
 
+    /** @var array<string, mixed> */
     #[ORM\Column(type: Types::JSON)]
     private array $metadata = [];
 
@@ -37,6 +38,13 @@ class RecommendationEvent
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function setId(int $id): static
+    {
+        $this->id = $id;
+
+        return $this;
     }
 
     public function getUser(): ?User
@@ -87,11 +95,13 @@ class RecommendationEvent
         return $this;
     }
 
+    /** @return array<string, mixed> */
     public function getMetadata(): array
     {
         return $this->metadata;
     }
 
+    /** @param array<string, mixed> $metadata */
     public function setMetadata(array $metadata): static
     {
         $this->metadata = $metadata;
@@ -110,4 +120,10 @@ class RecommendationEvent
 
         return $this;
     }
+
 }
+
+
+
+
+

@@ -38,7 +38,8 @@ class OrdonnanceRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
 
-    public function findBySearchAndSort(?string $search, ?string $sortBy, ?string $sortOrder = 'ASC')
+    /** @return list<Ordonnance> */
+    public function findBySearchAndSort(?string $search, ?string $sortBy, ?string $sortOrder = 'ASC'): array
     {
         $qb = $this->createQueryBuilder('o');
 

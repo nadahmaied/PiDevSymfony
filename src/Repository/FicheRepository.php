@@ -17,7 +17,8 @@ class FicheRepository extends ServiceEntityRepository
         parent::__construct($registry, Fiche::class);
     }
 
-    public function findBySearchAndSort(?string $search, ?string $sortBy, ?string $sortOrder = 'ASC')
+    /** @return list<Fiche> */
+    public function findBySearchAndSort(?string $search, ?string $sortBy, ?string $sortOrder = 'ASC'): array
     {
         $qb = $this->createQueryBuilder('f');
 

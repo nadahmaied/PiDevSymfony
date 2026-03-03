@@ -76,7 +76,7 @@ final class CalendrierController extends AbstractController
         MedecinRepository $medecinRepo
     ): JsonResponse {
         $medecinId = (int) $request->query->get('medecin_id');
-        $dateStr   = $request->query->get('date', '');
+        $dateStr = (string) $request->query->get('date', '');
 
         if (!$medecinId || !$dateStr) return $this->json(['error' => 'Paramètres manquants'], 400);
 
@@ -105,6 +105,9 @@ final class CalendrierController extends AbstractController
     // ============================================================
     // CRÉNEAUX DYNAMIQUE — médecin id=1
     // ============================================================
+    /**
+     * @param list<string> $heuresReservees
+     */
     private function getCreneauxDynamic(
         int $medecinId, \DateTime $date, int $jourSemaine,
         DisponibiliteRepository $dispoRepo, array $heuresReservees
@@ -153,6 +156,9 @@ final class CalendrierController extends AbstractController
     // ============================================================
     // CRÉNEAUX STATIQUES — autres médecins
     // ============================================================
+    /**
+     * @param list<string> $heuresReservees
+     */
     private function getCreneauxStatique(int $jourSemaine, array $heuresReservees): JsonResponse
     {
         if ($jourSemaine === 7) return $this->jsonCreneaux([], false, 'Aucun créneau disponible le dimanche');
@@ -171,6 +177,10 @@ final class CalendrierController extends AbstractController
     // HELPERS
     // ============================================================
 
+    /**
+     * @param list<string> $heuresReservees
+     * @return list<array{heure: string, disponible: bool}>
+     */
     private function genererSlots(string $debut, string $fin, array $heuresReservees): array
     {
         $slots = []; $current = new \DateTime($debut); $finObj = new \DateTime($fin);
@@ -182,6 +192,9 @@ final class CalendrierController extends AbstractController
         return $slots;
     }
 
+    /**
+     * @return list<array{heure: string, disponible: false, pris: false}>
+     */
     private function genererSlotsBloques(string $debut, string $fin): array
     {
         $slots = []; $current = new \DateTime($debut); $finObj = new \DateTime($fin);
@@ -192,18 +205,27 @@ final class CalendrierController extends AbstractController
         return $slots;
     }
 
+    /**
+     * @param list<array{hdebut: string, hfin: string}> $seancesAnnulees
+     */
     private function isSeanceAnnulee(array $seancesAnnulees, string $debut, string $fin): bool
     {
         foreach ($seancesAnnulees as $s) { if ($s['hdebut'] === $debut && $s['hfin'] === $fin) return true; }
         return false;
     }
 
+    /**
+     * @param list<array{hdebut: string, hfin: string}> $disposExtra
+     */
     private function isExtraActif(array $disposExtra, string $debut, string $fin): bool
     {
         foreach ($disposExtra as $d) { if ($d['hdebut'] === $debut && $d['hfin'] === $fin) return true; }
         return false;
     }
 
+    /**
+     * @param list<array{heure: string, disponible: bool, pris?: bool}> $creneaux
+     */
     private function jsonCreneaux(array $creneaux, bool $samedi, ?string $message): JsonResponse
     {
         return new JsonResponse(['creneaux' => $creneaux, 'samedi' => $samedi, 'message' => $message]);
@@ -279,6 +301,9 @@ final class CalendrierController extends AbstractController
         try {
             $date   = new \DateTime($dateStr);
             $hdebut = \DateTime::createFromFormat('H:i', $heure);
+            if (!$hdebut instanceof \DateTime) {
+                return $this->json(['success' => false, 'error' => 'Date/heure invalide'], 400);
+            }
             $hfin   = clone $hdebut;
             $hfin->modify('+30 minutes');
         } catch (\Exception $e) {
@@ -315,7 +340,7 @@ final class CalendrierController extends AbstractController
     #[Route('/api/calendrier/recu/{id}', name: 'api_calendrier_recu', methods: ['GET'])]
     public function recu(Rdv $rdv, Request $request): Response
     {
-        $paymentId = $request->query->get('payment_id', '—');
+        $paymentId = (string) $request->query->get('payment_id', '—');
         $now       = new \DateTime();
 
         $html = '<!DOCTYPE html>

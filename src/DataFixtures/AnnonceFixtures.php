@@ -51,10 +51,12 @@ class AnnonceFixtures extends Fixture
             $annonce = new Annonce();
             
             // Générer un titre réaliste en français
-            $titreBase = $faker->randomElement($titresExemples);
+            $titreBaseRaw = $faker->randomElement($titresExemples);
+            $titreBase = is_array($titreBaseRaw) ? implode(' ', $titreBaseRaw) : $titreBaseRaw;
             // Parfois ajouter un complément pour varier
             if ($faker->boolean(30)) {
-                $complement = ' - ' . $faker->words(rand(2, 4), true);
+                $words = $faker->words(rand(2, 4), true);
+                $complement = ' - ' . (is_array($words) ? implode(' ', $words) : $words);
                 $titreComplet = $titreBase . $complement;
             } else {
                 $titreComplet = $titreBase;
@@ -108,8 +110,10 @@ class AnnonceFixtures extends Fixture
                     "Afin d'améliorer la prise en charge des patients, nous recherchons du matériel de diagnostic (glucomètres, appareils de tension, oxymètres, etc.). Ce matériel permettra de détecter plus rapidement certaines pathologies et d'adapter les traitements.",
                 'Urgence : équipement de réanimation' =>
                     "Un besoin urgent en équipement de réanimation a été identifié pour renforcer la capacité de prise en charge des urgences vitales. Les dons contribueront à l'acquisition de dispositifs indispensables comme les respirateurs, les moniteurs et les accessoires associés.",
-                default =>
-                    $faker->paragraphs(rand(2, 4), true),
+                default => (function () use ($faker): string {
+                    $paragraphs = $faker->paragraphs(rand(2, 4), true);
+                    return is_array($paragraphs) ? implode("\n", $paragraphs) : $paragraphs;
+                })(),
             };
             $annonce->setDescription($description);
             

@@ -38,6 +38,7 @@ class Medicament
     #[Assert\NotNull(message: 'La date d\'expiration est obligatoire.')]
     private ?\DateTimeInterface $dateExpiration = null;
 
+    /** @var Collection<int, LigneOrdonnance> */
     #[ORM\OneToMany(targetEntity: LigneOrdonnance::class, mappedBy: 'medicament')]
     private Collection $lignesOrdonnance;
 
@@ -49,6 +50,13 @@ class Medicament
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function setId(int $id): static
+    {
+        $this->id = $id;
+
+        return $this;
     }
 
     public function getNomMedicament(): ?string
@@ -139,4 +147,10 @@ class Medicament
 
         return $this;
     }
+
 }
+
+
+
+
+

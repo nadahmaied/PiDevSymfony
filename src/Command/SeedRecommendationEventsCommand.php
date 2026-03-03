@@ -183,9 +183,13 @@ class SeedRecommendationEventsCommand extends Command
         return random_int(1, 3);
     }
 
+    /**
+     * @param list<string> $values
+     * @param list<int> $weights
+     */
     private function pick(array $values, array $weights): string
     {
-        $sum = array_sum($weights);
+        $sum = (int) array_sum($weights);
         $roll = random_int(1, max(1, $sum));
         $acc = 0;
 
@@ -196,6 +200,11 @@ class SeedRecommendationEventsCommand extends Command
             }
         }
 
-        return (string) $values[array_key_last($values)];
+        $lastKey = array_key_last($values);
+        if ($lastKey === null) {
+            return '';
+        }
+
+        return (string) $values[$lastKey];
     }
 }

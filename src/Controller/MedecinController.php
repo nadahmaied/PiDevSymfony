@@ -14,8 +14,11 @@ class MedecinController extends AbstractController
     public function index(Request $request, MedecinRepository $repo): Response
     {
         $specialite = $request->query->get('specialite');
-        $nom        = $request->query->get('nom');
-        $type       = $request->query->get('type');
+        $nom = $request->query->get('nom');
+        $type = $request->query->get('type');
+        $specialite = is_string($specialite) && $specialite !== '' ? $specialite : null;
+        $nom = is_string($nom) && $nom !== '' ? $nom : null;
+        $type = is_string($type) && $type !== '' ? $type : null;
 
         $medecins = [];
         $searched = false;

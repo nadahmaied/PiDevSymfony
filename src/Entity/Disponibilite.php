@@ -37,6 +37,13 @@ class Disponibilite
         return $this->id;
     }
 
+    public function setId(int $id): static
+    {
+        $this->id = $id;
+
+        return $this;
+    }
+
     public function getDateDispo(): ?\DateTime
     {
         return $this->dateDispo;
@@ -108,4 +115,10 @@ class Disponibilite
 
         return $this;
     }
+
 }
+
+
+
+
+

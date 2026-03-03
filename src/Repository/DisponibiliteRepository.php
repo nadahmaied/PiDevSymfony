@@ -19,6 +19,7 @@ class DisponibiliteRepository extends ServiceEntityRepository
     /**
      * Toutes les dispos d'un médecin pour une date (tous statuts)
      */
+    /** @return list<Disponibilite> */
     public function findByMedecinAndDate(int $medId, \DateTime $date): array
     {
         return $this->createQueryBuilder('d')
@@ -78,6 +79,7 @@ class DisponibiliteRepository extends ServiceEntityRepository
     /**
      * Retourne les IDs des médecins disponibles pour une date donnée
      */
+    /** @return list<int> */
     public function findMedecinIdsDisponibles(\DateTime $date): array
     {
         $result = $this->createQueryBuilder('d')
@@ -95,6 +97,7 @@ class DisponibiliteRepository extends ServiceEntityRepository
     /**
      * Toutes les dispos actives d'un médecin (calendrier)
      */
+    /** @return list<Disponibilite> */
     public function findByMedecin(int $medecinId): array
     {
         return $this->createQueryBuilder('d')
@@ -112,6 +115,7 @@ class DisponibiliteRepository extends ServiceEntityRepository
     /**
      * Dates disponibles pour un mois donné
      */
+    /** @return list<string> */
     public function findDatesDisponiblesDuMois(int $year, int $month): array
     {
         $debut = new \DateTime("$year-$month-01");
@@ -127,6 +131,9 @@ class DisponibiliteRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
 
-        return array_map(fn($r) => $r['dateDispo']->format('Y-m-d'), $result);
+        return array_values(array_map(
+            static fn (array $r): string => $r['dateDispo']->format('Y-m-d'),
+            $result
+        ));
     }
 }

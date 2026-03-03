@@ -57,7 +57,12 @@ class FrontAuthController extends AbstractController
                 $diplomaFilename = uniqid() . '.' . $diplomaFile->guessExtension();
 
                 try {
-                    $uploadsDir = $this->getParameter('kernel.project_dir') . '/public/uploads/documents';
+                    $projectDirParam = $this->getParameter('kernel.project_dir');
+                    if (!is_string($projectDirParam)) {
+                        throw new \RuntimeException('Invalid kernel.project_dir parameter.');
+                    }
+                    $projectDir = $projectDirParam;
+                    $uploadsDir = $projectDir . '/public/uploads/documents';
                     if (!is_dir($uploadsDir)) {
                         mkdir($uploadsDir, 0777, true);
                     }

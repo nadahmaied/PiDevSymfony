@@ -58,6 +58,13 @@ class Question
         return $this->id;
     }
 
+    public function setId(int $id): static
+    {
+        $this->id = $id;
+
+        return $this;
+    }
+
     public function getTitre(): ?string
     {
         return $this->titre;
@@ -135,4 +142,10 @@ class Question
 
         return $this;
     }
+
 }
+
+
+
+
+

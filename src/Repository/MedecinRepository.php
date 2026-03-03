@@ -15,6 +15,7 @@ class MedecinRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Medecin::class);
     }
+    /** @return list<Medecin> */
     public function search(?string $specialite, ?string $nom, ?string $type): array
     {
         $qb = $this->createQueryBuilder('m');
@@ -61,6 +62,10 @@ class MedecinRepository extends ServiceEntityRepository
     //        ;
     //    }
 
+    /**
+     * @param list<int> $ids
+     * @return list<string>
+     */
     public function findSpecialitesByIds(array $ids): array
 {
     if (empty($ids)) return [];
@@ -74,6 +79,10 @@ class MedecinRepository extends ServiceEntityRepository
     return array_column($result, 'specialite');
 }
 
+/**
+ * @param list<int> $ids
+ * @return list<Medecin>
+ */
 public function findBySpecialiteAndIds(string $specialite, array $ids): array
 {
     if (empty($ids)) return [];

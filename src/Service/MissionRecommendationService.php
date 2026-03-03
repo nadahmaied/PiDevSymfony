@@ -27,14 +27,14 @@ class MissionRecommendationService
     ) {
     }
 
+    /**
+     * @param list<MissionVolunteer> $missions
+     * @return list<array<string, mixed>>
+     */
     public function recommendForUser(User $user, array $missions, int $limit = 5): array
     {
         $recommendations = [];
         foreach ($missions as $mission) {
-            if (!$mission instanceof MissionVolunteer) {
-                continue;
-            }
-
             $recommendations[] = $this->scoreMission($user, $mission);
         }
 
@@ -46,6 +46,7 @@ class MissionRecommendationService
         return array_slice($recommendations, 0, $limit);
     }
 
+    /** @return array<string, mixed> */
     public function scoreMission(User $user, MissionVolunteer $mission): array
     {
         $weights = $this->normalizeWeights($user->getRecommendationWeights());
@@ -95,6 +96,7 @@ class MissionRecommendationService
         ];
     }
 
+    /** @return array<string, float> */
     public function buildTrainingFeatures(User $user, MissionVolunteer $mission): array
     {
         $skills = $this->skillsScore($user, $mission);
@@ -106,6 +108,10 @@ class MissionRecommendationService
         return $this->buildFeatureVector($mission, $skills, $geo, $availability, $history, $social);
     }
 
+    /**
+     * @param list<MissionVolunteer> $missions
+     * @return array{openCount: int, urgentCount: int, hardCount: int, topMissingSkills: array<string, int>}
+     */
     public function adminInsights(array $missions): array
     {
         $open = array_filter($missions, static fn (MissionVolunteer $m): bool => $m->getStatut() === 'Ouverte');
@@ -130,6 +136,7 @@ class MissionRecommendationService
         ];
     }
 
+    /** @return array<string, float> */
     private function buildFeatureVector(
         MissionVolunteer $mission,
         float $skills,
@@ -255,6 +262,10 @@ class MissionRecommendationService
         return 0.5;
     }
 
+    /**
+     * @param list<string> $left
+     * @param list<string> $right
+     */
     private function overlapScore(array $left, array $right): float
     {
         $left = array_values(array_unique(array_filter($left)));
@@ -270,10 +281,6 @@ class MissionRecommendationService
 
         $intersection = array_intersect($left, $right);
         $union = array_unique(array_merge($left, $right));
-
-        if (count($union) === 0) {
-            return 0.0;
-        }
 
         return count($intersection) / count($union);
     }
@@ -297,11 +304,15 @@ class MissionRecommendationService
         return $earthRadius * $angle;
     }
 
+    /**
+     * @param array<string, float|int> $customWeights
+     * @return array<string, float>
+     */
     private function normalizeWeights(array $customWeights): array
     {
         $weights = self::DEFAULT_WEIGHTS;
         foreach ($weights as $key => $default) {
-            if (isset($customWeights[$key]) && is_numeric($customWeights[$key])) {
+            if (isset($customWeights[$key])) {
                 $weights[$key] = max(0.0, (float) $customWeights[$key]);
             }
         }
@@ -318,6 +329,7 @@ class MissionRecommendationService
         return $weights;
     }
 
+    /** @return list<string> */
     private function buildReasons(
         MissionVolunteer $mission,
         float $skills,

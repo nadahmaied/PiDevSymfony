@@ -57,6 +57,7 @@ class Rdv
     #[ORM\ManyToOne]
     private ?User $medecinUser = null;
 
+    /** @var Collection<int, Ordonnance> */
     #[ORM\OneToMany(targetEntity: Ordonnance::class, mappedBy: 'idRdv')]
     private Collection $ordonnances;
 
@@ -79,7 +80,17 @@ class Rdv
         }
     }
 
-    public function getId(): ?int { return $this->id; }
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function setId(int $id): static
+    {
+        $this->id = $id;
+
+        return $this;
+    }
 
     public function getDate(): ?\DateTime { return $this->date; }
     public function setDate(?\DateTime $date): static { $this->date = $date; return $this; }
@@ -129,4 +140,10 @@ class Rdv
         }
         return $this;
     }
+
 }
+
+
+
+
+

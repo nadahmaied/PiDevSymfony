@@ -34,8 +34,11 @@ class AdminUserController extends AbstractController
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
 
         $q = $request->query->get('q');
-        $sort = $request->query->get('sort', 'id');
-        $direction = $request->query->get('direction', 'ASC');
+        if (!is_string($q) || $q === '') {
+            $q = null;
+        }
+        $sort = (string) $request->query->get('sort', 'id');
+        $direction = (string) $request->query->get('direction', 'ASC');
 
         $qb = $userRepository->createQueryBuilder('u');
 
@@ -122,8 +125,13 @@ class AdminUserController extends AbstractController
                 $newFilename = uniqid().'.'.$profilePictureFile->guessExtension();
 
                 try {
+                    $projectDirParam = $this->getParameter('kernel.project_dir');
+                    if (!is_string($projectDirParam)) {
+                        throw new \RuntimeException('Invalid kernel.project_dir parameter.');
+                    }
+                    $projectDir = $projectDirParam;
                     $profilePictureFile->move(
-                        $this->getParameter('kernel.project_dir').'/public/uploads/profiles',
+                        $projectDir . '/public/uploads/profiles',
                         $newFilename
                     );
                     $user->setProfilePicture($newFilename);

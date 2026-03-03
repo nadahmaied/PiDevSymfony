@@ -2,6 +2,8 @@
 
 namespace App\Controller;
 
+use App\Entity\Ordonnance;
+use App\Entity\User;
 use App\Repository\FicheRepository;
 use App\Repository\LigneOrdonnanceRepository;
 use App\Repository\MedicamentRepository;
@@ -26,6 +28,16 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_USER')]
 class PatientController extends AbstractController
 {
+    private function getAuthenticatedUser(): User
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            throw $this->createAccessDeniedException('Vous devez etre connecte.');
+        }
+
+        return $user;
+    }
+
     #[Route('/dashboard', name: 'patient_dashboard')]
     public function dashboard(
         FicheRepository $ficheRepo,
@@ -38,7 +50,7 @@ class PatientController extends AbstractController
         DonationRepository $donationRepository
     ): Response
     {
-        $user = $this->getUser();
+        $user = $this->getAuthenticatedUser();
         $latestFiche = $ficheRepo->findOneBy(['idU' => $user]);
         $recentOrdonnances = $ordRepo->findByPatient($user, 3);
         $now = new \DateTimeImmutable();
@@ -92,6 +104,7 @@ class PatientController extends AbstractController
     public function medicaments(Request $request, MedicamentRepository $medicamentRepository): Response
     {
         $search = $request->query->get('search');
+        $search = is_string($search) && $search !== '' ? $search : null;
         $medicaments = $medicamentRepository->findBySearchAndSort($search, 'nomMedicament', 'ASC');
 
         return $this->render('patient/medicaments.html.twig', [
@@ -107,7 +120,7 @@ class PatientController extends AbstractController
         OrdonnanceRepository $ordonnanceRepository,
         UserRepository $userRepository
     ): Response {
-        $patient = $this->getUser();
+        $patient = $this->getAuthenticatedUser();
         return $this->render('stats/index.html.twig', [
             'patient' => $patient,
             'patients' => [$patient],
@@ -123,7 +136,7 @@ class PatientController extends AbstractController
     #[Route('/dossier', name: 'patient_dossier')]
     public function dossier(FicheRepository $ficheRepo, OrdonnanceRepository $ordRepo): Response
     {
-        $user = $this->getUser();
+        $user = $this->getAuthenticatedUser();
         $fiche = $ficheRepo->findOneBy(['idU' => $user]);
         $patientOrdonnances = $ordRepo->findByPatient($user);
         $aiOrdonnances = [];
@@ -146,11 +159,12 @@ class PatientController extends AbstractController
     }
 
     #[Route('/fiche/{id}', name: 'patient_fiche_show')]
-    public function showFiche($id, FicheRepository $ficheRepo, OrdonnanceRepository $ordonnanceRepository, MedicalAiService $medicalAiService): Response
+    public function showFiche(int $id, FicheRepository $ficheRepo, OrdonnanceRepository $ordonnanceRepository, MedicalAiService $medicalAiService): Response
     {
         $fiche = $ficheRepo->find($id);
 
-        if (!$fiche || $fiche->getIdU() !== $this->getUser()) {
+        $user = $this->getAuthenticatedUser();
+        if (!$fiche || $fiche->getIdU() !== $user) {
             throw $this->createAccessDeniedException();
         }
 
@@ -176,11 +190,12 @@ class PatientController extends AbstractController
     }
 
     #[Route('/ordonnance/{id}', name: 'patient_ordonnance_show')]
-    public function showOrdonnance($id, OrdonnanceRepository $ordRepo, EntityManagerInterface $em, string $siteBaseUrl): Response
+    public function showOrdonnance(int $id, OrdonnanceRepository $ordRepo, EntityManagerInterface $em, string $siteBaseUrl): Response
     {
         $ordonnance = $ordRepo->find($id);
 
-        if (!$ordonnance || $ordonnance->getIdRdv()?->getPatient() !== $this->getUser()) {
+        $user = $this->getAuthenticatedUser();
+        if (!$ordonnance || $ordonnance->getIdRdv()?->getPatient() !== $user) {
             throw $this->createAccessDeniedException();
         }
 
@@ -197,7 +212,7 @@ class PatientController extends AbstractController
         ]);
     }
 
-    private function generateOrdonnanceQrDataUri($ordonnance, string $siteBaseUrl): string
+    private function generateOrdonnanceQrDataUri(Ordonnance $ordonnance, string $siteBaseUrl): string
     {
         $scanUrl = rtrim($siteBaseUrl, '/') . $this->generateUrl(
             'app_ordonnance_scan',
@@ -205,12 +220,11 @@ class PatientController extends AbstractController
             \Symfony\Component\Routing\Generator\UrlGeneratorInterface::ABSOLUTE_PATH
         );
 
-        $builder = new \Endroid\QrCode\Builder\Builder(
-            writer: new \Endroid\QrCode\Writer\SvgWriter(),
-            data: $scanUrl,
-            size: 200,
-            margin: 8
-        );
+        $builder = \Endroid\QrCode\Builder\Builder::create()
+            ->writer(new \Endroid\QrCode\Writer\SvgWriter())
+            ->data($scanUrl)
+            ->size(200)
+            ->margin(8);
         $result = $builder->build();
 
         return $result->getDataUri();

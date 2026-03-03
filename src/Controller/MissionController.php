@@ -69,9 +69,9 @@ class MissionController extends AbstractController
         $volunteer = new Volunteer();
         $user = $this->getUser();
 
-        if (!$user) {
+        if (!$user instanceof User) {
             $user = $entityManager->getRepository(User::class)->findOneBy([]);
-            if (!$user) {
+            if (!$user instanceof User) {
                 dd("ERREUR : Il faut creer au moins un utilisateur dans la base de donnees (table 'user') pour tester.");
             }
         }
@@ -85,11 +85,9 @@ class MissionController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->persist($volunteer);
-            if ($user instanceof User) {
-                $learningService->track($user, $mission, 'apply_created', 1.0, [
-                    'disponibilites' => $volunteer->getDisponibilites(),
-                ]);
-            }
+            $learningService->track($user, $mission, 'apply_created', 1.0, [
+                'disponibilites' => $volunteer->getDisponibilites(),
+            ]);
             $entityManager->flush();
 
             $this->addFlash('success', 'Candidature envoyee !');

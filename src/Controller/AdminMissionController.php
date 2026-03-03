@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\MissionVolunteer;
+use App\Entity\User;
 use App\Entity\Volunteer;
 use App\Form\MissionType;
 use App\Repository\MissionVolunteerRepository;
@@ -31,6 +32,9 @@ class AdminMissionController extends AbstractController
 {
     // 1. RÃ©cupÃ©rer le terme de recherche depuis l'URL (ex: ?q=medecin)
     $searchTerm = $request->query->get('q');
+    if (!is_string($searchTerm) || $searchTerm === '') {
+        $searchTerm = null;
+    }
     $applicationsFilter = (string) $request->query->get('candidatures', 'all');
     if (!\in_array($applicationsFilter, ['all', 'with', 'without'], true)) {
         $applicationsFilter = 'all';
@@ -61,7 +65,11 @@ class AdminMissionController extends AbstractController
         $mission = new MissionVolunteer();
         
         // --- NOUVEAU : On relie la mission Ã  l'admin connectÃ© ---
-        $mission->setUser($this->getUser());
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            throw $this->createAccessDeniedException('Vous devez etre connecte.');
+        }
+        $mission->setUser($user);
         // --------------------------------------------------------
 
         $form = $this->createForm(MissionType::class, $mission);
@@ -154,7 +162,7 @@ class AdminMissionController extends AbstractController
     #[Route('/{id}', name: 'app_admin_missions_delete', methods: ['POST'])]
     public function delete(Request $request, MissionVolunteer $mission, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$mission->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete'.$mission->getId(), (string) $request->request->get('_token'))) {
             $entityManager->remove($mission);
             $entityManager->flush();
         }

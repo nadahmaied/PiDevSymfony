@@ -49,8 +49,13 @@ class AccountController extends AbstractController
                 $newFilename = uniqid().'.'.$profilePictureFile->guessExtension();
 
                 try {
+                    $projectDirParam = $this->getParameter('kernel.project_dir');
+                    if (!is_string($projectDirParam)) {
+                        throw new \RuntimeException('Invalid kernel.project_dir parameter.');
+                    }
+                    $projectDir = $projectDirParam;
                     $profilePictureFile->move(
-                        $this->getParameter('kernel.project_dir').'/public/uploads/profiles',
+                        $projectDir . '/public/uploads/profiles',
                         $newFilename
                     );
                     $user->setProfilePicture($newFilename);

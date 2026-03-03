@@ -84,6 +84,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(nullable: true)]
     private ?float $longitude = null;
 
+    /** @var array<string, float> */
     #[ORM\Column(type: 'json')]
     private array $recommendationWeights = [];
 
@@ -144,6 +145,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function setId(int $id): static
+    {
+        $this->id = $id;
+
+        return $this;
     }
 
     public function getEmail(): ?string
@@ -326,32 +334,37 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    /** @return array<string, float> */
     public function getRecommendationWeights(): array
     {
-        if (!isset($this->recommendationWeights) || !is_array($this->recommendationWeights)) {
-            return [];
-        }
-
         return $this->recommendationWeights;
     }
 
+    /** @param array<string, float|int> $recommendationWeights */
     public function setRecommendationWeights(array $recommendationWeights): static
     {
-        $this->recommendationWeights = $recommendationWeights;
+        $normalized = [];
+        foreach ($recommendationWeights as $key => $weight) {
+            $normalized[(string) $key] = (float) $weight;
+        }
+        $this->recommendationWeights = $normalized;
 
         return $this;
     }
 
+    /** @return list<string> */
     public function skillsProfileAsArray(): array
     {
         return self::csvToArray($this->skillsProfile);
     }
 
+    /** @return list<string> */
     public function interestsProfileAsArray(): array
     {
         return self::csvToArray($this->interestsProfile);
     }
 
+    /** @return list<string> */
     public function availabilityProfileAsArray(): array
     {
         return self::csvToArray($this->availabilityProfile);
@@ -506,6 +519,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    /** @return list<string> */
     private static function csvToArray(?string $value): array
     {
         if (!$value) {
@@ -595,4 +609,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $this;
     }
+
 }
+
+
+
+
+

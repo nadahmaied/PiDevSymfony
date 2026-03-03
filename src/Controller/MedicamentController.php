@@ -20,6 +20,9 @@ class MedicamentController extends AbstractController
         $search = $request->query->get('search');
         $sortBy = $request->query->get('sortBy');
         $sortOrder = $request->query->get('sortOrder', 'ASC');
+        $search = is_string($search) && $search !== '' ? $search : null;
+        $sortBy = is_string($sortBy) && $sortBy !== '' ? $sortBy : null;
+        $sortOrder = is_string($sortOrder) && $sortOrder !== '' ? $sortOrder : 'ASC';
 
         return $this->render('medicament/index.html.twig', [
             'medicaments' => $medicamentRepository->findBySearchAndSort($search, $sortBy, $sortOrder),
@@ -80,7 +83,7 @@ class MedicamentController extends AbstractController
     #[Route('/{id}', name: 'app_medicament_delete', methods: ['POST'])]
     public function delete(Request $request, Medicament $medicament, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$medicament->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete'.$medicament->getId(), (string) $request->request->get('_token'))) {
             $entityManager->remove($medicament);
             $entityManager->flush();
             $this->addFlash('success', 'Médicament supprimé avec succès !');

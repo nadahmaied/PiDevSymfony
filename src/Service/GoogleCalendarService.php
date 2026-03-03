@@ -2,43 +2,32 @@
 
 namespace App\Service;
 
-use Google\Client;
-use Google\Service\Calendar;
-use Google\Service\Calendar\Event;
-use Google\Service\Calendar\EventDateTime;
-use Google\Service\Calendar\EventAttendee;
-use Google\Service\Calendar\EventReminder;
-use Google\Service\Calendar\EventReminders;
-
 class GoogleCalendarService
 {
-    private Calendar $service;
-    private string   $calendarId;
+    /** @var mixed */
+    private $service;
+    private string $calendarId;
 
     public function __construct(
         private string $credentialsPath,
         string $calendarId
     ) {
         $this->calendarId = $calendarId;
-        $this->service    = $this->buildService();
+        $this->service = $this->buildService();
     }
 
-    // ─────────────────────────────────────────────
-    // Build Google Client avec Service Account
-    // ─────────────────────────────────────────────
-    private function buildService(): Calendar
+    /** @return mixed */
+    private function buildService()
     {
-        $client = new Client();
+        $client = $this->newGoogleObject('Google\\Client');
         $client->setApplicationName('VitalTech RDV');
-        $client->setScopes([Calendar::CALENDAR]);
+        $client->setScopes(['https://www.googleapis.com/auth/calendar']);
         $client->setAuthConfig($this->credentialsPath);
 
-        return new Calendar($client);
+        return $this->newGoogleObject('Google\\Service\\Calendar', [$client]);
     }
 
-    // ─────────────────────────────────────────────
-    // Récupérer les events d'un jour donné
-    // ─────────────────────────────────────────────
+    /** @return list<mixed> */
     public function getEventsDuJour(\DateTime $date): array
     {
         $debut = clone $date;
@@ -48,25 +37,22 @@ class GoogleCalendarService
         $fin->setTime(23, 59, 59);
 
         $params = [
-            'timeMin'      => $debut->format(\DateTime::RFC3339),
-            'timeMax'      => $fin->format(\DateTime::RFC3339),
+            'timeMin' => $debut->format(\DateTime::RFC3339),
+            'timeMax' => $fin->format(\DateTime::RFC3339),
             'singleEvents' => true,
-            'orderBy'      => 'startTime',
-            'timeZone'     => 'Africa/Tunis',
+            'orderBy' => 'startTime',
+            'timeZone' => 'Africa/Tunis',
         ];
 
         try {
             $events = $this->service->events->listEvents($this->calendarId, $params);
             return $events->getItems();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return [];
         }
     }
 
-    // ─────────────────────────────────────────────
-    // Récupérer toutes les heures bloquées ce jour
-    // (créneaux de 30 min déjà réservés)
-    // ─────────────────────────────────────────────
+    /** @return list<string> */
     public function getHeuresBloquees(\DateTime $date): array
     {
         $events = $this->getEventsDuJour($date);
@@ -74,13 +60,14 @@ class GoogleCalendarService
 
         foreach ($events as $event) {
             $startDt = $event->getStart()->getDateTime();
-            if (!$startDt) continue;
+            if (!$startDt) {
+                continue;
+            }
 
-            $start   = new \DateTime($startDt);
-            $endDt   = $event->getEnd()->getDateTime();
-            $end     = $endDt ? new \DateTime($endDt) : null;
+            $start = new \DateTime($startDt);
+            $endDt = $event->getEnd()->getDateTime();
+            $end = $endDt ? new \DateTime($endDt) : null;
 
-            // Bloquer tous les créneaux de 30 min couverts par l'event
             $current = clone $start;
             while ($end && $current < $end) {
                 $heures[] = $current->format('H:i');
@@ -88,102 +75,110 @@ class GoogleCalendarService
             }
         }
 
-        return array_unique($heures);
+        return array_values(array_unique($heures));
     }
 
-    // ─────────────────────────────────────────────
-    // Créer un event = RÉSERVER un créneau
-    // ─────────────────────────────────────────────
+    /**
+     * @param array{date: string, heure: string, medecin: string, patient: string, telephone?: string, email?: string, specialite?: string, motif?: string} $data
+     */
     public function createRdvEvent(array $data): string
     {
         $startStr = $data['date'] . 'T' . $data['heure'] . ':00';
-        $startDt  = new \DateTime($startStr, new \DateTimeZone('Africa/Tunis'));
-        $endDt    = clone $startDt;
+        $startDt = new \DateTime($startStr, new \DateTimeZone('Africa/Tunis'));
+        $endDt = clone $startDt;
         $endDt->modify('+30 minutes');
 
-        $event = new Event();
+        $event = $this->newGoogleObject('Google\\Service\\Calendar\\Event');
         $event->setSummary('RDV - ' . $data['medecin'] . ' / ' . $data['patient']);
         $event->setDescription(
-            "👤 Patient : " . $data['patient'] . "\n" .
-            "📞 Tél : " . ($data['telephone'] ?? '') . "\n" .
-            "📧 Email : " . ($data['email'] ?? '') . "\n" .
-            "🏥 Spécialité : " . ($data['specialite'] ?? '') . "\n" .
-            "📋 Motif : " . ($data['motif'] ?? 'Consultation')
+            "Patient : " . $data['patient'] . "\n" .
+            "Tel : " . ($data['telephone'] ?? '') . "\n" .
+            "Email : " . ($data['email'] ?? '') . "\n" .
+            "Specialite : " . ($data['specialite'] ?? '') . "\n" .
+            "Motif : " . ($data['motif'] ?? 'Consultation')
         );
 
-        $start = new EventDateTime();
+        $start = $this->newGoogleObject('Google\\Service\\Calendar\\EventDateTime');
         $start->setDateTime($startDt->format(\DateTime::RFC3339));
         $start->setTimeZone('Africa/Tunis');
         $event->setStart($start);
 
-        $end = new EventDateTime();
+        $end = $this->newGoogleObject('Google\\Service\\Calendar\\EventDateTime');
         $end->setDateTime($endDt->format(\DateTime::RFC3339));
         $end->setTimeZone('Africa/Tunis');
         $event->setEnd($end);
 
-        // Participant (email patient)
         if (!empty($data['email'])) {
-            $attendee = new EventAttendee();
+            $attendee = $this->newGoogleObject('Google\\Service\\Calendar\\EventAttendee');
             $attendee->setEmail($data['email']);
             $event->setAttendees([$attendee]);
         }
 
-        // Rappel email 60 min avant
-        $reminder = new EventReminder();
+        $reminder = $this->newGoogleObject('Google\\Service\\Calendar\\EventReminder');
         $reminder->setMethod('email');
         $reminder->setMinutes(60);
 
-        $reminders = new EventReminders();
+        $reminders = $this->newGoogleObject('Google\\Service\\Calendar\\EventReminders');
         $reminders->setUseDefault(false);
         $reminders->setOverrides([$reminder]);
         $event->setReminders($reminders);
 
         $created = $this->service->events->insert($this->calendarId, $event);
 
-        return $created->getId();
+        return (string) $created->getId();
     }
 
-    // ─────────────────────────────────────────────
-    // Annuler un event Google Calendar
-    // ─────────────────────────────────────────────
     public function cancelEvent(string $eventId): void
     {
         try {
             $this->service->events->delete($this->calendarId, $eventId);
-        } catch (\Exception $e) {
-            // Event déjà supprimé ou inexistant
+        } catch (\Throwable $e) {
         }
     }
 
-    // ─────────────────────────────────────────────
-    // Jours qui ont au moins 1 RDV dans le mois
-    // (pour colorier le calendrier front)
-    // ─────────────────────────────────────────────
+    /** @return list<string> */
     public function getJoursOccupesDuMois(int $year, int $month): array
     {
         $debut = new \DateTime("$year-$month-01", new \DateTimeZone('Africa/Tunis'));
-        $fin   = (clone $debut)->modify('last day of this month')->setTime(23, 59, 59);
+        $fin = (clone $debut)->modify('last day of this month')->setTime(23, 59, 59);
 
         $params = [
-            'timeMin'      => $debut->format(\DateTime::RFC3339),
-            'timeMax'      => $fin->format(\DateTime::RFC3339),
+            'timeMin' => $debut->format(\DateTime::RFC3339),
+            'timeMax' => $fin->format(\DateTime::RFC3339),
             'singleEvents' => true,
-            'orderBy'      => 'startTime',
-            'maxResults'   => 500,
+            'orderBy' => 'startTime',
+            'maxResults' => 500,
         ];
 
         try {
             $events = $this->service->events->listEvents($this->calendarId, $params);
-            $jours  = [];
+            $jours = [];
+
             foreach ($events->getItems() as $event) {
                 $startDt = $event->getStart()->getDateTime();
                 if ($startDt) {
                     $jours[] = (new \DateTime($startDt))->format('Y-m-d');
                 }
             }
-            return array_unique($jours);
-        } catch (\Exception $e) {
+
+            return array_values(array_unique($jours));
+        } catch (\Throwable $e) {
             return [];
         }
+    }
+
+    /** @param list<mixed> $arguments
+     *  @return mixed
+     */
+    private function newGoogleObject(string $className, array $arguments = [])
+    {
+        if (!class_exists($className)) {
+            throw new \RuntimeException(sprintf(
+                'Missing Google API dependency: class "%s" not found. Run "composer require google/apiclient".',
+                $className
+            ));
+        }
+
+        return new $className(...$arguments);
     }
 }

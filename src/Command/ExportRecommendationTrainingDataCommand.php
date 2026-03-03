@@ -66,10 +66,6 @@ class ExportRecommendationTrainingDataCommand extends Command
 
         $rows = 0;
         foreach ($events as $event) {
-            if (!$event instanceof RecommendationEvent) {
-                continue;
-            }
-
             $label = $this->labelFromEvent($event);
             if ($label === null) {
                 continue;

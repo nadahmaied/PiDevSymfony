@@ -17,7 +17,8 @@ class MedicamentRepository extends ServiceEntityRepository
         parent::__construct($registry, Medicament::class);
     }
 
-    public function findBySearchAndSort(?string $search, ?string $sortBy, ?string $sortOrder = 'ASC')
+    /** @return list<Medicament> */
+    public function findBySearchAndSort(?string $search, ?string $sortBy, ?string $sortOrder = 'ASC'): array
     {
         $qb = $this->createQueryBuilder('m');
 
@@ -36,6 +37,7 @@ class MedicamentRepository extends ServiceEntityRepository
 
     /**
      * Returns each medicament with how many prescription lines reference it.
+     * @return array<int, array{0: Medicament, usageCount: string|int}>
      */
     public function findWithPrescriptionUsage(): array
     {

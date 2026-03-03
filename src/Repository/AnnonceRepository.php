@@ -16,6 +16,7 @@ class AnnonceRepository extends ServiceEntityRepository
         parent::__construct($registry, Annonce::class);
     }
 
+    /** @return array<int, array{urgence: string, total: string|int}> */
     public function countByUrgence(): array
     {
         return $this->createQueryBuilder('a')

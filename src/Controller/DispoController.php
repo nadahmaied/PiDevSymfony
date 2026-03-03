@@ -219,6 +219,9 @@ final class DispoController extends AbstractController
 
             $hdebut = \DateTime::createFromFormat('H:i', $extra['debut']);
             $hfin   = \DateTime::createFromFormat('H:i', $extra['fin']);
+            if (!$hdebut instanceof \DateTime || !$hfin instanceof \DateTime) {
+                return new JsonResponse(['success' => false, 'message' => 'Heure invalide.'], 400);
+            }
 
             $dispo = new Disponibilite();
             $dispo->setMedId($medId);
@@ -271,6 +274,9 @@ final class DispoController extends AbstractController
 
             $hdebut = \DateTime::createFromFormat('H:i', $seance['debut']);
             $hfin   = \DateTime::createFromFormat('H:i', $seance['fin']);
+            if (!$hdebut instanceof \DateTime || !$hfin instanceof \DateTime) {
+                return new JsonResponse(['success' => false, 'message' => 'Heure invalide.'], 400);
+            }
 
             $dispo = new Disponibilite();
             $dispo->setMedId($medId);
@@ -309,10 +315,18 @@ final class DispoController extends AbstractController
         try {
             $data = json_decode($request->getContent(), true);
             if (isset($data['hdebut'])) {
-                $dispo->setHdebut(\DateTime::createFromFormat('H:i', $data['hdebut']));
+                $hdebut = \DateTime::createFromFormat('H:i', (string) $data['hdebut']);
+                if (!$hdebut instanceof \DateTime) {
+                    return new JsonResponse(['success' => false, 'message' => 'Heure de debut invalide.'], 400);
+                }
+                $dispo->setHdebut($hdebut);
             }
             if (isset($data['hfin'])) {
-                $dispo->setHFin(\DateTime::createFromFormat('H:i', $data['hfin']));
+                $hfin = \DateTime::createFromFormat('H:i', (string) $data['hfin']);
+                if (!$hfin instanceof \DateTime) {
+                    return new JsonResponse(['success' => false, 'message' => 'Heure de fin invalide.'], 400);
+                }
+                $dispo->setHFin($hfin);
             }
             $diff = $dispo->getHdebut()->diff($dispo->getHFin());
             $dispo->setNbrH((int) round($diff->h + ($diff->i / 60)));

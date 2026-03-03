@@ -4,6 +4,7 @@ namespace App\Service;
 
 class MlModelScoringService
 {
+    /** @var array<string, mixed>|null */
     private ?array $model = null;
     private bool $loaded = false;
 
@@ -12,6 +13,7 @@ class MlModelScoringService
     ) {
     }
 
+    /** @param array<string, float|int> $features */
     public function predictProbability(array $features): ?float
     {
         $model = $this->loadModel();
@@ -55,6 +57,7 @@ class MlModelScoringService
         return (int) (($model['metrics']['train_rows'] ?? 0));
     }
 
+    /** @return array<string, mixed>|null */
     private function loadModel(): ?array
     {
         if ($this->loaded) {

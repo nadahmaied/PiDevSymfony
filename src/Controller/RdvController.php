@@ -25,17 +25,6 @@ use App\Service\SmsService;
 
 final class RdvController extends AbstractController
 {
-    // ============================================================
-    // HELPER — récupère l'utilisateur connecté (comme MissionRecommendationController)
-    // ============================================================
-    private function getAuthenticatedUser(): User
-    {
-        $user = $this->getUser();
-        if (!$user instanceof User) {
-            throw $this->createAccessDeniedException('Vous devez être connecté.');
-        }
-        return $user;
-    }
 
     // ============================================================
     // FRONT — Liste des RDV du patient connecté
@@ -74,8 +63,11 @@ final class RdvController extends AbstractController
         }
 
         $specialite = $request->query->get('specialite');
-        $nom        = $request->query->get('nom');
-        $type       = $request->query->get('type');
+        $nom = $request->query->get('nom');
+        $type = $request->query->get('type');
+        $specialite = is_string($specialite) && $specialite !== '' ? $specialite : null;
+        $nom = is_string($nom) && $nom !== '' ? $nom : null;
+        $type = is_string($type) && $type !== '' ? $type : null;
         $medecins   = [];
         $searched   = false;
 
@@ -266,7 +258,7 @@ final class RdvController extends AbstractController
     #[Route('/delete/{id}', name: 'deleteRdv', methods: ['POST'])]
     public function delete(Request $request, Rdv $rdv, ManagerRegistry $mr): Response
     {
-        if ($this->isCsrfTokenValid('delete' . $rdv->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete' . $rdv->getId(), (string) $request->request->get('_token'))) {
             $em = $mr->getManager();
             $em->remove($rdv);
             $em->flush();
@@ -278,10 +270,10 @@ final class RdvController extends AbstractController
     #[Route('/editBack/{id}', name: 'editRdvBack', methods: ['POST'])]
     public function editRdvBack(Request $request, Rdv $rdv, ManagerRegistry $mr): Response
     {
-        $date = $request->request->get('date');
-        $time = $request->request->get('hdebut');
+        $date = (string) $request->request->get('date');
+        $time = (string) $request->request->get('hdebut');
 
-        if ($date && $time) {
+        if ($date !== '' && $time !== '') {
             $newDate = new \DateTime($date);
             $newTime = new \DateTime($time);
             $rdv->setDate($newDate);
@@ -402,7 +394,7 @@ final class RdvController extends AbstractController
     #[Route('/rdv/search', name: 'rdv_search', methods: ['GET'])]
     public function search(Request $request, RdvRepository $rdvRepository): \Symfony\Component\HttpFoundation\JsonResponse
     {
-        $query = trim($request->query->get('q', ''));
+        $query = trim((string) $request->query->get('q', ''));
 
         // ✅ Recherche filtrée selon l'utilisateur connecté
         $user = $this->getUser();

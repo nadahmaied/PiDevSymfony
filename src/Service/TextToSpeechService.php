@@ -78,24 +78,27 @@ final class TextToSpeechService
         curl_close($ch);
 
         if ($body === false) {
-            throw new \RuntimeException('Erreur lors de la requête TTS : ' . $error);
+            throw new \RuntimeException('Erreur lors de la requete TTS : ' . $error);
+        }
+        if (!is_string($body)) {
+            throw new \RuntimeException('Reponse TTS invalide.');
         }
 
         if ($status < 200 || $status >= 300) {
-            $snippet = trim(mb_substr((string) $body, 0, 1200));
+            $snippet = trim(mb_substr($body, 0, 1200));
             $reqId = $responseHeaders['x-requestid'] ?? ($responseHeaders['x-ms-requestid'] ?? '');
             throw new \RuntimeException(sprintf(
                 "Le service TTS a renvoyé le statut HTTP %d (Content-Type: %s, BodyLen: %d, RequestId: %s). Réponse: %s",
                 $status,
                 $contentType !== '' ? $contentType : 'n/a',
-                strlen((string) $body),
+                strlen($body),
                 $reqId !== '' ? $reqId : 'n/a',
                 $snippet !== '' ? $snippet : '[vide]',
             ));
         }
 
         if ($contentType !== '' && !str_contains(strtolower($contentType), 'audio')) {
-            $snippet = trim(mb_substr((string) $body, 0, 1200));
+            $snippet = trim(mb_substr($body, 0, 1200));
             throw new \RuntimeException(sprintf(
                 'Réponse inattendue du service TTS (Content-Type: %s). Réponse: %s',
                 $contentType,

@@ -56,6 +56,7 @@ class Annonce
     )]
     private ?string $etatAnnonce = null;
 
+    /** @var Collection<int, Donation> */
     #[ORM\OneToMany(mappedBy: 'annonce', targetEntity: Donation::class, cascade: ['persist', 'remove'])]
     private Collection $donations;
 
@@ -68,6 +69,13 @@ class Annonce
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function setId(int $id): static
+    {
+        $this->id = $id;
+
+        return $this;
     }
 
     public function getTitreAnnonce(): ?string
@@ -160,3 +168,7 @@ class Annonce
         return $this;
     }
 }
+
+
+
+

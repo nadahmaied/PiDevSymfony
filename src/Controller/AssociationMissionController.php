@@ -26,12 +26,14 @@ class AssociationMissionController extends AbstractController
     {
         $user = $this->getUser();
         
-        if (!$user) {
+        if (!$user instanceof User) {
             $user = $userRepository->findOneBy([]);
-            if (!$user) {
-                throw $this->createNotFoundException("ERREUR : Aucun utilisateur trouvé dans la base de données (table 'user'). Créez-en un via phpMyAdmin !");
-            }
         }
+
+        if (!$user instanceof User) {
+            throw $this->createNotFoundException("ERREUR : Aucun utilisateur trouve dans la base de donnees (table 'user'). Creez-en un via phpMyAdmin !");
+        }
+
         return $user;
     }
 
@@ -48,6 +50,9 @@ class AssociationMissionController extends AbstractController
         
         // 2. Récupération du mot-clé recherché
         $searchTerm = $request->query->get('q');
+        if (!is_string($searchTerm) || $searchTerm === '') {
+            $searchTerm = null;
+        }
 
         // 3. Construction de la requête
         $qb = $missionRepository->createQueryBuilder('m')
@@ -178,7 +183,7 @@ class AssociationMissionController extends AbstractController
             throw $this->createAccessDeniedException("Interdit !");
         }
 
-        if ($this->isCsrfTokenValid('delete'.$mission->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete'.$mission->getId(), (string) $request->request->get('_token'))) {
             $entityManager->remove($mission);
             $entityManager->flush();
             $this->addFlash('success', 'Mission supprimée.');

@@ -14,6 +14,7 @@ class RecommendationLearningService
     ) {
     }
 
+    /** @param array<string, mixed> $metadata */
     public function track(User $user, MissionVolunteer $mission, string $eventType, float $signal = 1.0, array $metadata = []): void
     {
         $event = (new RecommendationEvent())

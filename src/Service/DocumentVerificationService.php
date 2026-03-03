@@ -90,6 +90,7 @@ class DocumentVerificationService
         }
     }
 
+    /** @return array{verified: bool, message: string} */
     public function verifyDiploma(string $diplomaPath, string $userFirstName, string $userLastName): array
     {
         error_log("Verifying diploma for: $userFirstName $userLastName");
@@ -149,6 +150,7 @@ class DocumentVerificationService
         ];
     }
 
+    /** @return array{verified: bool, message: string} */
     public function verifyDocuments(string $diplomaPath, string $idCardPath, string $userFirstName, string $userLastName): array
     {
         $diplomaText = $this->extractTextFromImage($diplomaPath);
@@ -209,7 +211,10 @@ class DocumentVerificationService
     {
         // Remove accents and convert to lowercase
         $text = mb_strtolower($text, 'UTF-8');
-        $text = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $text);
+        $asciiText = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $text);
+        if ($asciiText !== false) {
+            $text = $asciiText;
+        }
         // Remove special characters and extra spaces
         $text = preg_replace('/[^a-z0-9\s]/', '', $text);
         $text = preg_replace('/\s+/', ' ', $text);
