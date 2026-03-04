@@ -1,0 +1,1 @@
+{"version":1,"defects":[],"times":{"App\\Tests\\Service\\AnnonceManagerTest::testValidAnnonce":0.714,"App\\Tests\\Service\\AnnonceManagerTest::testAnnonceWithoutTitle":0.131,"App\\Tests\\Service\\AnnonceManagerTest::testAnnonceWithInvalidUrgence":0,"App\\Tests\\Service\\AnnonceManagerTest::testAnnonceWithPastDatePublication":0.002}}
