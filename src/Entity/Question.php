@@ -42,6 +42,30 @@ class Question
     #[ORM\JoinColumn(nullable: false)]
     private ?User $auteur = null;
 
+    #[ORM\Column(length: 20)]
+    private string $moderationStatus = 'safe';
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $moderationReason = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?float $toxicityScore = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?float $sensitiveScore = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?float $medicalRiskScore = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $flaggedAt = null;
+
+    #[ORM\ManyToOne]
+    private ?User $reviewedBy = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $reviewedAt = null;
+
     /**
      * @var Collection<int, Reponse>
      */
@@ -139,6 +163,102 @@ class Question
                 $reponse->setQuestion(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getModerationStatus(): string
+    {
+        return $this->moderationStatus;
+    }
+
+    public function setModerationStatus(string $moderationStatus): static
+    {
+        $this->moderationStatus = $moderationStatus;
+
+        return $this;
+    }
+
+    public function getModerationReason(): ?string
+    {
+        return $this->moderationReason;
+    }
+
+    public function setModerationReason(?string $moderationReason): static
+    {
+        $this->moderationReason = $moderationReason;
+
+        return $this;
+    }
+
+    public function getToxicityScore(): ?float
+    {
+        return $this->toxicityScore;
+    }
+
+    public function setToxicityScore(?float $toxicityScore): static
+    {
+        $this->toxicityScore = $toxicityScore;
+
+        return $this;
+    }
+
+    public function getSensitiveScore(): ?float
+    {
+        return $this->sensitiveScore;
+    }
+
+    public function setSensitiveScore(?float $sensitiveScore): static
+    {
+        $this->sensitiveScore = $sensitiveScore;
+
+        return $this;
+    }
+
+    public function getMedicalRiskScore(): ?float
+    {
+        return $this->medicalRiskScore;
+    }
+
+    public function setMedicalRiskScore(?float $medicalRiskScore): static
+    {
+        $this->medicalRiskScore = $medicalRiskScore;
+
+        return $this;
+    }
+
+    public function getFlaggedAt(): ?\DateTimeImmutable
+    {
+        return $this->flaggedAt;
+    }
+
+    public function setFlaggedAt(?\DateTimeImmutable $flaggedAt): static
+    {
+        $this->flaggedAt = $flaggedAt;
+
+        return $this;
+    }
+
+    public function getReviewedBy(): ?User
+    {
+        return $this->reviewedBy;
+    }
+
+    public function setReviewedBy(?User $reviewedBy): static
+    {
+        $this->reviewedBy = $reviewedBy;
+
+        return $this;
+    }
+
+    public function getReviewedAt(): ?\DateTimeImmutable
+    {
+        return $this->reviewedAt;
+    }
+
+    public function setReviewedAt(?\DateTimeImmutable $reviewedAt): static
+    {
+        $this->reviewedAt = $reviewedAt;
 
         return $this;
     }

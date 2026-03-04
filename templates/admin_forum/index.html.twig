@@ -13,9 +13,14 @@
                 </p>
             </div>
 
-            <a href="{{ path('app_admin_forum_new') }}" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition font-bold text-sm flex items-center gap-2 shadow-sm">
-                <i class="fa-solid fa-plus"></i> Nouveau sujet
-            </a>
+            <div class="flex items-center gap-2">
+                <a href="{{ path('app_admin_forum_moderation') }}" class="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition font-bold text-sm flex items-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-shield-halved"></i> Contenus signales
+                </a>
+                <a href="{{ path('app_admin_forum_new') }}" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition font-bold text-sm flex items-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-plus"></i> Nouveau sujet
+                </a>
+            </div>
         </div>
 
         <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6">

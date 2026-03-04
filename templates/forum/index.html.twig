@@ -77,16 +77,16 @@
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center gap-4 text-slate-400 text-sm">
                                         <span class="flex items-center gap-1 group-hover:text-blue-500 transition">
-                                            <i class="fa-regular fa-comment-dots"></i> {{ question.reponses|length }} reponses
+                                            <i class="fa-regular fa-comment-dots"></i> {{ question.reponses|filter(r => r.moderationStatus != 'blocked')|length }} reponses
                                         </span>
                                         <span class="flex items-center gap-1 group-hover:text-red-500 transition">
                                             <i class="fa-regular fa-heart"></i> 0
                                         </span>
                                     </div>
 
-                                    {% if question.reponses|length > 0 %}
+                                    {% if question.reponses|filter(r => r.moderationStatus != 'blocked')|length > 0 %}
                                         <div class="flex -space-x-2">
-                                            {% for reponse in question.reponses|slice(0, 3) %}
+                                            {% for reponse in question.reponses|filter(r => r.moderationStatus != 'blocked')|slice(0, 3) %}
                                                 <img class="w-6 h-6 rounded-full border-2 border-white"
                                                      src="https://ui-avatars.com/api/?name={{ reponse.auteur ? reponse.auteur.email : '?' }}&background=random"
                                                      title="Reponse de {{ reponse.auteur ? reponse.auteur.email : '?' }}" alt="Reponse auteur">
@@ -158,3 +158,4 @@
     }
 </style>
 {% endblock %}
+

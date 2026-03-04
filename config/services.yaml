@@ -63,6 +63,12 @@ services:
             $apiUrl: '%forum_ai_api_url%'
             $model: '%forum_ai_model%'
 
+    App\Service\ForumModerationAiService:
+        arguments:
+            $apiKey: '%forum_ai_api_key%'
+            $apiUrl: '%forum_ai_api_url%'
+            $model: '%forum_ai_model%'
+
     App\Service\VolunteerAiAssistant:
         arguments:
             $apiKey: '%volunteer_ai_api_key%'

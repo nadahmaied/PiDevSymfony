@@ -1,0 +1,94 @@
+{% extends 'baseBack.html.twig' %}
+
+{% block title %}Contenus signales{% endblock %}
+
+{% block body %}
+    <div class="p-8 space-y-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Moderation IA - Forum</h1>
+                <p class="text-sm text-gray-500">Verifier les contenus signales automatiquement.</p>
+            </div>
+            <a href="{{ path('app_admin_forum_index') }}" class="text-sm font-semibold text-blue-600 hover:text-blue-800">Retour au forum admin</a>
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h2 class="font-bold text-gray-800">Sujets signales ({{ flaggedQuestions|length }})</h2>
+            </div>
+            <div class="divide-y divide-gray-100">
+                {% for question in flaggedQuestions %}
+                    <div class="p-5 flex items-start justify-between gap-6">
+                        <div>
+                            <p class="font-semibold text-gray-900">{{ question.titre }}</p>
+                            <p class="text-xs text-gray-500 mt-1">Auteur: {{ question.auteur ? question.auteur.email : 'N/A' }} | {{ question.dateCreation|date('d/m/Y H:i') }}</p>
+                            <p class="text-sm text-gray-600 mt-2">{{ question.moderationReason ?: 'Aucune raison detaillee.' }}</p>
+                            <p class="text-xs text-gray-500 mt-2">
+                                Toxicite: {{ ((question.toxicityScore ?? 0) * 100)|round }}%,
+                                Sensible: {{ ((question.sensitiveScore ?? 0) * 100)|round }}%,
+                                Risque medical: {{ ((question.medicalRiskScore ?? 0) * 100)|round }}%
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold px-2 py-1 rounded-full {{ question.moderationStatus == 'blocked' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700' }}">
+                                {{ question.moderationStatus }}
+                            </span>
+                            <form method="post" action="{{ path('app_admin_forum_moderation_question_status', {'id': question.id}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('moderation_question_' ~ question.id) }}">
+                                <input type="hidden" name="status" value="safe">
+                                <button class="text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-md hover:bg-emerald-700">Approuver</button>
+                            </form>
+                            <form method="post" action="{{ path('app_admin_forum_moderation_question_status', {'id': question.id}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('moderation_question_' ~ question.id) }}">
+                                <input type="hidden" name="status" value="blocked">
+                                <button class="text-xs bg-red-600 text-white px-3 py-1.5 rounded-md hover:bg-red-700">Bloquer</button>
+                            </form>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="p-6 text-sm text-gray-500">Aucun sujet signale.</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h2 class="font-bold text-gray-800">Reponses signalees ({{ flaggedReponses|length }})</h2>
+            </div>
+            <div class="divide-y divide-gray-100">
+                {% for reponse in flaggedReponses %}
+                    <div class="p-5 flex items-start justify-between gap-6">
+                        <div>
+                            <p class="font-semibold text-gray-900">Reponse sur: {{ reponse.question ? reponse.question.titre : 'Sujet supprime' }}</p>
+                            <p class="text-xs text-gray-500 mt-1">Auteur: {{ reponse.auteur ? reponse.auteur.email : 'N/A' }} | {{ reponse.dateCreation|date('d/m/Y H:i') }}</p>
+                            <p class="text-sm text-gray-600 mt-2">{{ reponse.moderationReason ?: 'Aucune raison detaillee.' }}</p>
+                            <p class="text-xs text-gray-500 mt-2">
+                                Toxicite: {{ ((reponse.toxicityScore ?? 0) * 100)|round }}%,
+                                Sensible: {{ ((reponse.sensitiveScore ?? 0) * 100)|round }}%,
+                                Risque medical: {{ ((reponse.medicalRiskScore ?? 0) * 100)|round }}%
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold px-2 py-1 rounded-full {{ reponse.moderationStatus == 'blocked' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700' }}">
+                                {{ reponse.moderationStatus }}
+                            </span>
+                            <form method="post" action="{{ path('app_admin_forum_moderation_reponse_status', {'id': reponse.id}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('moderation_reponse_' ~ reponse.id) }}">
+                                <input type="hidden" name="status" value="safe">
+                                <button class="text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-md hover:bg-emerald-700">Approuver</button>
+                            </form>
+                            <form method="post" action="{{ path('app_admin_forum_moderation_reponse_status', {'id': reponse.id}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('moderation_reponse_' ~ reponse.id) }}">
+                                <input type="hidden" name="status" value="blocked">
+                                <button class="text-xs bg-red-600 text-white px-3 py-1.5 rounded-md hover:bg-red-700">Bloquer</button>
+                            </form>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="p-6 text-sm text-gray-500">Aucune reponse signalee.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+

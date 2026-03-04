@@ -49,11 +49,11 @@
 
             <div class="border-t border-slate-200 pt-8">
                 <h3 class="font-bold text-slate-800 text-xl mb-6 flex items-center gap-2">
-                    <span class="bg-teal-100 text-teal-700 px-3 py-1 rounded-lg text-sm">{{ question.reponses|length }}</span> Reponses
+                    <span class="bg-teal-100 text-teal-700 px-3 py-1 rounded-lg text-sm">{{ visibleReponses|length }}</span> Reponses
                 </h3>
 
                 <div class="space-y-6">
-                    {% for reponse in question.reponses %}
+                    {% for reponse in visibleReponses %}
                         <div class="flex gap-4 group">
                             <div class="flex flex-col items-center">
                                 <img src="https://ui-avatars.com/api/?name={{ reponse.auteur ? reponse.auteur.email : '?' }}&background=random" class="w-10 h-10 rounded-full border-2 border-white shadow-sm" alt="Auteur reponse">
@@ -106,4 +106,5 @@
     </main>
 </div>
 {% endblock %}
+
 

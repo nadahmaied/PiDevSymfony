@@ -9,6 +9,7 @@ use App\Form\QuestionType;
 use App\Form\ReponseType;
 use App\Repository\QuestionRepository;
 use App\Service\ForumAiAssistant;
+use App\Service\ForumModerationAiService;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -68,7 +69,9 @@ class ForumController extends AbstractController
         $qb = $questionRepository->createQueryBuilder('q')
             ->leftJoin('q.auteur', 'u')
             ->leftJoin('q.reponses', 'r')
-            ->addSelect('u', 'r');
+            ->addSelect('u', 'r')
+            ->andWhere('q.moderationStatus != :blockedStatus')
+            ->setParameter('blockedStatus', 'blocked');
 
         if ($searchTerm) {
             $qb->andWhere('q.titre LIKE :search OR q.contenu LIKE :search')
@@ -103,7 +106,7 @@ class ForumController extends AbstractController
     }
 
     #[Route('/nouveau', name: 'app_forum_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    public function new(Request $request, EntityManagerInterface $entityManager, ForumModerationAiService $moderationAiService): Response
     {
         $question = new Question();
         $form = $this->createForm(QuestionType::class, $question);
@@ -117,11 +120,14 @@ class ForumController extends AbstractController
 
             $question->setAuteur($user);
             $question->setDateCreation(new \DateTimeImmutable());
+            $this->applyModerationToQuestion($question, $moderationAiService->analyze(
+                (string) $question->getTitre() . "\n\n" . (string) $question->getContenu()
+            ));
 
             $entityManager->persist($question);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Votre sujet a ete publie !');
+            $this->addFlash('success', $this->moderationSuccessMessage($question->getModerationStatus(), 'sujet'));
             return $this->redirectToRoute('app_forum_index');
         }
 
@@ -131,8 +137,17 @@ class ForumController extends AbstractController
     }
 
     #[Route('/sujet/{id}', name: 'app_forum_show', methods: ['GET', 'POST'])]
-    public function show(Request $request, Question $question, EntityManagerInterface $entityManager): Response
+    public function show(
+        Request $request,
+        Question $question,
+        EntityManagerInterface $entityManager,
+        ForumModerationAiService $moderationAiService
+    ): Response
     {
+        if ($question->getModerationStatus() === 'blocked') {
+            throw $this->createNotFoundException('Ce sujet est indisponible.');
+        }
+
         $reponse = new Reponse();
         $form = $this->createForm(ReponseType::class, $reponse);
         $form->handleRequest($request);
@@ -146,16 +161,22 @@ class ForumController extends AbstractController
             $reponse->setAuteur($user);
             $reponse->setDateCreation(new \DateTimeImmutable());
             $reponse->setQuestion($question);
+            $this->applyModerationToReponse($reponse, $moderationAiService->analyze((string) $reponse->getContenu()));
 
             $entityManager->persist($reponse);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Votre reponse a ete ajoutee !');
+            $this->addFlash('success', $this->moderationSuccessMessage($reponse->getModerationStatus(), 'reponse'));
             return $this->redirectToRoute('app_forum_show', ['id' => $question->getId()]);
         }
 
+        $visibleReponses = $question->getReponses()->filter(
+            static fn (Reponse $item): bool => $item->getModerationStatus() !== 'blocked'
+        );
+
         return $this->render('forum/show.html.twig', [
             'question' => $question,
+            'visibleReponses' => $visibleReponses,
             'form' => $form,
         ]);
     }
@@ -234,5 +255,54 @@ class ForumController extends AbstractController
         }
 
         return $reponse->getAuteur()->getId() === $user->getId();
+    }
+
+    /** @param array{status:string,toxicity:float,sensitive:float,medicalRisk:float,reasons:list<string>} $analysis */
+    private function applyModerationToQuestion(Question $question, array $analysis): void
+    {
+        $status = $analysis['status'];
+        $question->setModerationStatus($status);
+        $question->setToxicityScore($analysis['toxicity']);
+        $question->setSensitiveScore($analysis['sensitive']);
+        $question->setMedicalRiskScore($analysis['medicalRisk']);
+        $question->setModerationReason(implode(' | ', $analysis['reasons']));
+
+        if ($status === 'review' || $status === 'blocked') {
+            $question->setFlaggedAt(new \DateTimeImmutable());
+        } else {
+            $question->setFlaggedAt(null);
+        }
+    }
+
+    /** @param array{status:string,toxicity:float,sensitive:float,medicalRisk:float,reasons:list<string>} $analysis */
+    private function applyModerationToReponse(Reponse $reponse, array $analysis): void
+    {
+        $status = $analysis['status'];
+        $reponse->setModerationStatus($status);
+        $reponse->setToxicityScore($analysis['toxicity']);
+        $reponse->setSensitiveScore($analysis['sensitive']);
+        $reponse->setMedicalRiskScore($analysis['medicalRisk']);
+        $reponse->setModerationReason(implode(' | ', $analysis['reasons']));
+
+        if ($status === 'review' || $status === 'blocked') {
+            $reponse->setFlaggedAt(new \DateTimeImmutable());
+        } else {
+            $reponse->setFlaggedAt(null);
+        }
+    }
+
+    private function moderationSuccessMessage(string $status, string $type): string
+    {
+        return match ($status) {
+            'blocked' => sprintf(
+                'Votre %s est en attente de moderation (contenu sensible detecte).',
+                $type
+            ),
+            'review' => sprintf(
+                'Votre %s a ete publie et signale pour verification admin.',
+                $type
+            ),
+            default => sprintf('Votre %s a ete publie.', $type),
+        };
     }
 }

@@ -8,6 +8,7 @@ use App\Entity\User;
 use App\Form\QuestionType;
 use App\Form\ReponseType;
 use App\Repository\QuestionRepository;
+use App\Repository\ReponseRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -45,6 +46,92 @@ class AdminForumController extends AbstractController
         return $this->render('admin_forum/index.html.twig', [
             'pagination' => $pagination,
         ]);
+    }
+
+    #[Route('/moderation', name: 'app_admin_forum_moderation', methods: ['GET'])]
+    public function moderation(QuestionRepository $questionRepository, ReponseRepository $reponseRepository): Response
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+
+        $flaggedQuestions = $questionRepository->createQueryBuilder('q')
+            ->leftJoin('q.auteur', 'u')->addSelect('u')
+            ->andWhere('q.moderationStatus IN (:statuses)')
+            ->setParameter('statuses', ['review', 'blocked'])
+            ->orderBy('q.flaggedAt', 'DESC')
+            ->setMaxResults(50)
+            ->getQuery()
+            ->getResult();
+
+        $flaggedReponses = $reponseRepository->createQueryBuilder('r')
+            ->leftJoin('r.auteur', 'u')->addSelect('u')
+            ->leftJoin('r.question', 'q')->addSelect('q')
+            ->andWhere('r.moderationStatus IN (:statuses)')
+            ->setParameter('statuses', ['review', 'blocked'])
+            ->orderBy('r.flaggedAt', 'DESC')
+            ->setMaxResults(100)
+            ->getQuery()
+            ->getResult();
+
+        return $this->render('admin_forum/moderation.html.twig', [
+            'flaggedQuestions' => $flaggedQuestions,
+            'flaggedReponses' => $flaggedReponses,
+        ]);
+    }
+
+    #[Route('/moderation/question/{id}/status', name: 'app_admin_forum_moderation_question_status', methods: ['POST'])]
+    public function updateQuestionModerationStatus(Request $request, Question $question, EntityManagerInterface $entityManager): Response
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        if (!$this->isCsrfTokenValid('moderation_question_' . $question->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF invalide.');
+        }
+
+        $status = (string) $request->request->get('status', 'review');
+        if (!\in_array($status, ['safe', 'review', 'blocked'], true)) {
+            $status = 'review';
+        }
+
+        $user = $this->getUser();
+        if ($user instanceof User) {
+            $question->setReviewedBy($user);
+        }
+        $question->setReviewedAt(new \DateTimeImmutable());
+        $question->setModerationStatus($status);
+        if ($status === 'safe') {
+            $question->setFlaggedAt(null);
+        }
+        $entityManager->flush();
+        $this->addFlash('success', 'Statut de moderation du sujet mis a jour.');
+
+        return $this->redirectToRoute('app_admin_forum_moderation');
+    }
+
+    #[Route('/moderation/reponse/{id}/status', name: 'app_admin_forum_moderation_reponse_status', methods: ['POST'])]
+    public function updateReponseModerationStatus(Request $request, Reponse $reponse, EntityManagerInterface $entityManager): Response
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        if (!$this->isCsrfTokenValid('moderation_reponse_' . $reponse->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF invalide.');
+        }
+
+        $status = (string) $request->request->get('status', 'review');
+        if (!\in_array($status, ['safe', 'review', 'blocked'], true)) {
+            $status = 'review';
+        }
+
+        $user = $this->getUser();
+        if ($user instanceof User) {
+            $reponse->setReviewedBy($user);
+        }
+        $reponse->setReviewedAt(new \DateTimeImmutable());
+        $reponse->setModerationStatus($status);
+        if ($status === 'safe') {
+            $reponse->setFlaggedAt(null);
+        }
+        $entityManager->flush();
+        $this->addFlash('success', 'Statut de moderation de la reponse mis a jour.');
+
+        return $this->redirectToRoute('app_admin_forum_moderation');
     }
 
     #[Route('/new', name: 'app_admin_forum_new', methods: ['GET', 'POST'])]
