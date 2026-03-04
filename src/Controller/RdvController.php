@@ -25,7 +25,7 @@ use App\Service\SmsService;
 
 final class RdvController extends AbstractController
 {
-    // ============================================================
+   /* // ============================================================
     // HELPER — récupère l'utilisateur connecté (comme MissionRecommendationController)
     // ============================================================
     private function getAuthenticatedUser(): User
@@ -35,7 +35,7 @@ final class RdvController extends AbstractController
             throw $this->createAccessDeniedException('Vous devez être connecté.');
         }
         return $user;
-    }
+    }*/
 
     // ============================================================
     // FRONT — Liste des RDV du patient connecté
@@ -48,7 +48,6 @@ final class RdvController extends AbstractController
     ): Response {
         // ✅ Récupère le patient connecté dynamiquement (comme MissionRecommendationController)
         $patient = $this->getUser();
-
         if ($patient instanceof User) {
             // Patient connecté → ses RDV uniquement
             $rdvs = $rdvRepository->findBy(
@@ -202,47 +201,50 @@ final class RdvController extends AbstractController
     // ============================================================
     // BACK — Affiche uniquement les RDV du médecin connecté
     // ============================================================
-    #[Route('/showAllRdvBack', name: 'showAllRdvBack')]
-    public function showAllRdvBack(
-        RdvRepository $repo,
-        MedecinRepository $medecinRepo
-    ): Response {
-        // ✅ Médecin connecté dynamiquement (comme MissionRecommendationController)
-        $user = $this->getUser();
-
-        if (!$user instanceof User) {
-            throw $this->createAccessDeniedException('Vous devez être connecté en tant que médecin.');
-        }
-
-        // Récupère le nom du médecin depuis l'entité User connecté
-        $nomMedecin = 'Dr. ' . $user->getPrenom() . ' ' . $user->getNom();
-
-        $rdvs = $repo->findBy(
-            ['medecin' => $nomMedecin],
-            ['date' => 'DESC']
-        );
-
-        $today = new \DateTime('today');
-
-        $countAujourdhui = count(array_filter($rdvs, fn($r) =>
-            $r->getDate()->format('Y-m-d') === $today->format('Y-m-d')
-        ));
-        $countEnAttente = count(array_filter($rdvs, fn($r) =>
-            $r->getStatut() === 'En attente'
-        ));
-        $countTermines = count(array_filter($rdvs, fn($r) =>
-            $r->getDate() < $today && $r->getStatut() === 'Confirmé'
-        ));
-
-        return $this->render('rdv/back/showRdv.html.twig', [
-            'rdvs'            => $rdvs,
-            'nomMedecin'      => $nomMedecin,
-            'medecinId'       => $user->getId(),
-            'countAujourdhui' => $countAujourdhui,
-            'countEnAttente'  => $countEnAttente,
-            'countTermines'   => $countTermines,
-        ]);
+#[Route('/showAllRdvBack', name: 'showAllRdvBack')]
+public function showAllRdvBack(
+    RdvRepository $repo,
+    MedecinRepository $medecinRepo
+): Response {
+    $user = $this->getUser();
+    if (!$user instanceof User) {
+        throw $this->createAccessDeniedException('Vous devez être connecté en tant que médecin.');
     }
+
+    // ✅ Cherche le médecin via user_id, pas via nom du User
+    $medecin = $medecinRepo->findOneBy(['user' => $user]);
+
+    if (!$medecin) {
+        throw $this->createNotFoundException('Aucun médecin trouvé pour cet utilisateur.');
+    }
+
+    $nomMedecin = 'Dr. ' . $medecin->getPrenom() . ' ' . $medecin->getNom();
+
+    $rdvs = $repo->findBy(
+        ['medecin' => $nomMedecin],
+        ['date' => 'DESC']
+    );
+
+    $today = new \DateTime('today');
+    $countAujourdhui = count(array_filter($rdvs, fn($r) =>
+        $r->getDate() && $r->getDate()->format('Y-m-d') === $today->format('Y-m-d')
+    ));
+    $countEnAttente = count(array_filter($rdvs, fn($r) =>
+        $r->getStatut() === 'En attente'
+    ));
+    $countTermines = count(array_filter($rdvs, fn($r) =>
+        $r->getDate() && $r->getDate() < $today && $r->getStatut() === 'Confirmé'
+    ));
+
+    return $this->render('rdv/back/showRdv.html.twig', [
+        'rdvs'            => $rdvs,
+        'nomMedecin'      => $nomMedecin,
+        'medecinId'       => $medecin->getId(),
+        'countAujourdhui' => $countAujourdhui,
+        'countEnAttente'  => $countEnAttente,
+        'countTermines'   => $countTermines,
+    ]);
+}
 
     // ============================================================
     // BACK — Disponibilités du médecin connecté

@@ -1,32 +1,30 @@
-{% extends 'baseBack.html.twig' %}
+{% extends 'admin_base.html.twig' %}
+
+{% block page_header %}Planning des Consultations{% endblock %}
+{% block page_subtitle %}Gérez les disponibilités et les rendez-vous patients{% endblock %}
+
+{% block header_actions %}
+    <a href="{{ path('showAlldispoBackDispo', {medecinId: medecinId}) }}"
+       class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-3 rounded-xl shadow transition">
+        <i class="fa-solid fa-calendar-plus"></i> Gérer ma disponibilité
+    </a>
+{% endblock %}
 
 {% block body %}
-<div class="flex-1 overflow-y-auto p-8">
 
-{# ===== HEADER : nom du médecin + navigation ===== #}
-<div class="flex items-center justify-between mb-6">
-    <div>
-        <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm">
-                {{ nomMedecin|slice(4,2)|upper }}
-            </div>
-            {{ nomMedecin }}
-        </h2>
-        <p class="text-slate-400 text-sm mt-1">Planning des consultations</p>
+{# ── Nom du médecin ── #}
+<div class="flex items-center gap-3 mb-6">
+    <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm">
+        {{ nomMedecin|slice(4,2)|upper }}
     </div>
-
-    <div class="flex items-center gap-3">
-        <a href="{{ path('showAlldispoBackDispo', {medecinId: medecinId}) }}"
-           class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-3 rounded-xl shadow transition">
-            <i class="fa-solid fa-calendar-plus"></i>
-            Gérer ma disponibilité
-        </a>
+    <div>
+        <h2 class="text-xl font-bold text-slate-800">{{ nomMedecin }}</h2>
+        <p class="text-slate-400 text-sm">Planning des consultations</p>
     </div>
 </div>
 
+{# ── Stats ── #}
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-
-    {# ── Aujourd'hui ── #}
     <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
         <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-xl">
             <i class="fa-solid fa-calendar-day"></i>
@@ -36,8 +34,6 @@
             <p class="text-xl font-bold text-gray-800">{{ countAujourdhui }} RDV</p>
         </div>
     </div>
-
-    {# ── En attente ── #}
     <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
         <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-lg flex items-center justify-center text-xl">
             <i class="fa-solid fa-clock"></i>
@@ -47,8 +43,6 @@
             <p class="text-xl font-bold text-gray-800">{{ countEnAttente }} Demandes</p>
         </div>
     </div>
-
-    {# ── Terminés ── #}
     <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
         <div class="w-12 h-12 bg-green-50 text-green-600 rounded-lg flex items-center justify-center text-xl">
             <i class="fa-solid fa-user-check"></i>
@@ -58,9 +52,9 @@
             <p class="text-xl font-bold text-gray-800">{{ countTermines }} Consultations</p>
         </div>
     </div>
-
 </div>
 
+{# ── Table RDVs ── #}
 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
     <table class="w-full text-left">
         <thead class="bg-gray-50 text-gray-600 text-xs uppercase">
@@ -74,12 +68,9 @@
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-100 text-sm">
-
         {% for rdv in rdvs %}
         <tr class="hover:bg-blue-50/30 transition {% if rdv.statut == 'Annulé' %}opacity-60{% endif %}">
-
             <td class="px-6 py-4 font-mono text-gray-400">#RDV-{{ rdv.id }}</td>
-
             <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">
@@ -91,19 +82,16 @@
                     </div>
                 </div>
             </td>
-
             <td class="px-6 py-4">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-user-doctor text-gray-400"></i>
                     <span class="font-medium text-gray-700">{{ rdv.medecin }}</span>
                 </div>
             </td>
-
             <td class="px-6 py-4 text-gray-600">
                 <span class="block font-bold">{{ rdv.date|date('d M Y') }}</span>
                 <span class="block text-xs"><i class="fa-regular fa-clock mr-1"></i>{{ rdv.hdebut|date('H:i') }}</span>
             </td>
-
             <td class="px-6 py-4">
                 {% if rdv.statut == 'Confirmé' %}
                     <span class="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-bold border border-green-200 flex items-center w-fit gap-1">
@@ -119,7 +107,6 @@
                     </span>
                 {% endif %}
             </td>
-
             <td class="px-6 py-4 flex justify-center gap-3">
                 {% if rdv.statut != 'Confirmé' and rdv.statut != 'Annulé' %}
                 <button type="button" onclick="openConfirmModal({{ rdv.id }})"
@@ -127,13 +114,11 @@
                     <i class="fa-solid fa-check"></i>
                 </button>
                 {% endif %}
-
                 <button type="button"
-                        onclick="openModal({{ rdv.id }}, '{{ rdv.date|date('Y-m-d') }}', '{{ rdv.hdebut|date('H:i') }}')"
+                        onclick="openEditModal({{ rdv.id }}, '{{ rdv.date|date('Y-m-d') }}', '{{ rdv.hdebut|date('H:i') }}')"
                         class="text-gray-400 hover:text-orange-500 p-2 transition">
                     <i class="fa-solid fa-pen"></i>
                 </button>
-
                 <form method="POST" action="{{ path('deleteRdv', {id: rdv.id}) }}">
                     <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ rdv.id) }}">
                     <button type="button" onclick="openCancelModal({{ rdv.id }})"
@@ -143,21 +128,19 @@
                 </form>
             </td>
         </tr>
-
         {% else %}
         <tr>
             <td colspan="6" class="text-center py-6 text-gray-400">Aucun rendez-vous trouvé</td>
         </tr>
         {% endfor %}
-
         </tbody>
     </table>
 </div>
 
-{# ===== MODAL MODIFIER ===== #}
+{# ── Modal Modifier ── #}
 <div id="editModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
     <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl p-8 relative">
-        <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-red-500">
+        <button onclick="closeEditModal()" class="absolute top-4 right-4 text-gray-400 hover:text-red-500">
             <i class="fa-solid fa-xmark text-xl"></i>
         </button>
         <h3 class="text-xl font-bold mb-6 text-slate-800">Modifier Date & Heure</h3>
@@ -173,14 +156,14 @@
                 </div>
             </div>
             <div class="flex gap-3 mt-6">
-                <button type="button" onclick="closeModal()" class="flex-1 px-6 py-3 bg-slate-100 rounded-xl">Annuler</button>
+                <button type="button" onclick="closeEditModal()" class="flex-1 px-6 py-3 bg-slate-100 rounded-xl">Annuler</button>
                 <button type="submit" class="flex-1 px-6 py-3 bg-orange-600 text-white rounded-xl">Enregistrer</button>
             </div>
         </form>
     </div>
 </div>
 
-{# ===== MODAL SUPPRIMER ===== #}
+{# ── Modal Supprimer ── #}
 <div id="cancelModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
     <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-8 relative text-center">
         <h3 class="text-xl font-bold text-slate-800 mb-4">Supprimer le rendez-vous ?</h3>
@@ -194,7 +177,7 @@
     </div>
 </div>
 
-{# ===== MODAL CONFIRMER ===== #}
+{# ── Modal Confirmer ── #}
 <div id="confirmModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
     <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-8 relative text-center">
         <h3 class="text-xl font-bold text-slate-800 mb-4">Confirmer le rendez-vous ?</h3>
@@ -208,18 +191,17 @@
     </div>
 </div>
 
-</div>
 {% endblock %}
 
 {% block javascripts %}
 <script>
-function openModal(id, date, time) {
+function openEditModal(id, date, time) {
     document.getElementById('editForm').action = "{{ path('editRdvBack', {'id': 'ID'}) }}".replace('ID', id);
     document.getElementById('modalDate').value = date;
     document.getElementById('modalTime').value = time;
     document.getElementById('editModal').classList.remove('hidden');
 }
-function closeModal() { document.getElementById('editModal').classList.add('hidden'); }
+function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
 
 function openCancelModal(id) {
     document.getElementById('cancelForm').action = "{{ path('deleteRdv', {'id': 'ID'}) }}".replace('ID', id);

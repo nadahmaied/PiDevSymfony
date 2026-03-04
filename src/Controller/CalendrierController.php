@@ -11,7 +11,10 @@ use App\Repository\MedecinRepository;
 use App\Repository\DisponibiliteRepository;
 use App\Repository\RdvRepository;
 use App\Entity\Rdv;
+use App\Entity\User;
+use App\Repository\UserRepository; 
 use Doctrine\Persistence\ManagerRegistry;
+
 
 final class CalendrierController extends AbstractController
 {
@@ -242,7 +245,8 @@ final class CalendrierController extends AbstractController
     public function reserver(
         Request $request,
         ManagerRegistry $mr,
-        MedecinRepository $medecinRepo
+        MedecinRepository $medecinRepo,
+    UserRepository $userRepo 
     ): JsonResponse {
         $data = json_decode($request->getContent(), true);
 
@@ -256,11 +260,6 @@ final class CalendrierController extends AbstractController
 
         if (!$medecinId || !$dateStr || !$heure) {
             return $this->json(['success' => false, 'error' => 'Données manquantes'], 400);
-        }
-
-        $medecin = $medecinRepo->find($medecinId);
-        if (!$medecin) {
-            return $this->json(['success' => false, 'error' => 'Médecin introuvable'], 404);
         }
 
         // ── Vérification Stripe si paiement carte ─────────────
@@ -289,6 +288,18 @@ final class CalendrierController extends AbstractController
         $statut = ($paiement === 'carte_en_ligne' && $stripePaymentId) ? 'Confirmé' : 'En attente';
 
         $rdv = new Rdv();
+        
+        $medecin = $medecinRepo->find($medecinId);
+        if (!$medecin) {
+            return $this->json(['success' => false, 'error' => 'Médecin introuvable'], 404);
+        }
+
+        // ✅ Lier le patient (utilisateur connecté)
+        $patient = $this->getUser();
+        if ($patient instanceof User) {
+            $rdv->setPatient($patient);
+        }
+     
         $rdv->setDate($date);
         $rdv->setHdebut($hdebut);
         $rdv->setHfin($hfin);

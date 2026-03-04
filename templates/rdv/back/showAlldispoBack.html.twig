@@ -1,37 +1,72 @@
-{% extends 'baseBack.html.twig' %}
+{% extends 'admin_base.html.twig' %}
+
+{% block page_title %}Disponibilités{% endblock %}
+{% block page_subtitle %}Gérez vos créneaux et disponibilités{% endblock %}
+
+{% block stylesheets %}
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.8/locales/fr.global.min.js"></script>
+
+    <style>
+        /* Hover sur les cellules du calendrier */
+        .fc-daygrid-day:hover {
+            background-color: rgba(0, 0, 0, 0.055) !important;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        /* Cellule aujourd'hui : garde le jaune mais s'assombrit */
+        .fc-day-today:hover {
+            background-color: rgba(255, 220, 100, 0.55) !important;
+        }
+
+        /* Cellules passées (déjà grises) : hover plus subtil */
+        .fc-daygrid-day.bg-gray-50:hover {
+            background-color: rgba(0, 0, 0, 0.08) !important;
+        }
+
+        /* Hover sur les événements */
+        .fc-event:hover {
+            filter: brightness(0.88);
+            transition: filter 0.15s ease;
+            cursor: pointer;
+        }
+    </style>
+{% endblock %}
 
 {% block body %}
 
-<div class="flex-1 overflow-y-auto p-8">
+{# ── Bouton ── #}
+<div class="mb-6">
+    <a href="{{ path('showAllRdvBack', {medecinId: medecinId}) }}"
+       class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-3 rounded-xl shadow transition">
+        <i class="fa-solid fa-list"></i> Consulter les rendez-vous
+    </a>
+</div>
 
-    <div class="flex justify-start mb-6">
-        <a href="{{ path('showAllRdvBack', {medecinId: medecinId}) }}"
-           class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-3 rounded-xl shadow transition">
-            <i class="fa-solid fa-list"></i> Consulter les rendez-vous
-        </a>
+{# ── Stats ── #}
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
+        <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-xl"><i class="fa-solid fa-calendar-day"></i></div>
+        <div><p class="text-gray-500 text-xs font-bold uppercase">Aujourd'hui</p><p class="text-xl font-bold text-gray-800">{{ countAujourdhui }} RDV</p></div>
     </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
-            <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-xl"><i class="fa-solid fa-calendar-day"></i></div>
-            <div><p class="text-gray-500 text-xs font-bold uppercase">Aujourd'hui</p><p class="text-xl font-bold text-gray-800">{{ countAujourdhui }} RDV</p></div>
-        </div>
-        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
-            <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-lg flex items-center justify-center text-xl"><i class="fa-solid fa-clock"></i></div>
-            <div><p class="text-gray-500 text-xs font-bold uppercase">En attente</p><p class="text-xl font-bold text-gray-800">{{ countEnAttente }} Demandes</p></div>
-        </div>
-        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
-            <div class="w-12 h-12 bg-green-50 text-green-600 rounded-lg flex items-center justify-center text-xl"><i class="fa-solid fa-user-check"></i></div>
-            <div><p class="text-gray-500 text-xs font-bold uppercase">Terminés</p><p class="text-xl font-bold text-gray-800">{{ countTermines }} Consultations</p></div>
-        </div>
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
+        <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-lg flex items-center justify-center text-xl"><i class="fa-solid fa-clock"></i></div>
+        <div><p class="text-gray-500 text-xs font-bold uppercase">En attente</p><p class="text-xl font-bold text-gray-800">{{ countEnAttente }} Demandes</p></div>
     </div>
-
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div id="calendar"></div>
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
+        <div class="w-12 h-12 bg-green-50 text-green-600 rounded-lg flex items-center justify-center text-xl"><i class="fa-solid fa-user-check"></i></div>
+        <div><p class="text-gray-500 text-xs font-bold uppercase">Terminés</p><p class="text-xl font-bold text-gray-800">{{ countTermines }} Consultations</p></div>
     </div>
 </div>
 
-<!-- MODAL -->
+{# ── Calendrier ── #}
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <div id="calendar"></div>
+</div>
+
+{# ── Modal Disponibilité ── #}
 <div id="dispoModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
     <div class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl p-6 relative max-h-[85vh] overflow-y-auto">
 
@@ -39,8 +74,7 @@
 
         <div class="flex items-center gap-3 mb-4">
             <h3 id="modalTitle" class="text-2xl font-bold text-slate-800"></h3>
-            <span id="badgePassé"
-                  class="hidden items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-200 text-gray-600">
+            <span id="badgePassé" class="hidden items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-200 text-gray-600">
                 <i class="fa-solid fa-lock text-xs"></i> Lecture seule
             </span>
         </div>
@@ -148,16 +182,13 @@ document.addEventListener('DOMContentLoaded', function () {
             const cellDate = new Date(arg.date); cellDate.setHours(0,0,0,0);
             return cellDate < today ? ['bg-gray-50', 'opacity-70'] : [];
         },
-        dateClick: function (info) {
-            openModal(info.dateStr);
-        }
+        dateClick: function (info) { openModal(info.dateStr); }
     });
     calendar.render();
 });
 
 async function openModal(date) {
     currentDate = date;
-
     const today    = new Date(); today.setHours(0, 0, 0, 0);
     const clickedD = new Date(date + 'T00:00:00');
     isDatePassee   = clickedD < today;
@@ -183,7 +214,6 @@ async function openModal(date) {
     }
 
     try {
-        // Passer le medecin_id courant à l'API
         const response = await fetch(`/back/disponibilite/get/${date}?medecin_id=${CURRENT_MED_ID}`);
         const data     = await response.json();
 
@@ -207,7 +237,6 @@ async function openModal(date) {
             renderSectionAnnulation(currentPeutAnnuler, currentSeancesAnnulees);
             renderSectionExtra(data.jour, currentExtraAutorise, currentExtraActif);
         }
-
     } catch (e) {
         document.getElementById('rdvList').innerHTML = "<p class='text-red-500'>Erreur serveur</p>";
     }
@@ -257,10 +286,7 @@ function displayHorairesDefault(horaires, seancesAnnulees) {
         const key     = `${h.debut}-${h.fin}`;
         const annulee = annuleesKeys.includes(key);
         return annulee
-            ? `<div class="flex items-center justify-center gap-2 text-red-500 line-through opacity-60">
-                   🚫 ${h.debut} - ${h.fin}
-                   <span class="text-xs no-underline">(annulée)</span>
-               </div>`
+            ? `<div class="flex items-center justify-center gap-2 text-red-500 line-through opacity-60">🚫 ${h.debut} - ${h.fin} <span class="text-xs no-underline">(annulée)</span></div>`
             : `<div class="text-gray-700">${h.debut} - ${h.fin}</div>`;
     }).join('');
 }
@@ -271,8 +297,8 @@ function renderSectionAnnulation(peutAnnuler, seancesAnnulees) {
     section.classList.remove('hidden');
 
     const annuleesKeys = seancesAnnulees.map(s => `${s.hdebut}-${s.hfin}`);
-    const btnMatin     = document.getElementById('btnAnnulerMatin');
-    const btnSoir      = document.getElementById('btnAnnulerSoir');
+    const btnMatin = document.getElementById('btnAnnulerMatin');
+    const btnSoir  = document.getElementById('btnAnnulerSoir');
 
     if (annuleesKeys.includes('09:00-12:00')) {
         btnMatin.textContent = '✅ Restaurer la séance du matin (09h‑12h)';

@@ -14,13 +14,6 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class DispoController extends AbstractController
 {
-    // ============================================================
-    // ID DU MÉDECIN COURANT
-    // Hardcodé pour l'instant — remplacer par $this->getUser() quand login ajouté
-    // 1 = Dr. Sarah Amrani
-    // 2 = Dr. Mohamed Kallel
-    // 3 = Dr. Ali Zouhaier
-    // ============================================================
     private const MED_ID = 1;
 
     private const HORAIRES_DEFAULT = [
@@ -46,7 +39,6 @@ final class DispoController extends AbstractController
     private const SEANCE_MATIN = ['debut' => '09:00', 'fin' => '12:00'];
     private const SEANCE_SOIR  = ['debut' => '14:00', 'fin' => '17:00'];
 
-    // ============================================================
     #[Route('/back/disponibilites/{medecinId}', name: 'showAlldispoBackDispo', defaults: ['medecinId' => null])]
     public function showAllDispoBack(
         DisponibiliteRepository $dispoRepo,
@@ -70,26 +62,37 @@ final class DispoController extends AbstractController
         }
 
         foreach ($rdvs as $rdv) {
+            // ── CORRECTION : ignorer les RDVs sans date ──
+            if ($rdv->getDate() === null) {
+                continue;
+            }
+
             $date = $rdv->getDate()->format('Y-m-d');
             if (!isset($dispoData[$date])) {
                 $dispoData[$date] = ['dispos' => [], 'rdvs' => []];
             }
             $dispoData[$date]['rdvs'][] = [
                 'id'      => $rdv->getId(),
-                'hdebut'  => $rdv->getHdebut()->format('H:i'),
-                'hfin'    => $rdv->getHfin() ? $rdv->getHfin()->format('H:i') : '',
+                'hdebut'  => $rdv->getHdebut() ? $rdv->getHdebut()->format('H:i') : '',
+                'hfin'    => $rdv->getHfin()   ? $rdv->getHfin()->format('H:i')   : '',
                 'motif'   => $rdv->getMotif(),
                 'statut'  => $rdv->getStatut(),
                 'medecin' => $rdv->getMedecin(),
             ];
         }
 
-        // Stats pour les cartes
-        $today = new \DateTime('today');
+        $today   = new \DateTime('today');
         $allRdvs = $rdvRepo->findAll();
-        $countAujourdhui = count(array_filter($allRdvs, fn($r) => $r->getDate()->format('Y-m-d') === $today->format('Y-m-d')));
-        $countEnAttente  = count(array_filter($allRdvs, fn($r) => $r->getStatut() === 'En attente'));
-        $countTermines   = count(array_filter($allRdvs, fn($r) => $r->getDate() < $today && $r->getStatut() === 'Confirmé'));
+
+        $countAujourdhui = count(array_filter($allRdvs, fn($r) =>
+            $r->getDate() !== null && $r->getDate()->format('Y-m-d') === $today->format('Y-m-d')
+        ));
+        $countEnAttente = count(array_filter($allRdvs, fn($r) =>
+            $r->getStatut() === 'En attente'
+        ));
+        $countTermines = count(array_filter($allRdvs, fn($r) =>
+            $r->getDate() !== null && $r->getDate() < $today && $r->getStatut() === 'Confirmé'
+        ));
 
         return $this->render('rdv/back/showAlldispoBack.html.twig', [
             'dispoData'       => $dispoData,
@@ -101,11 +104,6 @@ final class DispoController extends AbstractController
         ]);
     }
 
-    // ============================================================
-    // GET données d'un jour (AJAX — consommé aussi par le front)
-    // URL : /back/disponibilite/get/{date}?medecin_id=1
-    // Le paramètre medecin_id est optionnel (défaut = MED_ID)
-    // ============================================================
     #[Route('/back/disponibilite/get/{date}', name: 'getDispoByDate', methods: ['GET'])]
     public function getDispoByDate(
         string $date,
@@ -113,7 +111,6 @@ final class DispoController extends AbstractController
         DisponibiliteRepository $dispoRepo,
         RdvRepository $rdvRepo
     ): JsonResponse {
-        // Le front peut passer ?medecin_id=X pour récupérer les dispos d'un médecin spécifique
         $medId = (int) $request->query->get('medecin_id', self::MED_ID);
 
         try {
@@ -142,6 +139,9 @@ final class DispoController extends AbstractController
             $rdvsEntities = $rdvRepo->findBy(['date' => $dateObj]);
             $rdvs = [];
             foreach ($rdvsEntities as $rdv) {
+                // ── CORRECTION : ignorer les RDVs sans hdebut ──
+                if ($rdv->getHdebut() === null) continue;
+
                 $rdvs[] = [
                     'id'      => $rdv->getId(),
                     'hdebut'  => $rdv->getHdebut()->format('H:i'),
@@ -186,7 +186,6 @@ final class DispoController extends AbstractController
         }
     }
 
-    // ============================================================
     #[Route('/back/disponibilite/toggle-extra', name: 'toggleExtraDispo', methods: ['POST'])]
     public function toggleExtraDispo(
         Request $request,
@@ -238,7 +237,6 @@ final class DispoController extends AbstractController
         }
     }
 
-    // ============================================================
     #[Route('/back/disponibilite/cancel-session', name: 'cancelDefaultSession', methods: ['POST'])]
     public function cancelDefaultSession(
         Request $request,
@@ -290,7 +288,6 @@ final class DispoController extends AbstractController
         }
     }
 
-    // ============================================================
     #[Route('/back/disponibilite/edit/{id}', name: 'editDispoBack', methods: ['POST'])]
     public function editDispo(
         int $id,
@@ -334,7 +331,6 @@ final class DispoController extends AbstractController
         }
     }
 
-    // ============================================================
     #[Route('/back/disponibilite/delete/{id}', name: 'deleteDispo', methods: ['POST'])]
     public function deleteDispo(
         int $id,
@@ -350,7 +346,6 @@ final class DispoController extends AbstractController
         return new JsonResponse(['success' => true, 'message' => 'Supprimée avec succès']);
     }
 
-    // ============================================================
     private function getJourFrancais(\DateTime $date): string
     {
         return [

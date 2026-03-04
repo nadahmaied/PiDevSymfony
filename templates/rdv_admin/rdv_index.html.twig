@@ -1,0 +1,241 @@
+{% extends 'rdv_admin/base.html.twig' %}
+
+{% block title %}Tous les RDVs - Admin VitalTech{% endblock %}
+{% block page_header %}Gestion des Rendez-vous{% endblock %}
+{% block page_subtitle %}Vue globale de tous les rendez-vous patients{% endblock %}
+
+{% block header_actions %}
+    <a href="{{ path('admin_rdv_stats') }}"
+       class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2.5 rounded-xl shadow transition text-sm">
+        <i class="fa-solid fa-chart-pie"></i> Statistiques
+    </a>
+    <a href="{{ path('admin_dispo_index') }}"
+       class="inline-flex items-center gap-2 bg-cyan-600 hover:bg-cyan-700 text-white font-bold px-4 py-2.5 rounded-xl shadow transition text-sm">
+        <i class="fa-solid fa-calendar-days"></i> Disponibilités
+    </a>
+{% endblock %}
+
+{% block body %}
+
+{# ── KPIs ── #}
+<div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex items-center gap-3">
+        <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-sm">
+            <i class="fa-solid fa-calendar-check"></i>
+        </div>
+        <div>
+            <p class="text-xs text-gray-400 font-bold uppercase">Total</p>
+            <p class="text-2xl font-black text-gray-800">{{ stats.total }}</p>
+        </div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex items-center gap-3">
+        <div class="w-10 h-10 bg-orange-50 text-orange-500 rounded-xl flex items-center justify-center text-sm">
+            <i class="fa-solid fa-clock"></i>
+        </div>
+        <div>
+            <p class="text-xs text-gray-400 font-bold uppercase">En attente</p>
+            <p class="text-2xl font-black text-orange-500">{{ stats.en_attente }}</p>
+        </div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex items-center gap-3">
+        <div class="w-10 h-10 bg-green-50 text-green-600 rounded-xl flex items-center justify-center text-sm">
+            <i class="fa-solid fa-check-circle"></i>
+        </div>
+        <div>
+            <p class="text-xs text-gray-400 font-bold uppercase">Confirmés</p>
+            <p class="text-2xl font-black text-green-600">{{ stats.confirmes }}</p>
+        </div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex items-center gap-3">
+        <div class="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center text-sm">
+            <i class="fa-solid fa-ban"></i>
+        </div>
+        <div>
+            <p class="text-xs text-gray-400 font-bold uppercase">Annulés</p>
+            <p class="text-2xl font-black text-red-500">{{ stats.annules }}</p>
+        </div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex items-center gap-3">
+        <div class="w-10 h-10 bg-sky-50 text-sky-600 rounded-xl flex items-center justify-center text-sm">
+            <i class="fa-solid fa-calendar-day"></i>
+        </div>
+        <div>
+            <p class="text-xs text-gray-400 font-bold uppercase">Aujourd'hui</p>
+            <p class="text-2xl font-black text-sky-600">{{ stats.aujourdhui }}</p>
+        </div>
+    </div>
+</div>
+
+{# ── Filtres ── #}
+<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 mb-6">
+    <form method="GET" class="flex flex-wrap gap-3 items-end">
+        <div class="flex-1 min-w-40">
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-1.5">
+                <i class="fa-solid fa-user-doctor mr-1"></i> Médecin
+            </label>
+            <select name="medecin" class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50">
+                <option value="">Tous les médecins</option>
+                {% for med in medecins %}
+                    {% set nomMed = 'Dr. ' ~ med.prenom ~ ' ' ~ med.nom %}
+                    <option value="{{ nomMed }}" {% if filterMedecin == nomMed %}selected{% endif %}>
+                        {{ nomMed }}{% if med.specialite %} — {{ med.specialite }}{% endif %}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="flex-1 min-w-32">
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-1.5">
+                <i class="fa-solid fa-circle-half-stroke mr-1"></i> Statut
+            </label>
+            <select name="statut" class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                <option value="">Tous</option>
+                <option value="En attente" {% if filterStatut == 'En attente' %}selected{% endif %}>En attente</option>
+                <option value="Confirmé"   {% if filterStatut == 'Confirmé'   %}selected{% endif %}>Confirmé</option>
+                <option value="Annulé"     {% if filterStatut == 'Annulé'     %}selected{% endif %}>Annulé</option>
+            </select>
+        </div>
+        <div class="flex-1 min-w-36">
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-1.5">
+                <i class="fa-regular fa-calendar mr-1"></i> Date
+            </label>
+            <input type="date" name="date" value="{{ filterDate }}"
+                   class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 bg-gray-50">
+        </div>
+        <div class="flex gap-2">
+            <button type="submit"
+                    class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition shadow-sm">
+                <i class="fa-solid fa-filter mr-1"></i> Filtrer
+            </button>
+            <a href="{{ path('admin_rdv_index') }}"
+               class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-sm font-bold transition">
+                <i class="fa-solid fa-rotate-left"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+{# ── Tableau ── #}
+<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="font-bold text-gray-800 flex items-center gap-2">
+            <i class="fa-solid fa-table-list text-blue-500"></i>
+            {{ rdvs|length }} rendez-vous trouvé(s)
+        </h3>
+    </div>
+
+    <div class="overflow-x-auto">
+    <table class="w-full text-left">
+        <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
+            <tr>
+                <th class="px-5 py-3.5">Réf.</th>
+                <th class="px-5 py-3.5">Patient</th>
+                <th class="px-5 py-3.5">Médecin</th>
+                <th class="px-5 py-3.5">Date & Heure</th>
+                <th class="px-5 py-3.5">Motif</th>
+                <th class="px-5 py-3.5">Statut</th>
+                <th class="px-5 py-3.5 text-center">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 text-sm">
+        {% for rdv in rdvs %}
+            {% if rdv.date is not null and rdv.medecin is not null %}
+            <tr class="hover:bg-blue-50/30 transition">
+                <td class="px-5 py-3.5">
+                    <span class="font-mono text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-lg">#{{ rdv.id }}</span>
+                </td>
+
+                <td class="px-5 py-3.5">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
+                            {{ rdv.patient ? rdv.patient.prenom|slice(0,1)|upper : '?' }}
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-800 text-xs">
+                                {{ rdv.patient ? rdv.patient.prenom ~ ' ' ~ rdv.patient.nom : 'Inconnu' }}
+                            </p>
+                            <p class="text-gray-400 text-xs">{{ rdv.patient ? rdv.patient.email : '' }}</p>
+                        </div>
+                    </div>
+                </td>
+
+                <td class="px-5 py-3.5">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-slate-600 to-slate-800 text-white flex items-center justify-center flex-shrink-0">
+                            <i class="fa-solid fa-user-doctor text-xs"></i>
+                        </div>
+                        <span class="font-semibold text-gray-700 text-xs">{{ rdv.medecin }}</span>
+                    </div>
+                </td>
+
+                <td class="px-5 py-3.5">
+                    <p class="font-bold text-gray-800 text-sm">{{ rdv.date|date('d/m/Y') }}</p>
+                    <p class="text-xs text-gray-400">
+                        <i class="fa-regular fa-clock mr-1"></i>
+                        {{ rdv.hdebut ? rdv.hdebut|date('H:i') : '--' }}
+                        {% if rdv.hfin %} – {{ rdv.hfin|date('H:i') }}{% endif %}
+                    </p>
+                </td>
+
+                <td class="px-5 py-3.5">
+                    <span class="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-lg">{{ rdv.motif ?? '—' }}</span>
+                </td>
+
+                <td class="px-5 py-3.5">
+                    {% if rdv.statut == 'Confirmé' %}
+                        <span class="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-full border border-green-200">
+                            <i class="fa-solid fa-check text-xs"></i> Confirmé
+                        </span>
+                    {% elseif rdv.statut == 'En attente' %}
+                        <span class="inline-flex items-center gap-1 bg-orange-100 text-orange-600 text-xs font-bold px-2.5 py-1 rounded-full border border-orange-200">
+                            <i class="fa-solid fa-hourglass-half text-xs"></i> En attente
+                        </span>
+                    {% else %}
+                        <span class="inline-flex items-center gap-1 bg-red-100 text-red-600 text-xs font-bold px-2.5 py-1 rounded-full border border-red-200">
+                            <i class="fa-solid fa-ban text-xs"></i> Annulé
+                        </span>
+                    {% endif %}
+                </td>
+
+                <td class="px-5 py-3.5">
+                    <div class="flex items-center justify-center gap-1.5">
+                        {% if rdv.statut == 'En attente' %}
+                        <form method="POST" action="{{ path('admin_rdv_confirm', {id: rdv.id}) }}">
+                            <button title="Confirmer"
+                                    class="w-8 h-8 flex items-center justify-center rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition">
+                                <i class="fa-solid fa-check text-xs"></i>
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ path('admin_rdv_cancel', {id: rdv.id}) }}">
+                            <button title="Annuler"
+                                    class="w-8 h-8 flex items-center justify-center rounded-lg bg-orange-50 text-orange-500 hover:bg-orange-100 transition">
+                                <i class="fa-solid fa-xmark text-xs"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                        <form method="POST" action="{{ path('admin_rdv_delete', {id: rdv.id}) }}"
+                              onsubmit="return confirm('Supprimer définitivement ce RDV ?')">
+                            <input type="hidden" name="_token" value="{{ csrf_token('admin_delete_rdv_' ~ rdv.id) }}">
+                            <button title="Supprimer"
+                                    class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition">
+                                <i class="fa-solid fa-trash text-xs"></i>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endif %}
+        {% else %}
+            <tr>
+                <td colspan="7" class="text-center py-16 text-gray-400">
+                    <i class="fa-solid fa-calendar-xmark text-4xl mb-3 block opacity-30"></i>
+                    <p class="font-medium">Aucun rendez-vous trouvé</p>
+                    <p class="text-xs mt-1">Modifiez les filtres pour afficher des résultats</p>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+
+{% endblock %}
