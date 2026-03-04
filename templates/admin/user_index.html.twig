@@ -10,7 +10,7 @@
 {% block body %}
     <div class="p-6 space-y-4">
         <div class="flex items-center justify-between">
-            <form method="get" class="flex flex-col md:flex-row items-stretch md:items-center gap-3">
+            <form method="get" action="{{ path('admin_user_index') }}" id="admin-user-search-form" class="flex flex-col md:flex-row items-stretch md:items-center gap-3">
                 <div class="flex items-center gap-2">
                     <label for="search" class="text-sm text-gray-600">Rechercher :</label>
                     <input
@@ -38,103 +38,94 @@
             </a>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <table class="min-w-full divide-y divide-gray-200 text-sm">
-                <thead class="bg-gray-50">
-                    <tr>
-                        {% set toggled = direction == 'ASC' ? 'DESC' : 'ASC' %}
-                        <th class="px-4 py-2 text-left font-semibold text-gray-600">
-                            <a href="{{ path('admin_user_index', { q: q, sort: 'id', direction: sort == 'id' ? toggled : 'ASC' }) }}" class="inline-flex items-center gap-1">
-                                ID
-                                {% if sort == 'id' %}
-                                    <i class="fa-solid fa-arrow-{{ direction == 'ASC' ? 'up' : 'down' }} text-[10px]"></i>
-                                {% endif %}
-                            </a>
-                        </th>
-                        <th class="px-4 py-2 text-left font-semibold text-gray-600">
-                            <a href="{{ path('admin_user_index', { q: q, sort: 'email', direction: sort == 'email' ? toggled : 'ASC' }) }}" class="inline-flex items-center gap-1">
-                                Email
-                                {% if sort == 'email' %}
-                                    <i class="fa-solid fa-arrow-{{ direction == 'ASC' ? 'up' : 'down' }} text-[10px]"></i>
-                                {% endif %}
-                            </a>
-                        </th>
-                        <th class="px-4 py-2 text-left font-semibold text-gray-600">
-                            <a href="{{ path('admin_user_index', { q: q, sort: 'nom', direction: sort == 'nom' ? toggled : 'ASC' }) }}" class="inline-flex items-center gap-1">
-                                Nom
-                                {% if sort == 'nom' %}
-                                    <i class="fa-solid fa-arrow-{{ direction == 'ASC' ? 'up' : 'down' }} text-[10px]"></i>
-                                {% endif %}
-                            </a>
-                        </th>
-                        <th class="px-4 py-2 text-left font-semibold text-gray-600">
-                            <a href="{{ path('admin_user_index', { q: q, sort: 'prenom', direction: sort == 'prenom' ? toggled : 'ASC' }) }}" class="inline-flex items-center gap-1">
-                                Prénom
-                                {% if sort == 'prenom' %}
-                                    <i class="fa-solid fa-arrow-{{ direction == 'ASC' ? 'up' : 'down' }} text-[10px]"></i>
-                                {% endif %}
-                            </a>
-                        </th>
-                        <th class="px-4 py-2 text-left font-semibold text-gray-600">
-                            <a href="{{ path('admin_user_index', { q: q, sort: 'role', direction: sort == 'role' ? toggled : 'ASC' }) }}" class="inline-flex items-center gap-1">
-                                Rôle
-                                {% if sort == 'role' %}
-                                    <i class="fa-solid fa-arrow-{{ direction == 'ASC' ? 'up' : 'down' }} text-[10px]"></i>
-                                {% endif %}
-                            </a>
-                        </th>
-                        <th class="px-4 py-2 text-left font-semibold text-gray-600">
-                            Actions
-                        </th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                    {% for user in users %}
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-4 py-2 text-gray-700">{{ user.id }}</td>
-                            <td class="px-4 py-2 text-gray-700">{{ user.email }}</td>
-                            <td class="px-4 py-2 text-gray-700">{{ user.nom }}</td>
-                            <td class="px-4 py-2 text-gray-700">{{ user.prenom }}</td>
-                            <td class="px-4 py-2 text-gray-700">{{ user.role }}</td>
-                            <td class="px-4 py-2 text-gray-700">
-                                {% if user.role == 'ROLE_SUPER_ADMIN' and not is_granted('ROLE_SUPER_ADMIN') %}
-                                    <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-500">
-                                        Protege
-                                    </span>
-                                {% else %}
-                                    <div class="flex items-center gap-2">
-                                        <a href="{{ path('admin_user_edit', { id: user.id }) }}"
-                                           class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-amber-500 hover:bg-amber-600">
-                                            <i class="fa-solid fa-pen mr-1 text-[10px]"></i>
-                                            Modifier
-                                        </a>
-                                        <form method="post"
-                                              action="{{ path('admin_user_delete', { id: user.id }) }}"
-                                              onsubmit="return confirm('Supprimer cet utilisateur ?');">
-                                            <input type="hidden" name="_token" value="{{ csrf_token('delete_user_' ~ user.id) }}">
-                                            <button type="submit"
-                                                    class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-rose-500 hover:bg-rose-600">
-                                                <i class="fa-solid fa-trash mr-1 text-[10px]"></i>
-                                                Supprimer
-                                            </button>
-                                        </form>
-                                    </div>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% else %}
-                        <tr>
-                            <td colspan="5" class="px-4 py-4 text-center text-gray-500">
-                                Aucun utilisateur trouvé.
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        <div class="mt-4">
-            {{ knp_pagination_render(users) }}
+        <div id="admin-user-list-container">
+            {% include 'admin/_user_list_content.html.twig' with {
+                users: users,
+                q: q,
+                sort: sort,
+                direction: direction
+            } %}
         </div>
     </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function () {
+            const form = document.getElementById('admin-user-search-form');
+            const searchInput = document.getElementById('search');
+            const container = document.getElementById('admin-user-list-container');
+
+            if (!form || !searchInput || !container) {
+                return;
+            }
+
+            let debounceTimer = null;
+
+            const fetchUsers = async (url) => {
+                const requestUrl = new URL(url, window.location.origin);
+                requestUrl.searchParams.set('ajax', '1');
+
+                const response = await fetch(requestUrl.toString(), {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) {
+                    return;
+                }
+
+                const payload = await response.json();
+                container.innerHTML = payload.html;
+
+                requestUrl.searchParams.delete('ajax');
+                window.history.replaceState({}, '', requestUrl.toString());
+            };
+
+            const triggerSearch = () => {
+                const currentUrl = new URL(window.location.href);
+                const value = searchInput.value.trim();
+
+                if (value) {
+                    currentUrl.searchParams.set('q', value);
+                } else {
+                    currentUrl.searchParams.delete('q');
+                }
+
+                currentUrl.searchParams.delete('page');
+                fetchUsers(currentUrl.toString());
+            };
+
+            form.addEventListener('submit', (event) => {
+                event.preventDefault();
+                triggerSearch();
+            });
+
+            searchInput.addEventListener('input', () => {
+                if (debounceTimer) {
+                    clearTimeout(debounceTimer);
+                }
+
+                debounceTimer = setTimeout(triggerSearch, 300);
+            });
+
+            container.addEventListener('click', (event) => {
+                const link = event.target.closest('a[href]');
+                if (!link) {
+                    return;
+                }
+
+                const linkUrl = new URL(link.href, window.location.origin);
+                if (linkUrl.pathname !== window.location.pathname) {
+                    return;
+                }
+
+                event.preventDefault();
+                fetchUsers(linkUrl.toString());
+            });
+        })();
+    </script>
 {% endblock %}
 

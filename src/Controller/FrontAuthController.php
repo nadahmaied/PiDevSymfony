@@ -4,11 +4,15 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Form\FrontRegistrationFormType;
+use App\Repository\UserRepository;
 use App\Service\DocumentVerificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Address;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
@@ -20,7 +24,9 @@ class FrontAuthController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager,
         UserPasswordHasherInterface $passwordHasher,
-        DocumentVerificationService $verificationService
+        DocumentVerificationService $verificationService,
+        UserRepository $userRepository,
+        MailerInterface $mailer
     ): Response {
         // 👇 CORRECTION ICI : Si on est déjà connecté, on va vers l'accueil
         if ($this->getUser()) {
@@ -74,7 +80,7 @@ class FrontAuthController extends AbstractController
                     // AI verification is unreliable due to API limitations
                     $user->setIsVerified(false);
                     $user->setVerificationStatus('pending_review');
-                    
+
                     $this->addFlash('info', 'Votre diplôme a été soumis avec succès. Un administrateur vérifiera votre compte sous peu. Vous recevrez une notification une fois approuvé.');
                 } catch (\Exception $e) {
                     $this->addFlash('error', 'Erreur lors du téléchargement du document.');
@@ -91,6 +97,36 @@ class FrontAuthController extends AbstractController
             $entityManager->persist($user);
             $entityManager->flush();
 
+            if ($selectedRole === 'ROLE_MEDECIN') {
+                $admins = $userRepository->createQueryBuilder('u')
+                    ->where('u.role IN (:roles)')
+                    ->setParameter('roles', ['ROLE_ADMIN', 'ROLE_SUPER_ADMIN'])
+                    ->getQuery()
+                    ->getResult();
+
+                foreach ($admins as $admin) {
+                    if (!$admin instanceof User || !$admin->getEmail()) {
+                        continue;
+                    }
+
+                    try {
+                        $email = (new TemplatedEmail())
+                            ->from(new Address('wassimbac12@gmail.com', 'VitalTech'))
+                            ->to($admin->getEmail())
+                            ->subject('Nouveau médecin en attente de validation')
+                            ->htmlTemplate('emails/doctor_signup_pending_admin.html.twig')
+                            ->context([
+                                'doctor' => $user,
+                                'admin' => $admin,
+                            ]);
+
+                        $mailer->send($email);
+                    } catch (\Exception $e) {
+                        error_log('Failed to send doctor signup admin notification: ' . $e->getMessage());
+                    }
+                }
+            }
+
             return $this->redirectToRoute('front_login');
         }
 
@@ -100,7 +136,7 @@ class FrontAuthController extends AbstractController
     }
 
     #[Route('/login', name: 'front_login')]
-    public function login(AuthenticationUtils $authenticationUtils): Response
+    public function login(Request $request, AuthenticationUtils $authenticationUtils): Response
     {
         // 👇 CORRECTION ICI : Si on est déjà connecté, on va vers l'accueil
         if ($this->getUser()) {

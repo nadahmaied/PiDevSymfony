@@ -12,6 +12,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -33,6 +34,24 @@ class AdminUserController extends AbstractController
     {
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
 
+        if (!$request->isXmlHttpRequest() && !$request->query->getBoolean('ajax')) {
+            $pendingCount = $userRepository->count([
+                'role' => 'ROLE_MEDECIN',
+                'verificationStatus' => 'pending_review',
+            ]);
+
+            if ($pendingCount > 0) {
+                $this->addFlash(
+                    'info',
+                    sprintf(
+                        '%d compte%s mÃ©decin en attente de vÃ©rification.',
+                        $pendingCount,
+                        $pendingCount > 1 ? 's' : ''
+                    )
+                );
+            }
+        }
+
         $q = $request->query->get('q');
         if (!is_string($q) || $q === '') {
             $q = null;
@@ -45,7 +64,7 @@ class AdminUserController extends AbstractController
         if ($q) {
             $qb
                 ->andWhere('u.email LIKE :q OR u.nom LIKE :q OR u.prenom LIKE :q')
-                ->setParameter('q', '%'.$q.'%');
+                ->setParameter('q', '%' . $q . '%');
         }
 
         $allowedSortFields = ['id', 'email', 'nom', 'prenom', 'role'];
@@ -54,13 +73,26 @@ class AdminUserController extends AbstractController
         }
 
         $direction = strtoupper($direction) === 'DESC' ? 'DESC' : 'ASC';
-        $qb->orderBy('u.'.$sort, $direction);
+        $qb->orderBy('u.' . $sort, $direction);
 
         $pagination = $paginator->paginate(
             $qb,
             $request->query->getInt('page', 1),
             3
         );
+
+        if ($request->isXmlHttpRequest() || $request->query->getBoolean('ajax')) {
+            $html = $this->renderView('admin/_user_list_content.html.twig', [
+                'users' => $pagination,
+                'q' => $q,
+                'sort' => $sort,
+                'direction' => $direction,
+            ]);
+
+            return new JsonResponse([
+                'html' => $html,
+            ]);
+        }
 
         return $this->render('admin/user_index.html.twig', [
             'users' => $pagination,
@@ -122,7 +154,7 @@ class AdminUserController extends AbstractController
             $profilePictureFile = $form->get('profilePictureFile')->getData();
 
             if ($profilePictureFile) {
-                $newFilename = uniqid().'.'.$profilePictureFile->guessExtension();
+                $newFilename = uniqid() . '.' . $profilePictureFile->guessExtension();
 
                 try {
                     $projectDirParam = $this->getParameter('kernel.project_dir');
@@ -163,7 +195,7 @@ class AdminUserController extends AbstractController
             return $this->redirectToRoute('admin_user_index');
         }
 
-        if (!$this->isCsrfTokenValid('delete_user_'.$user->getId(), (string) $request->request->get('_token'))) {
+        if (!$this->isCsrfTokenValid('delete_user_' . $user->getId(), (string) $request->request->get('_token'))) {
             $this->addFlash('error', 'Token CSRF invalide.');
 
             return $this->redirectToRoute('admin_user_index');
@@ -176,7 +208,7 @@ class AdminUserController extends AbstractController
 
         return $this->redirectToRoute('admin_user_index');
     }
-    
+
     #[Route('/admin/verification/pending', name: 'admin_verification_pending')]
     public function pendingVerifications(UserRepository $userRepository): Response
     {
@@ -194,14 +226,14 @@ class AdminUserController extends AbstractController
 
     #[Route('/admin/verification/{id}/approve', name: 'admin_verification_approve', methods: ['POST'])]
     public function approveVerification(
-        User $user, 
-        Request $request, 
+        User $user,
+        Request $request,
         EntityManagerInterface $entityManager,
         MailerInterface $mailer
     ): Response {
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
 
-        if (!$this->isCsrfTokenValid('approve_verification_'.$user->getId(), (string) $request->request->get('_token'))) {
+        if (!$this->isCsrfTokenValid('approve_verification_' . $user->getId(), (string) $request->request->get('_token'))) {
             $this->addFlash('error', 'Token CSRF invalide.');
             return $this->redirectToRoute('admin_verification_pending');
         }
@@ -236,7 +268,7 @@ class AdminUserController extends AbstractController
     {
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
 
-        if (!$this->isCsrfTokenValid('reject_verification_'.$user->getId(), (string) $request->request->get('_token'))) {
+        if (!$this->isCsrfTokenValid('reject_verification_' . $user->getId(), (string) $request->request->get('_token'))) {
             $this->addFlash('error', 'Token CSRF invalide.');
             return $this->redirectToRoute('admin_verification_pending');
         }
@@ -249,4 +281,3 @@ class AdminUserController extends AbstractController
         return $this->redirectToRoute('admin_verification_pending');
     }
 }
-

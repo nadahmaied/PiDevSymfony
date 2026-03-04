@@ -6,6 +6,7 @@
     <title>Connexion administrateur - VitalTech</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body class="min-h-screen bg-slate-950 flex items-center justify-center px-4">
 <div class="w-full max-w-md">
@@ -24,6 +25,13 @@
                 <span>Identifiants invalides, veuillez réessayer.</span>
             </div>
         {% endif %}
+
+        {% for message in app.flashes('error') %}
+            <div class="mb-4 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-100 px-4 py-3 text-sm flex items-start gap-2">
+                <i class="fa-solid fa-circle-exclamation mt-0.5 text-rose-400"></i>
+                <span>{{ message }}</span>
+            </div>
+        {% endfor %}
 
         {% for message in app.flashes('success') %}
             <div class="mb-4 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-100 px-4 py-3 text-sm flex items-start gap-2">
@@ -67,6 +75,11 @@
                         placeholder="Mot de passe administrateur"
                     >
                 </div>
+            </div>
+
+            <div class="space-y-1.5">
+                <span class="block text-sm font-medium text-slate-100 mb-1">Vérification de sécurité</span>
+                <div class="g-recaptcha" data-sitekey="{{ recaptcha_site_key }}"></div>
             </div>
 
             <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">

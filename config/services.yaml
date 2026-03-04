@@ -125,3 +125,8 @@ services:
         arguments:
             $apiKey: '%env(default::AZURE_TTS_KEY)%'
             $region: '%env(default::AZURE_TTS_REGION)%'
+
+    App\Service\RecaptchaVerifier:
+        arguments:
+            $secretKey: '%env(RECAPTCHA_SECRET_KEY)%'
+            $environment: '%kernel.environment%'
