@@ -13,17 +13,24 @@
         <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-sky-600 text-white shadow-lg shadow-sky-300/60">
             <i class="fa-solid fa-heart-pulse text-2xl"></i>
         </div>
-        <h1 class="mt-4 text-2xl font-bold text-slate-900">Connexion à VitalTech</h1>
-        <p class="mt-1 text-sm text-slate-500">Accédez à votre espace patient sécurisé.</p>
+        <h1 class="mt-4 text-2xl font-bold text-slate-900">Connexion a VitalTech</h1>
+        <p class="mt-1 text-sm text-slate-500">Accedez a votre espace patient securise.</p>
     </div>
 
     <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl shadow-sky-100/60 p-6 border border-slate-100">
         {% if error %}
             <div class="mb-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 text-sm flex items-start gap-2">
                 <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
-                <span>Identifiants invalides, veuillez réessayer.</span>
+                <span>Identifiants invalides, veuillez reessayer.</span>
             </div>
         {% endif %}
+
+        {% for message in app.flashes('error') %}
+            <div class="mb-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 text-sm flex items-start gap-2">
+                <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
+                <span>{{ message }}</span>
+            </div>
+        {% endfor %}
 
         {% for message in app.flashes('success') %}
             <div class="mb-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 text-sm flex items-start gap-2">
@@ -71,6 +78,13 @@
 
             <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
 
+            {% if recaptcha_site_key is not empty %}
+                <div class="pt-1">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Verification de securite</label>
+                    <div class="g-recaptcha" data-sitekey="{{ recaptcha_site_key }}"></div>
+                </div>
+            {% endif %}
+
             <button
                 type="submit"
                 class="w-full inline-flex justify-center items-center px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 shadow-sm shadow-sky-300/60 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 transition-colors"
@@ -82,24 +96,26 @@
 
         <div class="mt-4 flex items-center justify-between text-xs text-slate-500">
             <a href="{{ path('forgot_password') }}" class="font-medium text-sky-600 hover:text-sky-700 hover:underline">
-                Mot de passe oublié ?
+                Mot de passe oublie ?
             </a>
             <p>
                 Pas encore de compte ?
                 <a href="{{ path('front_register') }}" class="font-medium text-sky-600 hover:text-sky-700 hover:underline">
-                    Créer un compte
+                    Creer un compte
                 </a>
             </p>
         </div>
     </div>
 
     <p class="mt-6 text-center text-[11px] text-slate-400">
-        Accès administrateur ?
+        Acces administrateur ?
         <a href="{{ path('admin_login') }}" class="font-medium text-slate-600 hover:text-slate-800 underline">
             Se connecter au backoffice
         </a>
     </p>
 </div>
+{% if recaptcha_site_key is not empty %}
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+{% endif %}
 </body>
 </html>
-

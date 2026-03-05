@@ -95,7 +95,7 @@ class FrontAuthController extends AbstractController
     }
 
     #[Route('/login', name: 'front_login')]
-    public function login(AuthenticationUtils $authenticationUtils): Response
+    public function login(AuthenticationUtils $authenticationUtils, string $recaptchaSiteKey): Response
     {
         // 👇 CORRECTION ICI : Si on est déjà connecté, on va vers l'accueil
         if ($this->getUser()) {
@@ -111,6 +111,7 @@ class FrontAuthController extends AbstractController
         return $this->render('security/front_login.html.twig', [
             'last_username' => $lastUsername,
             'error' => $error,
+            'recaptcha_site_key' => $recaptchaSiteKey,
         ]);
     }
 

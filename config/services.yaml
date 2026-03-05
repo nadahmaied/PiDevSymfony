@@ -18,6 +18,8 @@ parameters:
     volunteer_ai_api_key: '%env(VOLUNTEER_AI_API_KEY)%'
     volunteer_ai_api_url: '%env(VOLUNTEER_AI_API_URL)%'
     volunteer_ai_model: '%env(VOLUNTEER_AI_MODEL)%'
+    recaptcha_site_key: '%env(default::RECAPTCHA_SITE_KEY)%'
+    recaptcha_secret_key: '%env(default::RECAPTCHA_SECRET_KEY)%'
 
 services:
     # default configuration for services in *this* file
@@ -74,6 +76,10 @@ services:
             $apiKey: '%volunteer_ai_api_key%'
             $apiUrl: '%volunteer_ai_api_url%'
             $model: '%volunteer_ai_model%'
+
+    App\Service\RecaptchaVerifier:
+        arguments:
+            $secretKey: '%recaptcha_secret_key%'
             
     App\Service\SmsService:
         arguments:
@@ -88,6 +94,10 @@ services:
     App\Controller\PatientController:
         bind:
             $siteBaseUrl: '%site_base_url%'
+
+    App\Controller\FrontAuthController:
+        bind:
+            $recaptchaSiteKey: '%recaptcha_site_key%'
 
     App\Service\PrescriptionMailerService:
         arguments:
